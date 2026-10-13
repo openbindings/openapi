@@ -45,7 +45,7 @@ fn sample<T>(iterations: usize, mut f: impl FnMut() -> T) -> (f64, usize) {
 }
 fn owners() -> (usize, usize) {
     (
-        dynamic_openapi_client::live_json_owners(),
+        dynamic_openapi_client::qualification::live_owners(),
         openbindings_internal_json::backend::live_arenas(),
     )
 }

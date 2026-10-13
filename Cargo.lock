@@ -228,7 +228,7 @@ checksum = "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813"
 [[package]]
 name = "dynamic-openapi-client"
 version = "0.0.0"
-source = "git+https://github.com/openbindings/openapi-client?rev=fe09522a9b99a6c6b4918e3de0467b5a638afa5e#fe09522a9b99a6c6b4918e3de0467b5a638afa5e"
+source = "git+https://github.com/openbindings/openapi-client?rev=62d0a05ee9ff3f01512a2e0855a449157dbd9d45#62d0a05ee9ff3f01512a2e0855a449157dbd9d45"
 dependencies = [
  "base64",
  "fluent-uri",
@@ -240,7 +240,7 @@ dependencies = [
 [[package]]
 name = "dynamic-openapi-client-reqwest"
 version = "0.0.0"
-source = "git+https://github.com/openbindings/openapi-client?rev=fe09522a9b99a6c6b4918e3de0467b5a638afa5e#fe09522a9b99a6c6b4918e3de0467b5a638afa5e"
+source = "git+https://github.com/openbindings/openapi-client?rev=62d0a05ee9ff3f01512a2e0855a449157dbd9d45#62d0a05ee9ff3f01512a2e0855a449157dbd9d45"
 dependencies = [
  "bytes",
  "dynamic-openapi-client",
@@ -943,7 +943,7 @@ dependencies = [
 [[package]]
 name = "openbindings"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=bd3938e47e7cdc5f0c209949cff8c16618c813a6#bd3938e47e7cdc5f0c209949cff8c16618c813a6"
+source = "git+https://github.com/openbindings/sdk?rev=9ba62d3d56b6874f2da35768b25cc95e5500d102#9ba62d3d56b6874f2da35768b25cc95e5500d102"
 dependencies = [
  "fluent-uri",
  "openbindings-internal-json",
@@ -956,7 +956,7 @@ dependencies = [
 [[package]]
 name = "openbindings-interface-synthesis"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=bd3938e47e7cdc5f0c209949cff8c16618c813a6#bd3938e47e7cdc5f0c209949cff8c16618c813a6"
+source = "git+https://github.com/openbindings/sdk?rev=9ba62d3d56b6874f2da35768b25cc95e5500d102#9ba62d3d56b6874f2da35768b25cc95e5500d102"
 dependencies = [
  "openbindings",
  "serde",
@@ -966,7 +966,7 @@ dependencies = [
 [[package]]
 name = "openbindings-internal-json"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=bd3938e47e7cdc5f0c209949cff8c16618c813a6#bd3938e47e7cdc5f0c209949cff8c16618c813a6"
+source = "git+https://github.com/openbindings/sdk?rev=9ba62d3d56b6874f2da35768b25cc95e5500d102#9ba62d3d56b6874f2da35768b25cc95e5500d102"
 dependencies = [
  "itoa",
  "openbindings-internal-jsonschema",
@@ -979,7 +979,7 @@ dependencies = [
 [[package]]
 name = "openbindings-internal-jsonschema"
 version = "0.58.6-ob.1"
-source = "git+https://github.com/openbindings/sdk?rev=bd3938e47e7cdc5f0c209949cff8c16618c813a6#bd3938e47e7cdc5f0c209949cff8c16618c813a6"
+source = "git+https://github.com/openbindings/sdk?rev=9ba62d3d56b6874f2da35768b25cc95e5500d102#9ba62d3d56b6874f2da35768b25cc95e5500d102"
 dependencies = [
  "ahash",
  "bytecount",
@@ -1009,7 +1009,7 @@ dependencies = [
 [[package]]
 name = "openbindings-internal-jsonschema-value"
 version = "0.58.6-ob.1"
-source = "git+https://github.com/openbindings/sdk?rev=bd3938e47e7cdc5f0c209949cff8c16618c813a6#bd3938e47e7cdc5f0c209949cff8c16618c813a6"
+source = "git+https://github.com/openbindings/sdk?rev=9ba62d3d56b6874f2da35768b25cc95e5500d102#9ba62d3d56b6874f2da35768b25cc95e5500d102"
 dependencies = [
  "ahash",
  "bytecount",
@@ -1025,7 +1025,7 @@ dependencies = [
 [[package]]
 name = "openbindings-internal-referencing"
 version = "0.58.6-ob.1"
-source = "git+https://github.com/openbindings/sdk?rev=bd3938e47e7cdc5f0c209949cff8c16618c813a6#bd3938e47e7cdc5f0c209949cff8c16618c813a6"
+source = "git+https://github.com/openbindings/sdk?rev=9ba62d3d56b6874f2da35768b25cc95e5500d102#9ba62d3d56b6874f2da35768b25cc95e5500d102"
 dependencies = [
  "ahash",
  "fluent-uri",
@@ -1041,7 +1041,7 @@ dependencies = [
 [[package]]
 name = "openbindings-internal-regress"
 version = "0.12.0-ob.1"
-source = "git+https://github.com/openbindings/sdk?rev=bd3938e47e7cdc5f0c209949cff8c16618c813a6#bd3938e47e7cdc5f0c209949cff8c16618c813a6"
+source = "git+https://github.com/openbindings/sdk?rev=9ba62d3d56b6874f2da35768b25cc95e5500d102#9ba62d3d56b6874f2da35768b25cc95e5500d102"
 dependencies = [
  "memchr",
 ]
@@ -1049,7 +1049,7 @@ dependencies = [
 [[package]]
 name = "openbindings-internal-serde-json"
 version = "1.0.151-ob.1"
-source = "git+https://github.com/openbindings/sdk?rev=bd3938e47e7cdc5f0c209949cff8c16618c813a6#bd3938e47e7cdc5f0c209949cff8c16618c813a6"
+source = "git+https://github.com/openbindings/sdk?rev=9ba62d3d56b6874f2da35768b25cc95e5500d102#9ba62d3d56b6874f2da35768b25cc95e5500d102"
 dependencies = [
  "itoa",
  "memchr",
@@ -1061,7 +1061,7 @@ dependencies = [
 [[package]]
 name = "openbindings-invocation"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=bd3938e47e7cdc5f0c209949cff8c16618c813a6#bd3938e47e7cdc5f0c209949cff8c16618c813a6"
+source = "git+https://github.com/openbindings/sdk?rev=9ba62d3d56b6874f2da35768b25cc95e5500d102#9ba62d3d56b6874f2da35768b25cc95e5500d102"
 dependencies = [
  "futures-core",
  "openbindings",
@@ -1072,7 +1072,7 @@ dependencies = [
 [[package]]
 name = "openbindings-json-schema-evaluator"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=bd3938e47e7cdc5f0c209949cff8c16618c813a6#bd3938e47e7cdc5f0c209949cff8c16618c813a6"
+source = "git+https://github.com/openbindings/sdk?rev=9ba62d3d56b6874f2da35768b25cc95e5500d102#9ba62d3d56b6874f2da35768b25cc95e5500d102"
 dependencies = [
  "openbindings",
  "openbindings-internal-json",
@@ -1101,7 +1101,7 @@ dependencies = [
 [[package]]
 name = "openbindings-source-inspection"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=bd3938e47e7cdc5f0c209949cff8c16618c813a6#bd3938e47e7cdc5f0c209949cff8c16618c813a6"
+source = "git+https://github.com/openbindings/sdk?rev=9ba62d3d56b6874f2da35768b25cc95e5500d102#9ba62d3d56b6874f2da35768b25cc95e5500d102"
 dependencies = [
  "openbindings",
  "serde",

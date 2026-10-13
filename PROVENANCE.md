@@ -13,9 +13,9 @@ dependency attribution files are new extraction plumbing. The consumer test bina
 serializes its own tests with a local lock because they count process-global owners.
 `NOTICE` describes this resolved graph. No SDK implementation is copied into this
 product repository. Dependencies are immutable Git pins: the SDK at
-`bd3938e47e7cdc5f0c209949cff8c16618c813a6` (the commit that removed the adapter from
-the SDK, openbindings/sdk#12) and the client at
-`fe09522a9b99a6c6b4918e3de0467b5a638afa5e`.
+`9ba62d3d56b6874f2da35768b25cc95e5500d102` (main after the Phase 2 fix slices)
+and the client at
+`62d0a05ee9ff3f01512a2e0855a449157dbd9d45`.
 
 | Imported file | SDK source at the pinned commit | Disposition |
 | --- | --- | --- |
