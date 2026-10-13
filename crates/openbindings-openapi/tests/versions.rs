@@ -753,9 +753,36 @@ async fn contexts_statuses_and_finite_boundaries_are_scoped_to_each_kind() {
             "not json",
             BodyState::Complete,
         ));
-        for context in [json("{}"),json(&serde_json_compat::json!({"configuration":{wrong:"https://second.example.invalid"}}).to_string()),json(&serde_json_compat::json!({"configuration":{point:"https://unlisted.example.invalid"}}).to_string())] {
-            let error=invoke(&provider,&src,"/ping","get",&["{}"],Some(&context)).await.unwrap_err();assert_eq!(error.code(),"CONTEXT_REQUIRED");
-            let challenge=error.data().unwrap().text();assert!(challenge.contains(kind));assert!(challenge.contains(point));assert_eq!(count.get(),0);
+        for (context, code) in [
+            (json("{}"), "CONTEXT_REQUIRED"),
+            (
+                json(
+                    &serde_json_compat::json!({"configuration":{wrong:"https://second.example.invalid"}})
+                        .to_string(),
+                ),
+                "CONTEXT_REQUIRED",
+            ),
+            (
+                json(
+                    &serde_json_compat::json!({"configuration":{point:"https://unlisted.example.invalid"}})
+                        .to_string(),
+                ),
+                "ERR_REFUSED",
+            ),
+        ] {
+            let error = invoke(&provider, &src, "/ping", "get", &["{}"], Some(&context))
+                .await
+                .unwrap_err();
+            assert_eq!(error.code(), code);
+            if code == "CONTEXT_REQUIRED" {
+                let challenge = error.data().unwrap().text();
+                assert!(challenge.contains(kind));
+                assert!(challenge.contains(point));
+            } else {
+                assert!(error.context_required().is_none());
+                assert!(error.data().is_none());
+            }
+            assert_eq!(count.get(), 0);
         }
         let context = json(
             &serde_json_compat::json!({"configuration":{point:"https://second.example.invalid"}})

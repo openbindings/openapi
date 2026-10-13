@@ -178,7 +178,9 @@ impl std::error::Error for Error {}
 /// Reusable adapter. Inspection and synthesis need no transport; bind one once
 /// with [`Self::with_transport`] to enable the existing BindingInvoker role.
 ///
-/// One immutable prepared source is cached. No mutex is held during host I/O.
+/// One immutable prepared source is cached. No mutex is held during source
+/// analysis or host I/O. Concurrent misses may compute duplicate results;
+/// the last completed analysis replaces the single cache entry.
 /// Supplied resources must be reconstructed for an independent cold reload.
 pub struct OpenApi<T = ()> {
     options: Options,
@@ -230,6 +232,16 @@ impl<T> OpenApi<T> {
         source: &Source,
         control: &WorkControl,
     ) -> Result<Arc<analysis::Prepared>, Error> {
+        self.prepare_with(source, control, |kind, content| {
+            analysis::prepare(kind, content, &self.options, control)
+        })
+    }
+    fn prepare_with(
+        &self,
+        source: &Source,
+        control: &WorkControl,
+        analyze: impl FnOnce(Kind, &JsonValue) -> Result<analysis::Prepared, Error>,
+    ) -> Result<Arc<analysis::Prepared>, Error> {
         check(control)?;
         let kind = Kind::from_label(&source.kind)
             .ok_or_else(|| Error::new(ErrorKind::Unsupported, "unsupported-kind"))?;
@@ -240,23 +252,32 @@ impl<T> OpenApi<T> {
         if content.bytes().len() > self.options.source_bytes {
             return Err(Error::new(ErrorKind::Limit, "source-limit"));
         }
+        let evicted = {
+            let mut cache = self
+                .cached
+                .lock()
+                .map_err(|_| Error::new(ErrorKind::Unreadable, "poisoned-cache"))?;
+            check(control)?;
+            if let Some(prepared) = cache.as_ref().filter(|p| {
+                p.kind == kind
+                    && (std::ptr::eq(p.content.text(), content.text())
+                        || p.content.text() == content.text())
+            }) {
+                return Ok(prepared.clone());
+            }
+            cache.take()
+        };
+        // Drop the old graph and analyze the new source without the cache mutex.
+        drop(evicted);
+        let prepared = Arc::new(analyze(kind, content)?);
+        #[cfg(test)]
+        self.preparations
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let mut cache = self
             .cached
             .lock()
             .map_err(|_| Error::new(ErrorKind::Unreadable, "poisoned-cache"))?;
         check(control)?;
-        if let Some(prepared) = cache.as_ref().filter(|p| {
-            p.kind == kind
-                && (std::ptr::eq(p.content.text(), content.text())
-                    || p.content.text() == content.text())
-        }) {
-            return Ok(prepared.clone());
-        }
-        *cache = None;
-        let prepared = Arc::new(analysis::prepare(kind, content, &self.options, control)?);
-        #[cfg(test)]
-        self.preparations
-            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         *cache = Some(prepared.clone());
         Ok(prepared)
     }
@@ -342,5 +363,93 @@ mod cache_tests {
                 .prepare(&a, &control)
                 .is_err()
         );
+    }
+
+    #[test]
+    fn different_documents_analyze_concurrently_without_the_cache_lock() {
+        let provider = OpenApi::default();
+        let sources = [
+            source("https://a.invalid/doc.json"),
+            Source {
+                kind: EXPERIMENTAL_KIND.into(),
+                content: Some(
+                    json(&serde_json_compat::json!({
+                        "document": include_str!("../tests/fixtures/r1/destinations.json")
+                    }))
+                    .unwrap(),
+                ),
+                ..Default::default()
+            },
+        ];
+        let analyzing = std::sync::Barrier::new(2);
+        let (started, entered) = std::sync::mpsc::channel();
+        let analyze = |source: &Source, started: Option<std::sync::mpsc::Sender<()>>| {
+            let control = WorkControl::new();
+            provider
+                .prepare_with(source, &control, |kind, content| {
+                    // No other thread can be in cache lookup at this checkpoint.
+                    // Fail before the barrier if analysis holds the mutex.
+                    assert!(provider.cached.try_lock().is_ok());
+                    if let Some(started) = started {
+                        started.send(()).unwrap();
+                    }
+                    // Neither analysis can finish until both have entered.
+                    analyzing.wait();
+                    analysis::prepare(kind, content, &provider.options, &control)
+                })
+                .unwrap()
+        };
+        let prepared = std::thread::scope(|scope| {
+            let analyze = &analyze;
+            let first_source = &sources[0];
+            let first = scope.spawn(move || analyze(first_source, Some(started)));
+            // Start the second lookup only after the first analysis is waiting.
+            entered.recv().unwrap();
+            let second = scope.spawn(|| analyze(&sources[1], None));
+            vec![first.join().unwrap(), second.join().unwrap()]
+        });
+        assert_eq!(provider.preparations.load(Ordering::Relaxed), 2);
+        for (source, prepared) in sources.iter().zip(&prepared) {
+            let expected = analysis::prepare(
+                Kind::OpenApi31,
+                source.content.as_ref().unwrap(),
+                &provider.options,
+                &WorkControl::new(),
+            )
+            .unwrap();
+            assert_eq!(
+                prepared.inspection().to_json().unwrap().text(),
+                expected.inspection().to_json().unwrap().text()
+            );
+        }
+        let weak: Vec<_> = prepared.iter().map(Arc::downgrade).collect();
+        drop(prepared);
+        // Exactly one result is retained, whichever computation completed last.
+        assert_eq!(weak.iter().filter(|p| p.upgrade().is_some()).count(), 1);
+    }
+
+    #[test]
+    fn failed_analysis_evicts_previous_entry_and_preserves_result_budget() {
+        let provider = OpenApi::default();
+        let control = WorkControl::new();
+        let valid = source("https://a.invalid/doc.json");
+        let weak = Arc::downgrade(&provider.prepare(&valid, &control).unwrap());
+        let malformed = Source {
+            content: Some(json(&serde_json_compat::json!({"document": "{"})).unwrap()),
+            ..valid.clone()
+        };
+        assert!(provider.prepare(&malformed, &control).is_err());
+        assert!(weak.upgrade().is_none());
+        assert!(provider.cached.lock().unwrap().is_none());
+
+        let bounded = OpenApi::new(Options {
+            result_bytes: 1,
+            ..Default::default()
+        })
+        .unwrap();
+        let error = bounded.prepare(&valid, &control).err().unwrap();
+        assert_eq!(error.kind(), ErrorKind::Limit);
+        assert_eq!(error.code(), "result-limit");
+        assert!(bounded.cached.lock().unwrap().is_none());
     }
 }

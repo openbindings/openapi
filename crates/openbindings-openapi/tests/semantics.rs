@@ -175,20 +175,26 @@ async fn destination_context_is_membership_and_new_attempt() {
             }
         });
     let invoker = operation::Invoker::new(doc, provider);
-    for context in [
-        json("{}"),
-        json(&format!(r#"{{"configuration":{{"{SERVER_POINT}":17}}}}"#)),
-        json(&format!(
-            r#"{{"configuration":{{"{SERVER_POINT}":"https://evil.invalid"}}}}"#
-        )),
+    for (context, code) in [
+        (json("{}"), "CONTEXT_REQUIRED"),
+        (
+            json(&format!(r#"{{"configuration":{{"{SERVER_POINT}":17}}}}"#)),
+            "ERR_REFUSED",
+        ),
+        (
+            json(&format!(
+                r#"{{"configuration":{{"{SERVER_POINT}":"https://evil.invalid"}}}}"#
+            )),
+            "ERR_REFUSED",
+        ),
     ] {
         let mut job =
             invoker.invoke(operation::Request::operation("health").with_context(&context));
         job.write(json("{}")).await.unwrap();
         job.close();
         let err = job.next().await.unwrap().unwrap_err();
-        assert_eq!(err.code(), "CONTEXT_REQUIRED");
-        assert!(err.context_required().is_some());
+        assert_eq!(err.code(), code);
+        assert_eq!(err.context_required().is_some(), code == "CONTEXT_REQUIRED");
         assert_eq!(count.get(), 0);
     }
     let context = json(&format!(
