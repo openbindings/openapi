@@ -86,6 +86,26 @@ the kind's status error with data `{"status":404}` and no output:
 Malformed, incomplete or unsupported successful delivery produces `ERR_EXECUTION_FAILED`.
 Cancellation and other post-dispatch failures do not promise rollback or authorize retry.
 
+The adapter constructs finite requests under `Options` limits, enters `Transport::execute`
+at most once per attempt, follows no redirects, and never replays after any outcome.
+It attaches only explicitly selected per-attempt credentials with caller-approved
+origins; it acquires or attaches no ambient credentials. These are adapter guarantees.
+
+A `Transport` implementation must enforce the same restrictions in its HTTP client:
+disable automatic redirects, replay/retries, ambient authentication and cookie jars,
+and preserve the prepared target and headers. It must perform its own capability
+admission before dispatch, using `PreparedRequest::invoke` with honest
+`HostCapabilities` to run the client's strict checks before the HTTP callback.
+The adapter does not obtain or check that declaration, and declarations alone do
+not prove the underlying HTTP client's behavior. Hosts also own honest outcome
+evidence, cancellation and cleanup.
+
+**SSRF:** server URLs come from the OpenAPI document. A host invoking untrusted
+documents must restrict destinations, applying policy at every network hop after
+DNS resolution, including proxy connections. Declared-server membership and
+credential-origin grants do not authorize access to a destination or network range.
+Destination policy remains a host duty even for an anonymous operation.
+
 If effective server URLs are ambiguous, the adapter returns the existing `config.value`
 challenge. Supply the selected declared URL in
 `context.configuration["local.openapi-json-probe.r1.server"]` and deliberately start a
@@ -94,6 +114,8 @@ new attempt. For the 3.0 kind use `SERVER_POINT_30`, whose value is
 the other kind's point does not select a server. Context applies to that attempt;
 the adapter neither stores choices nor
 retries. URLs select declared destinations and do not allow an arbitrary override.
+Malformed or undeclared server choices are refused before effects; only an absent
+choice can trigger a server challenge.
 The opaque challenge `target` distinguishes retrieval identity, operation and effective
 choices and kind. It is not a trusted cache key or authority; applications own persistence.
 
@@ -215,8 +237,11 @@ operation invocation, including an authenticated PATCH.
 
 `Options` owns immutable client/graph budgets and supplied resources. The adapter
 caches one prepared source by kind and content and charges retained metadata. Alternating
-sources on one provider re-analyzes each source; analysis holds the cache lock, and a
-failed preparation evicts the previous entry. Warm timings apply to repeated use of
+sources on one provider re-analyzes each source. A cache miss evicts the previous
+entry, then analysis runs outside the cache lock before inserting its bounded result.
+Concurrent misses may compute identical results more than once; the last completed
+analysis replaces the single entry. A failed analysis retains no new entry.
+Warm timings apply to repeated use of
 the same source. A provider per source avoids alternating-source cache misses when
 that matters to the application. No cache lock is held across host I/O.
 Source, result, input and body limits are finite. Logical budgets are not RSS

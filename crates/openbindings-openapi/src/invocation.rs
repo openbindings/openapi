@@ -14,9 +14,32 @@ use std::{
     task::{Context, Poll},
 };
 
-/// Application-owned execution of one prepared request. Implementations must
-/// report honest client outcome evidence and own cancellation/cleanup. No executor
-/// or Send bound is imposed. A closure taking an owned plan can implement this.
+/// Application-owned execution of one finite prepared request.
+///
+/// The adapter waits for closed input, bounds request construction through
+/// [`crate::Options`], and calls [`Self::execute`] at most once per attempt. It
+/// follows no redirects, never replays a request (including after a status or
+/// transport failure), and attaches no ambient credentials: only explicitly
+/// selected, per-attempt credentials with caller-approved origins are supplied.
+/// These guarantees cover the adapter, not HTTP behavior inside the host.
+///
+/// Implementations must disable automatic redirects, replay/retries and ambient
+/// authentication (including cookies), apply their own capability admission
+/// before dispatch, and preserve the prepared target and headers. Dispatch through
+/// [`PreparedRequest::invoke`] with honest [`dynamic_openapi_client::HostCapabilities`]
+/// so the client's strict admission runs before the HTTP callback. A capability
+/// declaration is not proof that the underlying HTTP client obeys it; the adapter
+/// does not obtain or check the host's declaration itself.
+///
+/// Destination policy is also a host duty: check each network hop, including the
+/// resolved addresses after DNS resolution and any proxy connection. Server URLs
+/// come from the OpenAPI document and are untrusted; hosts invoking untrusted
+/// documents must restrict destinations to prevent SSRF. Declared-server membership
+/// and credential-origin grants do not authorize network access.
+///
+/// Implementations must report honest client outcome evidence and own
+/// cancellation/cleanup. No executor or Send bound is imposed. A closure taking
+/// an owned plan can implement this trait and has the same duties.
 pub trait Transport {
     /// A host future that may borrow its reusable host.
     type Execution<'a>: Future<Output = Outcome>
@@ -311,9 +334,15 @@ fn prepare_request<T>(
         .and_then(|c| c.get("configuration"))
         .and_then(|c| c.get(server_point));
     let selected = match choice {
-        Some(choice) => choice
-            .as_str()
-            .and_then(|s| servers.iter().position(|candidate| candidate == s)),
+        Some(choice) => {
+            let choice = choice.as_str().ok_or_else(refused)?;
+            Some(
+                servers
+                    .iter()
+                    .position(|candidate| candidate == choice)
+                    .ok_or_else(refused)?,
+            )
+        }
         None if servers.iter().all(|s| s == &servers[0]) => Some(0),
         None => None,
     };
