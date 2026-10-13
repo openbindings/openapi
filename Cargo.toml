@@ -1,6 +1,10 @@
 [workspace]
 resolver = "3"
 members = ["crates/openbindings-openapi", "examples/openapi-json-path-consumer", "examples/openapi-inspection-consumer", "examples/openapi-invocation-only"]
+# Build outputs are never members. CI also checks out a pinned SDK source under
+# target/ for archive qualification; excluding target/ keeps Cargo from treating
+# that checkout's packages as members of this workspace.
+exclude = ["target"]
 
 [workspace.package]
 version = "0.2.0-alpha.1"
