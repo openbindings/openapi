@@ -1,0 +1,20 @@
+OpenBindings OpenAPI implementation
+Copyright 2026 The OpenBindings Authors
+
+Clean import of the OpenAPI adapter and consumer qualification sources from
+openbindings/sdk at bd3938e47e7cdc5f0c209949cff8c16618c813a6.
+Imported path identities and extraction changes are recorded in PROVENANCE.md.
+
+This project depends on the OpenBindings SDK role contracts and exact JSON/schema
+implementation at that revision and on the independent Apache-2.0 openapi-client
+at fe09522a9b99a6c6b4918e3de0467b5a638afa5e. It supplies no copy of the SDK itself.
+The SDK's private dependency packages preserve their upstream licenses; their
+package-specific notices, including embedded schema attribution, are reproduced
+with the other dependencies' notices in THIRD-PARTY-NOTICES.txt.
+
+DEPENDENCIES.json lists this repository's actual locked Cargo graph, including
+platform and development dependencies, and its TypeScript 5.9.3 development tool.
+It records declared license expressions, source identities and notice hashes.
+THIRD-PARTY-NOTICES.txt reproduces the license/notice files found in those cached
+package sources. This attribution inventory is not a claim that every listed
+package is part of every runtime build.

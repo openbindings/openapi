@@ -1,0 +1,99 @@
+{
+  "format": "openbindings.consumer-wire-oracle@1",
+  "source": "Fresh manually specified consumer and upstream HTTP observations; no binding JSON syntax or old draft expectations",
+  "originsAreHarnessInputs": true,
+  "requests": [
+    {
+      "id": "lookup",
+      "method": "GET",
+      "pathAndQuery": "/api/parcels/box-7?parcelId=alias-9",
+      "body": {
+        "present": false
+      },
+      "response": {
+        "status": 200,
+        "contentType": "application/json",
+        "bodyText": "{\"parcelId\":\"box-7\",\"tracking\":9007199254740993}"
+      }
+    },
+    {
+      "id": "create",
+      "method": "POST",
+      "pathAndQuery": "/api/parcels",
+      "body": {
+        "present": true,
+        "jsonText": "{\"tracking\":9007199254740993,\"label\":\"雪\"}"
+      },
+      "response": {
+        "status": 201,
+        "contentType": "application/json",
+        "bodyText": "{\"tracking\":9007199254740993}"
+      }
+    },
+    {
+      "id": "no-body",
+      "method": "POST",
+      "pathAndQuery": "/api/parcels",
+      "body": {
+        "present": false
+      },
+      "response": {
+        "status": 204,
+        "bodyText": ""
+      }
+    },
+    {
+      "id": "null-body",
+      "method": "POST",
+      "pathAndQuery": "/api/parcels",
+      "body": {
+        "present": true,
+        "jsonText": "null"
+      },
+      "response": {
+        "status": 201,
+        "contentType": "application/json",
+        "bodyText": "null"
+      }
+    },
+    {
+      "id": "not-found",
+      "method": "GET",
+      "pathAndQuery": "/api/parcels/missing",
+      "body": {
+        "present": false
+      },
+      "response": {
+        "status": 404,
+        "contentType": "application/json",
+        "bodyText": "{\"error\":\"missing\"}"
+      }
+    },
+    {
+      "id": "health",
+      "method": "GET",
+      "pathAndQuery": "/api/health",
+      "body": {
+        "present": false
+      },
+      "response": {
+        "status": 204,
+        "bodyText": ""
+      }
+    },
+    {
+      "id": "mounted",
+      "method": "GET",
+      "pathAndQuery": "/api/mounted/box-7",
+      "body": {
+        "present": false
+      },
+      "response": {
+        "status": 200,
+        "contentType": "application/json",
+        "bodyText": "{\"parcelId\":\"box-7\"}"
+      }
+    }
+  ],
+  "comparison": "JSON bodies compare exact values and presence, not object order or whitespace. Content type and content length/body presence must be consistent. Request method/path/query and effect counts have independent literal assertions."
+}

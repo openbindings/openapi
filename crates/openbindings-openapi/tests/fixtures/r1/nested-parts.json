@@ -1,0 +1,49 @@
+{
+  "openapi": "3.1.2",
+  "info": {
+    "title": "Supplied path library",
+    "version": "1"
+  },
+  "components": {
+    "pathItems": {
+      "Parcel": {
+        "get": {
+          "parameters": [
+            {
+              "$ref": "./parameters.json#/components/parameters/ParcelId"
+            },
+            {
+              "name": "parcelId",
+              "in": "query",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "A parcel",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Parcel absent",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

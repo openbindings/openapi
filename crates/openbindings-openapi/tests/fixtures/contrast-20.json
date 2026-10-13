@@ -1,0 +1,32 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Legacy contrast",
+    "version": "1"
+  },
+  "host": "fixture.invalid",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/items": {
+      "post": {
+        "operationId": "create",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    }
+  }
+}

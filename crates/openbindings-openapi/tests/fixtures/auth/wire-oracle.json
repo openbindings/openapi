@@ -1,0 +1,101 @@
+{
+  "format": "openbindings.auth-json-seed-wire@1",
+  "status": "fresh authored expectations; not executed",
+  "headersCompared": "Case-insensitive header names, exact values and multiplicity; permit unrelated ordinary host headers. Expected auth headers are exhaustive. No credential query/body additions.",
+  "responseText": "{\"ok\":true,\"n\":9007199254740993,\"label\":\"雪\"}",
+  "requests": [
+    {
+      "id": "bearer-get",
+      "method": "GET",
+      "path": "/items",
+      "securitySchemes": [
+        "ServiceToken"
+      ],
+      "credentials": {
+        "ServiceToken": "fixture-bearer-A"
+      },
+      "authHeaders": {
+        "Authorization": "Bearer fixture-bearer-A"
+      },
+      "inputText": "{}",
+      "bodyText": null
+    },
+    {
+      "id": "key-post",
+      "method": "POST",
+      "path": "/items/new",
+      "securitySchemes": [
+        "PartnerKey"
+      ],
+      "credentials": {
+        "PartnerKey": "fixture-key-A"
+      },
+      "authHeaders": {
+        "X-Partner-Key": "fixture-key-A"
+      },
+      "inputText": "{\"body\":{\"n\":9007199254740993,\"label\":\"雪\"}}",
+      "bodyText": "{\"n\":9007199254740993,\"label\":\"雪\"}"
+    },
+    {
+      "id": "combined-post",
+      "method": "POST",
+      "path": "/combined",
+      "securitySchemes": [
+        "ServiceToken",
+        "PartnerKey"
+      ],
+      "credentials": {
+        "ServiceToken": "fixture-bearer-A",
+        "PartnerKey": "fixture-key-A"
+      },
+      "authHeaders": {
+        "Authorization": "Bearer fixture-bearer-A",
+        "X-Partner-Key": "fixture-key-A"
+      },
+      "inputText": "{\"body\":null}",
+      "bodyText": "null"
+    },
+    {
+      "id": "choice-key",
+      "method": "GET",
+      "path": "/choice",
+      "securitySchemes": [
+        "PartnerKey"
+      ],
+      "credentials": {
+        "ServiceToken": "fixture-unused-bearer",
+        "PartnerKey": "fixture-key-A"
+      },
+      "authHeaders": {
+        "X-Partner-Key": "fixture-key-A"
+      },
+      "inputText": "{}",
+      "bodyText": null
+    },
+    {
+      "id": "choice-anonymous",
+      "method": "GET",
+      "path": "/choice",
+      "securitySchemes": [],
+      "credentials": {
+        "ServiceToken": "fixture-unused-bearer",
+        "PartnerKey": "fixture-unused-key"
+      },
+      "authHeaders": {},
+      "inputText": "{}",
+      "bodyText": null
+    },
+    {
+      "id": "public-override",
+      "method": "GET",
+      "path": "/public",
+      "securitySchemes": [],
+      "credentials": {
+        "ServiceToken": "fixture-unused-bearer"
+      },
+      "authHeaders": {},
+      "inputText": "{}",
+      "bodyText": null
+    }
+  ]
+}

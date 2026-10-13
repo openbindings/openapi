@@ -1,0 +1,94 @@
+{
+  "openapi": "3.1.2",
+  "info": {
+    "title": "Parcel service experiment",
+    "version": "1"
+  },
+  "servers": [
+    {
+      "url": "https://parcel.example.invalid/api"
+    }
+  ],
+  "paths": {
+    "/parcels/{parcelId}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "parcelId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "parcelId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A parcel",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Parcel absent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/parcels": {
+      "post": {
+        "operationId": "createParcel",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": true
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": true
+              }
+            }
+          },
+          "204": {
+            "description": "Accepted without representation"
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "health",
+        "responses": {
+          "204": {
+            "description": "Healthy"
+          }
+        }
+      }
+    }
+  },
+  "x-exact-source": 9007199254740993
+}

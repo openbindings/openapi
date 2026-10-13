@@ -1,0 +1,79 @@
+{
+  "openbindings": "0.2.0",
+  "sources": {
+    "api": {
+      "kind": "local.openapi30-json-probe.r1",
+      "content": {
+        "document": "{\n  \"openapi\": \"3.0.4\",\n  \"info\": {\n    \"title\": \"Fresh authenticated inventory service\",\n    \"version\": \"1\"\n  },\n  \"servers\": [\n    {\n      \"url\": \"https://api.example.test\"\n    }\n  ],\n  \"security\": [\n    {\n      \"ServiceToken\": []\n    }\n  ],\n  \"paths\": {\n    \"/items\": {\n      \"get\": {\n        \"responses\": {\n          \"200\": {\n            \"description\": \"JSON result\",\n            \"content\": {\n              \"application/json\": {\n                \"schema\": {\n                  \"type\": \"object\"\n                }\n              }\n            }\n          }\n        }\n      }\n    },\n    \"/items/new\": {\n      \"post\": {\n        \"responses\": {\n          \"200\": {\n            \"description\": \"JSON result\",\n            \"content\": {\n              \"application/json\": {\n                \"schema\": {\n                  \"type\": \"object\"\n                }\n              }\n            }\n          }\n        },\n        \"requestBody\": {\n          \"required\": true,\n          \"content\": {\n            \"application/json\": {\n              \"schema\": {\n                \"type\": \"object\"\n              }\n            }\n          }\n        },\n        \"security\": [\n          {\n            \"PartnerKey\": []\n          }\n        ]\n      }\n    },\n    \"/combined\": {\n      \"post\": {\n        \"responses\": {\n          \"200\": {\n            \"description\": \"JSON result\",\n            \"content\": {\n              \"application/json\": {\n                \"schema\": {\n                  \"type\": \"object\"\n                }\n              }\n            }\n          }\n        },\n        \"requestBody\": {\n          \"required\": true,\n          \"content\": {\n            \"application/json\": {\n              \"schema\": {\n                \"type\": \"object\",\n                \"nullable\": true\n              }\n            }\n          }\n        },\n        \"security\": [\n          {\n            \"ServiceToken\": [],\n            \"PartnerKey\": []\n          }\n        ]\n      }\n    },\n    \"/choice\": {\n      \"get\": {\n        \"responses\": {\n          \"200\": {\n            \"description\": \"JSON result\",\n            \"content\": {\n              \"application/json\": {\n                \"schema\": {\n                  \"type\": \"object\"\n                }\n              }\n            }\n          }\n        },\n        \"security\": [\n          {\n            \"ServiceToken\": []\n          },\n          {\n            \"PartnerKey\": []\n          },\n          {}\n        ]\n      }\n    },\n    \"/optional\": {\n      \"get\": {\n        \"responses\": {\n          \"200\": {\n            \"description\": \"JSON result\",\n            \"content\": {\n              \"application/json\": {\n                \"schema\": {\n                  \"type\": \"object\"\n                }\n              }\n            }\n          }\n        },\n        \"security\": [\n          {},\n          {\n            \"ServiceToken\": []\n          }\n        ]\n      }\n    },\n    \"/public\": {\n      \"get\": {\n        \"responses\": {\n          \"200\": {\n            \"description\": \"JSON result\",\n            \"content\": {\n              \"application/json\": {\n                \"schema\": {\n                  \"type\": \"object\"\n                }\n              }\n            }\n          }\n        },\n        \"security\": []\n      }\n    },\n    \"/unsupported\": {\n      \"get\": {\n        \"responses\": {\n          \"200\": {\n            \"description\": \"JSON result\",\n            \"content\": {\n              \"application/json\": {\n                \"schema\": {\n                  \"type\": \"object\"\n                }\n              }\n            }\n          }\n        },\n        \"security\": [\n          {\n            \"LegacyBasic\": []\n          }\n        ]\n      }\n    }\n  },\n  \"components\": {\n    \"securitySchemes\": {\n      \"ServiceToken\": {\n        \"type\": \"http\",\n        \"scheme\": \"bearer\",\n        \"bearerFormat\": \"opaque\"\n      },\n      \"PartnerKey\": {\n        \"type\": \"apiKey\",\n        \"in\": \"header\",\n        \"name\": \"X-Partner-Key\"\n      },\n      \"LegacyBasic\": {\n        \"type\": \"http\",\n        \"scheme\": \"basic\"\n      }\n    }\n  },\n  \"x-fixture-provenance\": \"Fresh authenticated-json plan, 2026-10-13; no old binding-draft input\"\n}\n",
+        "retrievalUri": "https://source.example.test/service.json"
+      }
+    }
+  },
+  "operations": {
+    "items": {},
+    "create": {},
+    "combined": {},
+    "choice": {},
+    "optional": {},
+    "public": {},
+    "unsupported": {}
+  },
+  "bindings": {
+    "items": {
+      "operation": "items",
+      "source": "api",
+      "content": {
+        "path": "/items",
+        "method": "get"
+      }
+    },
+    "create": {
+      "operation": "create",
+      "source": "api",
+      "content": {
+        "path": "/items/new",
+        "method": "post"
+      }
+    },
+    "combined": {
+      "operation": "combined",
+      "source": "api",
+      "content": {
+        "path": "/combined",
+        "method": "post"
+      }
+    },
+    "choice": {
+      "operation": "choice",
+      "source": "api",
+      "content": {
+        "path": "/choice",
+        "method": "get"
+      }
+    },
+    "optional": {
+      "operation": "optional",
+      "source": "api",
+      "content": {
+        "path": "/optional",
+        "method": "get"
+      }
+    },
+    "public": {
+      "operation": "public",
+      "source": "api",
+      "content": {
+        "path": "/public",
+        "method": "get"
+      }
+    },
+    "unsupported": {
+      "operation": "unsupported",
+      "source": "api",
+      "content": {
+        "path": "/unsupported",
+        "method": "get"
+      }
+    }
+  }
+}

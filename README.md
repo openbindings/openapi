@@ -1,0 +1,69 @@
+The OpenBindings implementation of the source-inspection, interface-synthesis and binding-invocation roles for OpenAPI, built on [`openapi-client`](https://github.com/openbindings/openapi-client).
+
+The packages are unpublished. This repository depends on the SDK at
+`bd3938e47e7cdc5f0c209949cff8c16618c813a6` and the independent client at
+`fe09522a9b99a6c6b4918e3de0467b5a638afa5e`. The SDK defines the roles and supplies
+no kind-specific instances. This project supplies the OpenAPI provider.
+
+Use `OpenApi::default()` with the SDK's checked `Inspector` or `Synthesizer`.
+Use `OpenApi::with_transport` with application-owned execution and the checked
+binding or operation invoker. The [JSON-path consumer](examples/openapi-json-path-consumer/)
+shows inspection, synthesis, save/reload and invocation. The independent
+[inspection consumer](examples/openapi-inspection-consumer/) covers manual authoring
+and supplied-resource recovery, and the [minimal consumer](examples/openapi-invocation-only/)
+guards dependency isolation.
+
+The private `local.openapi-json-probe.r1` and `local.openapi30-json-probe.r1` kinds
+retain their meanings. Sources carry exact JSON text in `document` and optional
+`retrievalUri`; bindings carry `path` and lowercase `method`. This extraction changes
+no adapter source or public API. It implements no published OpenAPI binding standard.
+
+The existing finite JSON profile admits GET, POST, PUT, PATCH and DELETE for OpenAPI
+3.0 and 3.1, supplied references, scalar path/query parameters, finite JSON bodies,
+empty declared successes, and caller-supplied bearer and header API-key credentials.
+No schema-constraint translation, security acquisition, implicit fetching, automatic
+retry or full OpenAPI coverage is claimed. HEAD/OPTIONS/TRACE, richer encodings,
+streaming/binary delivery and literal Unicode path templates remain outside the
+invocation profile. See the [complete package guide](crates/openbindings-openapi/README.md)
+for kind contracts, budgets, security policy, synthesis loss and refusal behavior.
+
+AJ20, the incremental-auth performance check, remains unresolved and deferred with
+its original budgets unchanged. The stopped measurement examples are compiled and
+linted but never run by CI. This repository carries no historical loop evidence.
+Native HTTP and local Node/Wasm probes do not establish browser/Worker network
+support or a released TypeScript role API.
+
+Use Rust 1.99.0 with the wasm32-unknown-unknown target, wasm-bindgen-cli 0.2.129,
+Node 22.19.0, npm and Python 3.13+. With dependency caches populated:
+
+```sh
+cargo build --locked --offline
+cargo test --locked --offline
+npm ci --offline --ignore-scripts
+python3 tools/verify-openapi-inspection.py --wasm
+python3 tools/verify-openapi-json-path.py --wasm
+python3 tools/verify-openapi-invocation-only.py
+```
+
+The verifiers generate independent consumers under `target/`, preserve selected
+lockfile versions, and check a single source identity for each SDK package and the
+exact client revision. They require no SDK checkout in the source-Git mode.
+Archive qualification packages only an explicitly supplied clean cached SDK source:
+
+```sh
+python3 tools/verify-openapi-json-path.py --archives --wasm --sdk-source <cached-sdk-checkout>
+python3 tools/verify-openapi-inspection.py --archives --wasm --sdk-source <cached-sdk-checkout>
+python3 tools/verify-openapi-invocation-only.py --archives
+```
+
+The SDK source must have the pinned HEAD, unchanged tracked files and no tracked
+symlinks. Its commit and tree identity are recorded in the generated receipt.
+Extracted SDK packages are patched for both their original Git dependencies and
+normalized registry dependencies; no source checkout may escape into the archive
+consumer graph. The minimal archive consumer checks the preceding JSON-path
+receipt's input and extracted-package hashes before using that snapshot.
+
+CI requires full adapter tests on Linux, macOS and Windows, the independent
+consumers, extracted Cargo archives, and both Node/Wasm probes. The fixture-specific
+`-text` attribute preserves literal CRUD exchanges on every host.
+[PROVENANCE.md](PROVENANCE.md) maps the clean import to SDK source paths.

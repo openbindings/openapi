@@ -1,0 +1,36 @@
+{
+  "openbindings": "0.2.0",
+  "name": "Archive consumer",
+  "sources": {
+    "archive": {
+      "kind": "local.openapi30-json-probe.r1",
+      "content": {
+        "document": "{\n  \"openapi\": \"3.0.4\",\n  \"info\": {\"title\": \"Archive desk\", \"version\": \"2026-10\"},\n  \"servers\": [{\"url\": \"https://archive.example.invalid/root\"}],\n  \"paths\": {\n    \"/records/{key}\": {\"$ref\": \"./pieces/routes.json#/Lookup\"},\n    \"/records\": {\n      \"post\": {\n        \"servers\": [{\"url\": \"https://archive.example.invalid/write\"}],\n        \"requestBody\": {\"content\": {\"application/json\": {\"schema\": {\"type\": \"object\", \"nullable\": true, \"additionalProperties\": true}}}},\n        \"responses\": {\n          \"201\": {\"description\": \"Stored\", \"content\": {\"application/json\": {\"schema\": {\"type\": \"object\", \"nullable\": true}}}},\n          \"204\": {\"description\": \"No entity\"}\n        }\n      }\n    }\n  }\n}\n",
+        "retrievalUri": "https://descriptions.example.invalid/archive/root.json"
+      },
+      "x-owner": "Matthew"
+    }
+  },
+  "operations": {
+    "retrieve": {},
+    "store": {}
+  },
+  "bindings": {
+    "retrieveHttp": {
+      "operation": "retrieve",
+      "source": "archive",
+      "content": {
+        "path": "/records/{key}",
+        "method": "get"
+      }
+    },
+    "storeHttp": {
+      "operation": "store",
+      "source": "archive",
+      "content": {
+        "path": "/records",
+        "method": "post"
+      }
+    }
+  }
+}

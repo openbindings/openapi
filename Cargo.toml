@@ -1,0 +1,18 @@
+[workspace]
+resolver = "3"
+members = ["crates/openbindings-openapi", "examples/openapi-json-path-consumer", "examples/openapi-inspection-consumer", "examples/openapi-invocation-only"]
+
+[workspace.package]
+version = "0.2.0-alpha.1"
+edition = "2024"
+rust-version = "1.99"
+license = "Apache-2.0"
+repository = "https://github.com/openbindings/openapi"
+publish = false
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

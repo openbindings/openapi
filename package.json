@@ -1,0 +1,8 @@
+{
+  "name": "openbindings-openapi-probes",
+  "version": "0.2.0-alpha.1",
+  "private": true,
+  "description": "Development tools for the private Node/Wasm consumer probes",
+  "license": "Apache-2.0",
+  "devDependencies": { "typescript": "5.9.3" }
+}

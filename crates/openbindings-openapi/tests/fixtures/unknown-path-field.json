@@ -1,0 +1,1 @@
+{"openapi":"3.1.2","paths":{"/ready":{"get":{}},"/limited":{"get":{},"future":true}}}

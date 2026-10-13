@@ -1,0 +1,43 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "Supplied parts",
+    "version": "1"
+  },
+  "paths": {
+    "/remote": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "JSON result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ServiceToken": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ExternalToken": {
+        "type": "http",
+        "scheme": "bearer"
+      },
+      "ServiceToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Wrong-Secondary"
+      }
+    }
+  }
+}

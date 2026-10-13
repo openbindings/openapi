@@ -1,0 +1,203 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "Fresh authenticated inventory service",
+    "version": "1"
+  },
+  "servers": [
+    {
+      "url": "https://api.example.test"
+    }
+  ],
+  "security": [
+    {
+      "ServiceToken": []
+    }
+  ],
+  "paths": {
+    "/items": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "JSON result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/items/new": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "JSON result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "PartnerKey": []
+          }
+        ]
+      }
+    },
+    "/combined": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "JSON result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "nullable": true
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ServiceToken": [],
+            "PartnerKey": []
+          }
+        ]
+      }
+    },
+    "/choice": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "JSON result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ServiceToken": []
+          },
+          {
+            "PartnerKey": []
+          },
+          {}
+        ]
+      }
+    },
+    "/optional": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "JSON result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {},
+          {
+            "ServiceToken": []
+          }
+        ]
+      }
+    },
+    "/public": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "JSON result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/unsupported": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "JSON result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "LegacyBasic": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ServiceToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "opaque"
+      },
+      "PartnerKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Partner-Key"
+      },
+      "LegacyBasic": {
+        "type": "http",
+        "scheme": "basic"
+      }
+    }
+  },
+  "x-fixture-provenance": "Fresh authenticated-json plan, 2026-10-13; no old binding-draft input"
+}

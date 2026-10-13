@@ -1,0 +1,27 @@
+{
+  "openapi": "3.1.2",
+  "info": {
+    "title": "Parcel service experiment",
+    "version": "1"
+  },
+  "servers": [
+    {
+      "url": "https://alpha.example.invalid/api"
+    },
+    {
+      "url": "https://beta.example.invalid/api"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "health",
+        "responses": {
+          "204": {
+            "description": "Healthy"
+          }
+        }
+      }
+    }
+  }
+}

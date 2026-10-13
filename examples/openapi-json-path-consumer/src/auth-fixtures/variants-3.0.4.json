@@ -1,0 +1,3649 @@
+{
+  "two-keys": {
+    "openapi": "3.0.4",
+    "info": {
+      "title": "Fresh authenticated inventory service",
+      "version": "1"
+    },
+    "servers": [
+      {
+        "url": "https://api.example.test"
+      }
+    ],
+    "security": [
+      {
+        "ServiceToken": []
+      }
+    ],
+    "paths": {
+      "/items": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "PartnerKey": [],
+              "SecondKey": []
+            }
+          ]
+        }
+      },
+      "/items/new": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/combined": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": [],
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/choice": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": []
+            },
+            {
+              "PartnerKey": []
+            },
+            {}
+          ]
+        }
+      },
+      "/optional": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {},
+            {
+              "ServiceToken": []
+            }
+          ]
+        }
+      },
+      "/public": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": []
+        }
+      },
+      "/unsupported": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "LegacyBasic": []
+            }
+          ]
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "ServiceToken": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "opaque"
+        },
+        "PartnerKey": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Partner-Key"
+        },
+        "LegacyBasic": {
+          "type": "http",
+          "scheme": "basic"
+        },
+        "SecondKey": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Second-Key"
+        }
+      }
+    },
+    "x-fixture-provenance": "Fresh authenticated-json plan, 2026-10-13; no old binding-draft input"
+  },
+  "reordered": {
+    "openapi": "3.0.4",
+    "info": {
+      "title": "Fresh authenticated inventory service",
+      "version": "1"
+    },
+    "servers": [
+      {
+        "url": "https://api.example.test"
+      }
+    ],
+    "security": [
+      {
+        "ServiceToken": []
+      }
+    ],
+    "paths": {
+      "/items": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {},
+            {
+              "PartnerKey": []
+            },
+            {
+              "ServiceToken": []
+            }
+          ]
+        }
+      },
+      "/items/new": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/combined": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": [],
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/choice": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": []
+            },
+            {
+              "PartnerKey": []
+            },
+            {}
+          ]
+        }
+      },
+      "/optional": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {},
+            {
+              "ServiceToken": []
+            }
+          ]
+        }
+      },
+      "/public": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": []
+        }
+      },
+      "/unsupported": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "LegacyBasic": []
+            }
+          ]
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "ServiceToken": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "opaque"
+        },
+        "PartnerKey": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Partner-Key"
+        },
+        "LegacyBasic": {
+          "type": "http",
+          "scheme": "basic"
+        }
+      }
+    },
+    "x-fixture-provenance": "Fresh authenticated-json plan, 2026-10-13; no old binding-draft input"
+  },
+  "duplicate-alternatives": {
+    "openapi": "3.0.4",
+    "info": {
+      "title": "Fresh authenticated inventory service",
+      "version": "1"
+    },
+    "servers": [
+      {
+        "url": "https://api.example.test"
+      }
+    ],
+    "security": [
+      {
+        "ServiceToken": []
+      }
+    ],
+    "paths": {
+      "/items": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": []
+            },
+            {
+              "ServiceToken": []
+            }
+          ]
+        }
+      },
+      "/items/new": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/combined": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": [],
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/choice": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": []
+            },
+            {
+              "PartnerKey": []
+            },
+            {}
+          ]
+        }
+      },
+      "/optional": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {},
+            {
+              "ServiceToken": []
+            }
+          ]
+        }
+      },
+      "/public": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": []
+        }
+      },
+      "/unsupported": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "LegacyBasic": []
+            }
+          ]
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "ServiceToken": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "opaque"
+        },
+        "PartnerKey": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Partner-Key"
+        },
+        "LegacyBasic": {
+          "type": "http",
+          "scheme": "basic"
+        }
+      }
+    },
+    "x-fixture-provenance": "Fresh authenticated-json plan, 2026-10-13; no old binding-draft input"
+  },
+  "anonymous": {
+    "openapi": "3.0.4",
+    "info": {
+      "title": "Fresh authenticated inventory service",
+      "version": "1"
+    },
+    "servers": [
+      {
+        "url": "https://api.example.test"
+      }
+    ],
+    "security": [
+      {
+        "ServiceToken": []
+      }
+    ],
+    "paths": {
+      "/items": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {}
+          ]
+        }
+      },
+      "/items/new": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/combined": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": [],
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/choice": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": []
+            },
+            {
+              "PartnerKey": []
+            },
+            {}
+          ]
+        }
+      },
+      "/optional": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {},
+            {
+              "ServiceToken": []
+            }
+          ]
+        }
+      },
+      "/public": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": []
+        }
+      },
+      "/unsupported": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "LegacyBasic": []
+            }
+          ]
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "ServiceToken": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "opaque"
+        },
+        "PartnerKey": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Partner-Key"
+        },
+        "LegacyBasic": {
+          "type": "http",
+          "scheme": "basic"
+        }
+      }
+    },
+    "x-fixture-provenance": "Fresh authenticated-json plan, 2026-10-13; no old binding-draft input"
+  },
+  "mixed-unsupported": {
+    "openapi": "3.0.4",
+    "info": {
+      "title": "Fresh authenticated inventory service",
+      "version": "1"
+    },
+    "servers": [
+      {
+        "url": "https://api.example.test"
+      }
+    ],
+    "security": [
+      {
+        "ServiceToken": []
+      }
+    ],
+    "paths": {
+      "/items": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": []
+            },
+            {
+              "LegacyBasic": []
+            }
+          ]
+        }
+      },
+      "/items/new": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/combined": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": [],
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/choice": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": []
+            },
+            {
+              "PartnerKey": []
+            },
+            {}
+          ]
+        }
+      },
+      "/optional": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {},
+            {
+              "ServiceToken": []
+            }
+          ]
+        }
+      },
+      "/public": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": []
+        }
+      },
+      "/unsupported": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "LegacyBasic": []
+            }
+          ]
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "ServiceToken": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "opaque"
+        },
+        "PartnerKey": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Partner-Key"
+        },
+        "LegacyBasic": {
+          "type": "http",
+          "scheme": "basic"
+        }
+      }
+    },
+    "x-fixture-provenance": "Fresh authenticated-json plan, 2026-10-13; no old binding-draft input"
+  },
+  "roles": {
+    "openapi": "3.0.4",
+    "info": {
+      "title": "Fresh authenticated inventory service",
+      "version": "1"
+    },
+    "servers": [
+      {
+        "url": "https://api.example.test"
+      }
+    ],
+    "security": [
+      {
+        "ServiceToken": []
+      }
+    ],
+    "paths": {
+      "/items": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": [
+                "reader"
+              ]
+            }
+          ]
+        }
+      },
+      "/items/new": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/combined": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": [],
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/choice": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": []
+            },
+            {
+              "PartnerKey": []
+            },
+            {}
+          ]
+        }
+      },
+      "/optional": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {},
+            {
+              "ServiceToken": []
+            }
+          ]
+        }
+      },
+      "/public": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": []
+        }
+      },
+      "/unsupported": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "LegacyBasic": []
+            }
+          ]
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "ServiceToken": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "opaque"
+        },
+        "PartnerKey": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Partner-Key"
+        },
+        "LegacyBasic": {
+          "type": "http",
+          "scheme": "basic"
+        }
+      }
+    },
+    "x-fixture-provenance": "Fresh authenticated-json plan, 2026-10-13; no old binding-draft input"
+  },
+  "query": {
+    "openapi": "3.0.4",
+    "info": {
+      "title": "Fresh authenticated inventory service",
+      "version": "1"
+    },
+    "servers": [
+      {
+        "url": "https://api.example.test"
+      }
+    ],
+    "security": [
+      {
+        "ServiceToken": []
+      }
+    ],
+    "paths": {
+      "/items": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "Other": []
+            }
+          ]
+        }
+      },
+      "/items/new": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/combined": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": [],
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/choice": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": []
+            },
+            {
+              "PartnerKey": []
+            },
+            {}
+          ]
+        }
+      },
+      "/optional": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {},
+            {
+              "ServiceToken": []
+            }
+          ]
+        }
+      },
+      "/public": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": []
+        }
+      },
+      "/unsupported": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "LegacyBasic": []
+            }
+          ]
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "ServiceToken": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "opaque"
+        },
+        "PartnerKey": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Partner-Key"
+        },
+        "LegacyBasic": {
+          "type": "http",
+          "scheme": "basic"
+        },
+        "Other": {
+          "type": "apiKey",
+          "in": "query",
+          "name": "key"
+        }
+      }
+    },
+    "x-fixture-provenance": "Fresh authenticated-json plan, 2026-10-13; no old binding-draft input"
+  },
+  "cookie": {
+    "openapi": "3.0.4",
+    "info": {
+      "title": "Fresh authenticated inventory service",
+      "version": "1"
+    },
+    "servers": [
+      {
+        "url": "https://api.example.test"
+      }
+    ],
+    "security": [
+      {
+        "ServiceToken": []
+      }
+    ],
+    "paths": {
+      "/items": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "Other": []
+            }
+          ]
+        }
+      },
+      "/items/new": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/combined": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": [],
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/choice": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": []
+            },
+            {
+              "PartnerKey": []
+            },
+            {}
+          ]
+        }
+      },
+      "/optional": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {},
+            {
+              "ServiceToken": []
+            }
+          ]
+        }
+      },
+      "/public": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": []
+        }
+      },
+      "/unsupported": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "LegacyBasic": []
+            }
+          ]
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "ServiceToken": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "opaque"
+        },
+        "PartnerKey": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Partner-Key"
+        },
+        "LegacyBasic": {
+          "type": "http",
+          "scheme": "basic"
+        },
+        "Other": {
+          "type": "apiKey",
+          "in": "cookie",
+          "name": "key"
+        }
+      }
+    },
+    "x-fixture-provenance": "Fresh authenticated-json plan, 2026-10-13; no old binding-draft input"
+  },
+  "oauth": {
+    "openapi": "3.0.4",
+    "info": {
+      "title": "Fresh authenticated inventory service",
+      "version": "1"
+    },
+    "servers": [
+      {
+        "url": "https://api.example.test"
+      }
+    ],
+    "security": [
+      {
+        "ServiceToken": []
+      }
+    ],
+    "paths": {
+      "/items": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "Other": []
+            }
+          ]
+        }
+      },
+      "/items/new": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/combined": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": [],
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/choice": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": []
+            },
+            {
+              "PartnerKey": []
+            },
+            {}
+          ]
+        }
+      },
+      "/optional": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {},
+            {
+              "ServiceToken": []
+            }
+          ]
+        }
+      },
+      "/public": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": []
+        }
+      },
+      "/unsupported": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "LegacyBasic": []
+            }
+          ]
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "ServiceToken": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "opaque"
+        },
+        "PartnerKey": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Partner-Key"
+        },
+        "LegacyBasic": {
+          "type": "http",
+          "scheme": "basic"
+        },
+        "Other": {
+          "type": "oauth2",
+          "flows": {
+            "clientCredentials": {
+              "tokenUrl": "https://auth.example.test",
+              "scopes": {}
+            }
+          }
+        }
+      }
+    },
+    "x-fixture-provenance": "Fresh authenticated-json plan, 2026-10-13; no old binding-draft input"
+  },
+  "oidc": {
+    "openapi": "3.0.4",
+    "info": {
+      "title": "Fresh authenticated inventory service",
+      "version": "1"
+    },
+    "servers": [
+      {
+        "url": "https://api.example.test"
+      }
+    ],
+    "security": [
+      {
+        "ServiceToken": []
+      }
+    ],
+    "paths": {
+      "/items": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "Other": []
+            }
+          ]
+        }
+      },
+      "/items/new": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/combined": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": [],
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/choice": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": []
+            },
+            {
+              "PartnerKey": []
+            },
+            {}
+          ]
+        }
+      },
+      "/optional": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {},
+            {
+              "ServiceToken": []
+            }
+          ]
+        }
+      },
+      "/public": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": []
+        }
+      },
+      "/unsupported": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "LegacyBasic": []
+            }
+          ]
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "ServiceToken": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "opaque"
+        },
+        "PartnerKey": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Partner-Key"
+        },
+        "LegacyBasic": {
+          "type": "http",
+          "scheme": "basic"
+        },
+        "Other": {
+          "type": "openIdConnect",
+          "openIdConnectUrl": "https://auth.example.test/config"
+        }
+      }
+    },
+    "x-fixture-provenance": "Fresh authenticated-json plan, 2026-10-13; no old binding-draft input"
+  },
+  "unknown": {
+    "openapi": "3.0.4",
+    "info": {
+      "title": "Fresh authenticated inventory service",
+      "version": "1"
+    },
+    "servers": [
+      {
+        "url": "https://api.example.test"
+      }
+    ],
+    "security": [
+      {
+        "ServiceToken": []
+      }
+    ],
+    "paths": {
+      "/items": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "Other": []
+            }
+          ]
+        }
+      },
+      "/items/new": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/combined": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": [],
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/choice": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": []
+            },
+            {
+              "PartnerKey": []
+            },
+            {}
+          ]
+        }
+      },
+      "/optional": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {},
+            {
+              "ServiceToken": []
+            }
+          ]
+        }
+      },
+      "/public": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": []
+        }
+      },
+      "/unsupported": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "LegacyBasic": []
+            }
+          ]
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "ServiceToken": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "opaque"
+        },
+        "PartnerKey": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Partner-Key"
+        },
+        "LegacyBasic": {
+          "type": "http",
+          "scheme": "basic"
+        },
+        "Other": {
+          "type": "future"
+        }
+      }
+    },
+    "x-fixture-provenance": "Fresh authenticated-json plan, 2026-10-13; no old binding-draft input"
+  },
+  "mtls": {
+    "openapi": "3.0.4",
+    "info": {
+      "title": "Fresh authenticated inventory service",
+      "version": "1"
+    },
+    "servers": [
+      {
+        "url": "https://api.example.test"
+      }
+    ],
+    "security": [
+      {
+        "ServiceToken": []
+      }
+    ],
+    "paths": {
+      "/items": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "Other": []
+            }
+          ]
+        }
+      },
+      "/items/new": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/combined": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": [],
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/choice": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": []
+            },
+            {
+              "PartnerKey": []
+            },
+            {}
+          ]
+        }
+      },
+      "/optional": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {},
+            {
+              "ServiceToken": []
+            }
+          ]
+        }
+      },
+      "/public": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": []
+        }
+      },
+      "/unsupported": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "LegacyBasic": []
+            }
+          ]
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "ServiceToken": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "opaque"
+        },
+        "PartnerKey": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Partner-Key"
+        },
+        "LegacyBasic": {
+          "type": "http",
+          "scheme": "basic"
+        },
+        "Other": {
+          "type": "mutualTLS"
+        }
+      }
+    },
+    "x-fixture-provenance": "Fresh authenticated-json plan, 2026-10-13; no old binding-draft input"
+  },
+  "collision": {
+    "openapi": "3.0.4",
+    "info": {
+      "title": "Fresh authenticated inventory service",
+      "version": "1"
+    },
+    "servers": [
+      {
+        "url": "https://api.example.test"
+      }
+    ],
+    "security": [
+      {
+        "ServiceToken": []
+      }
+    ],
+    "paths": {
+      "/items": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": [],
+              "Other": []
+            }
+          ]
+        }
+      },
+      "/items/new": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/combined": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": [],
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/choice": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": []
+            },
+            {
+              "PartnerKey": []
+            },
+            {}
+          ]
+        }
+      },
+      "/optional": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {},
+            {
+              "ServiceToken": []
+            }
+          ]
+        }
+      },
+      "/public": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": []
+        }
+      },
+      "/unsupported": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "LegacyBasic": []
+            }
+          ]
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "ServiceToken": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "opaque"
+        },
+        "PartnerKey": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Partner-Key"
+        },
+        "LegacyBasic": {
+          "type": "http",
+          "scheme": "basic"
+        },
+        "Other": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "authorization"
+        }
+      }
+    },
+    "x-fixture-provenance": "Fresh authenticated-json plan, 2026-10-13; no old binding-draft input"
+  },
+  "key-collision": {
+    "openapi": "3.0.4",
+    "info": {
+      "title": "Fresh authenticated inventory service",
+      "version": "1"
+    },
+    "servers": [
+      {
+        "url": "https://api.example.test"
+      }
+    ],
+    "security": [
+      {
+        "ServiceToken": []
+      }
+    ],
+    "paths": {
+      "/items": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "PartnerKey": [],
+              "Other": []
+            }
+          ]
+        }
+      },
+      "/items/new": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/combined": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": [],
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/choice": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": []
+            },
+            {
+              "PartnerKey": []
+            },
+            {}
+          ]
+        }
+      },
+      "/optional": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {},
+            {
+              "ServiceToken": []
+            }
+          ]
+        }
+      },
+      "/public": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": []
+        }
+      },
+      "/unsupported": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "LegacyBasic": []
+            }
+          ]
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "ServiceToken": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "opaque"
+        },
+        "PartnerKey": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Partner-Key"
+        },
+        "LegacyBasic": {
+          "type": "http",
+          "scheme": "basic"
+        },
+        "Other": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "x-partner-key"
+        }
+      }
+    },
+    "x-fixture-provenance": "Fresh authenticated-json plan, 2026-10-13; no old binding-draft input"
+  },
+  "two-servers": {
+    "openapi": "3.0.4",
+    "info": {
+      "title": "Fresh authenticated inventory service",
+      "version": "1"
+    },
+    "servers": [
+      {
+        "url": "https://api.example.test"
+      },
+      {
+        "url": "https://second.example.test"
+      }
+    ],
+    "security": [
+      {
+        "ServiceToken": []
+      }
+    ],
+    "paths": {
+      "/items": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": []
+            }
+          ]
+        }
+      },
+      "/items/new": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/combined": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": [],
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/choice": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": []
+            },
+            {
+              "PartnerKey": []
+            },
+            {}
+          ]
+        }
+      },
+      "/optional": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {},
+            {
+              "ServiceToken": []
+            }
+          ]
+        }
+      },
+      "/public": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": []
+        }
+      },
+      "/unsupported": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "LegacyBasic": []
+            }
+          ]
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "ServiceToken": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "opaque"
+        },
+        "PartnerKey": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Partner-Key"
+        },
+        "LegacyBasic": {
+          "type": "http",
+          "scheme": "basic"
+        }
+      }
+    },
+    "x-fixture-provenance": "Fresh authenticated-json plan, 2026-10-13; no old binding-draft input"
+  },
+  "metadata-limit": {
+    "openapi": "3.0.4",
+    "info": {
+      "title": "Fresh authenticated inventory service",
+      "version": "1"
+    },
+    "servers": [
+      {
+        "url": "https://api.example.test"
+      }
+    ],
+    "security": [
+      {
+        "ServiceToken": []
+      }
+    ],
+    "paths": {
+      "/items": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "Key0": [],
+              "Key1": [],
+              "Key2": [],
+              "Key3": [],
+              "Key4": [],
+              "Key5": [],
+              "Key6": [],
+              "Key7": [],
+              "Key8": [],
+              "Key9": [],
+              "Key10": [],
+              "Key11": []
+            }
+          ]
+        }
+      },
+      "/items/new": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/combined": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": [],
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/choice": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": []
+            },
+            {
+              "PartnerKey": []
+            },
+            {}
+          ]
+        }
+      },
+      "/optional": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {},
+            {
+              "ServiceToken": []
+            }
+          ]
+        }
+      },
+      "/public": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": []
+        }
+      },
+      "/unsupported": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "LegacyBasic": []
+            }
+          ]
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "ServiceToken": {
+          "type": "http",
+          "scheme": "bearer",
+          "bearerFormat": "opaque"
+        },
+        "PartnerKey": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Partner-Key"
+        },
+        "LegacyBasic": {
+          "type": "http",
+          "scheme": "basic"
+        },
+        "Key0": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Key-0"
+        },
+        "Key1": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Key-1"
+        },
+        "Key2": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Key-2"
+        },
+        "Key3": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Key-3"
+        },
+        "Key4": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Key-4"
+        },
+        "Key5": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Key-5"
+        },
+        "Key6": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Key-6"
+        },
+        "Key7": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Key-7"
+        },
+        "Key8": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Key-8"
+        },
+        "Key9": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Key-9"
+        },
+        "Key10": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Key-10"
+        },
+        "Key11": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Key-11"
+        }
+      }
+    },
+    "x-fixture-provenance": "Fresh authenticated-json plan, 2026-10-13; no old binding-draft input"
+  },
+  "references": {
+    "openapi": "3.0.4",
+    "info": {
+      "title": "Fresh authenticated inventory service",
+      "version": "1"
+    },
+    "servers": [
+      {
+        "url": "https://api.example.test"
+      }
+    ],
+    "security": [
+      {
+        "ServiceToken": []
+      }
+    ],
+    "paths": {
+      "/items": {
+        "$ref": "parts.json#/paths/~1remote"
+      },
+      "/items/new": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/combined": {
+        "post": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": [],
+              "PartnerKey": []
+            }
+          ]
+        }
+      },
+      "/choice": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "ServiceToken": []
+            },
+            {
+              "PartnerKey": []
+            },
+            {}
+          ]
+        }
+      },
+      "/optional": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {},
+            {
+              "ServiceToken": []
+            }
+          ]
+        }
+      },
+      "/public": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": []
+        }
+      },
+      "/unsupported": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "JSON result",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "LegacyBasic": []
+            }
+          ]
+        }
+      }
+    },
+    "components": {
+      "securitySchemes": {
+        "ServiceToken": {
+          "$ref": "parts.json#/components/securitySchemes/ExternalToken"
+        },
+        "PartnerKey": {
+          "type": "apiKey",
+          "in": "header",
+          "name": "X-Partner-Key"
+        },
+        "LegacyBasic": {
+          "type": "http",
+          "scheme": "basic"
+        }
+      }
+    },
+    "x-fixture-provenance": "Fresh authenticated-json plan, 2026-10-13; no old binding-draft input"
+  }
+}

@@ -1,0 +1,2 @@
+# Frozen consumer sources must match the exact text embedded in manual documents.
+/examples/openapi-json-path-consumer/src/crud-fixtures/** -text

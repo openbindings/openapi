@@ -1,0 +1,160 @@
+{
+  "format": "openbindings.adapter-readiness-cases@1",
+  "status": "authored expectations; adapter not executed",
+  "fixtureAuthority": "Candidate bindings at pinned specification revision plus explicit implementation-slice policy; classifications are not new normative requirements.",
+  "provenance": {
+    "author": "OpenBindings adapter readiness work",
+    "origin": "authored locally for this plan",
+    "redistribution": "project-authored fixtures; no external API material",
+    "network": "fixture.invalid is a reserved test destination; readiness probe performs no I/O against it"
+  },
+  "cases": [
+    {
+      "id": "AI01",
+      "fixture": "minimal-31.json",
+      "expected": "Complete one-target inventory; object and JSON-text source carriers agree.",
+      "knownTargetPointers": [
+        "/paths/~1items/get"
+      ],
+      "firstSliceSupported": true
+    },
+    {
+      "id": "AI02",
+      "fixture": "identity-31.json",
+      "expected": "All three targets; pointer escaping is exact; operationId spelling/absence does not select binding identity.",
+      "knownTargetPointers": [
+        "/paths/~1a~0b~1c/get",
+        "/paths/~1unnamed/post",
+        "/paths/~1unicode/get"
+      ],
+      "firstSliceSupported": true
+    },
+    {
+      "id": "AI03",
+      "fixture": "mounted-31.json",
+      "expected": "Mount identity remains /mounted, not the physical component location.",
+      "knownTargetPointers": [
+        "/paths/~1mounted/get"
+      ],
+      "firstSliceSupported": true
+    },
+    {
+      "id": "AI04",
+      "fixture": "missing-resource-31.json",
+      "expected": "Missing supplied resource cannot become complete inventory; preserve /ready and an actionable limitation. No automatic fetch.",
+      "knownTargetPointers": [
+        "/paths/~1ready/get"
+      ],
+      "firstSliceSupported": true
+    },
+    {
+      "id": "AI05",
+      "fixture": "malformed-neighbor-31.json",
+      "expected": "Preserve /ready; malformed declaration is never a usable target. Classify the neighbor against draft meaning before claiming completeness.",
+      "knownTargetPointers": [
+        "/paths/~1ready/get"
+      ],
+      "firstSliceSupported": true
+    },
+    {
+      "id": "AI06",
+      "fixture": "schema-boundary-31.json",
+      "expected": "Exact source values survive manual authoring/reload. No schema projection is required; raw schema presence is not proof of projection soundness.",
+      "knownTargetPointers": [
+        "/paths/~1exact/get"
+      ],
+      "firstSliceSupported": true
+    },
+    {
+      "id": "AI07",
+      "fixture": "minimal-31.yaml",
+      "expected": "Equivalent target identity to AI01; JSON/YAML parsing uses the client.",
+      "knownTargetPointers": [
+        "/paths/~1items/get"
+      ],
+      "firstSliceSupported": true
+    },
+    {
+      "id": "AI08",
+      "fixture": "contrast-20.json",
+      "expected": "Known contrast only: first-slice public kind support remains false; no interpretation as 3.1.",
+      "knownTargetPointers": [
+        "/paths/~1items/post"
+      ],
+      "firstSliceSupported": false
+    },
+    {
+      "id": "AI09",
+      "fixture": "contrast-30.json",
+      "expected": "Known contrast only: first-slice public kind support remains false; nullable must not silently become 3.1 semantics.",
+      "knownTargetPointers": [
+        "/paths/~1items/get"
+      ],
+      "firstSliceSupported": false
+    },
+    {
+      "id": "AI10",
+      "fixture": "contrast-32.json",
+      "expected": "Known contrast only: first-slice public kind support remains false; query is a version-specific probe.",
+      "knownTargetPointers": [
+        "/paths/~1items/query"
+      ],
+      "firstSliceSupported": false
+    }
+  ],
+  "resourceSupply": {
+    "AI04": {
+      "entryRetrievalUri": "https://fixture.invalid/openapi.json",
+      "resourceUri": "https://fixture.invalid/paths.json",
+      "fixture": "supplied-paths-31.json",
+      "expectedCompletedTargets": [
+        "/paths/~1ready/get",
+        "/paths/~1pending/get"
+      ]
+    }
+  },
+  "variants": [
+    {
+      "id": "AI11",
+      "from": "minimal-31.json",
+      "mutations": [
+        "content absent",
+        "content null",
+        "content {}",
+        "document non-object/non-string",
+        "location only without supplied bytes",
+        "openapi 3.1.999",
+        "kind 3.1 with document 3.0.4",
+        "exact kind spelling changed",
+        "empty paths",
+        "only malformed operation declarations"
+      ],
+      "expected": "Keep malformed source, unavailable acquisition, out-of-scope edition, unsupported kind, and complete empty inventory distinct; see first-adapter-slice.md."
+    },
+    {
+      "id": "AI12",
+      "from": "minimal-31.json",
+      "mutations": [
+        "two operations sharing operationId",
+        "pre-cancelled WorkControl",
+        "tight admission bounds",
+        "drop source/provider after inspection",
+        "manual author-selected keys; serialize and reload"
+      ],
+      "expected": "No silent operation-ID selection; cancellation/bounds remain SDK/provider policy; retained results and author-owned keys work. Duplicate-ID semantic disposition requires a recorded draft audit, not inferred blanket invalidation."
+    }
+  ],
+  "files": {
+    "contrast-20.json": "d0c6b45b8f16d15e2e7b1fc402bd28447f7a7aa5d4589b3e1ca2bce9b78257a0",
+    "contrast-30.json": "c178831567ac583965cc97426863683e9a6874a82803e9adae09a3949c8f304e",
+    "contrast-32.json": "f287f7c9f5be51d8ff3e35dfbe75b91d745aa5c0c58c02a7a74d5e89bc15537d",
+    "identity-31.json": "96807dea0bf8c80298ebac175bb6f242454dd049e992da42e90953450f8ec556",
+    "malformed-neighbor-31.json": "f87055b22f81120e942b80b9e22e07e5dc3dc55b05fab698282c76b65c833e91",
+    "minimal-31.json": "cf0af80657bfefea6d5e5ad69e9bcbddbc37203680d059bcbde08903eaeeb1e4",
+    "minimal-31.yaml": "25413bd72bdcc7d5bdac0c67c56cd676610e4d993d5bdad62230e30b4563f358",
+    "missing-resource-31.json": "e38b1577dd159e127afacd1a5f6273833391944c0b89a892b41e4f64a1052062",
+    "mounted-31.json": "60e921d276d83ae863d69316e98558c3190ece41916e05078fcb4b809bbf671c",
+    "schema-boundary-31.json": "71d07194ada35647fbb84981705caca1795e720034b9ec1712a6d144afa287a3",
+    "supplied-paths-31.json": "f7f48710b4cae3c05f9e58364c0dee5a8d97b978d325e92460125243eb468e10"
+  }
+}

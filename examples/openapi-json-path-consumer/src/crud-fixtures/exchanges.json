@@ -1,0 +1,68 @@
+[
+  {
+    "operation": "list",
+    "path": "/records",
+    "method": "GET",
+    "target": "https://crud.example.test/records",
+    "input": "{}",
+    "request": null,
+    "status": 200,
+    "response": "{\"records\":[]}",
+    "output": "{\"records\":[]}"
+  },
+  {
+    "operation": "read",
+    "path": "/records/{id}",
+    "method": "GET",
+    "target": "https://crud.example.test/records/box-7",
+    "input": "{\"parameters\":{\"path\":{\"id\":\"box-7\"}}}",
+    "request": null,
+    "status": 200,
+    "response": "{\"id\":\"box-7\",\"n\":9007199254740993}",
+    "output": "{\"id\":\"box-7\",\"n\":9007199254740993}"
+  },
+  {
+    "operation": "create",
+    "path": "/records",
+    "method": "POST",
+    "target": "https://crud.example.test/records",
+    "input": "{\"body\":{\"n\":9007199254740993,\"label\":\"雪\"}}",
+    "request": "{\"n\":9007199254740993,\"label\":\"雪\"}",
+    "status": 201,
+    "response": "{\"id\":\"box-7\"}",
+    "output": "{\"id\":\"box-7\"}"
+  },
+  {
+    "operation": "replace",
+    "path": "/records/{id}",
+    "method": "PUT",
+    "target": "https://crud.example.test/records/box-7",
+    "input": "{\"parameters\":{\"path\":{\"id\":\"box-7\"}},\"body\":{\"n\":9007199254740993,\"label\":\"雪\"}}",
+    "request": "{\"n\":9007199254740993,\"label\":\"雪\"}",
+    "status": 200,
+    "response": "{\"n\":9007199254740993,\"label\":\"雪\"}",
+    "output": "{\"n\":9007199254740993,\"label\":\"雪\"}"
+  },
+  {
+    "operation": "edit",
+    "path": "/records/{id}",
+    "method": "PATCH",
+    "target": "https://crud.example.test/records/box-7",
+    "input": "{\"parameters\":{\"path\":{\"id\":\"box-7\"}},\"body\":{\"label\":\"revised\"}}",
+    "request": "{\"label\":\"revised\"}",
+    "status": 202,
+    "response": "",
+    "output": null
+  },
+  {
+    "operation": "remove",
+    "path": "/records/{id}",
+    "method": "DELETE",
+    "target": "https://crud.example.test/records/box-7",
+    "input": "{\"parameters\":{\"path\":{\"id\":\"box-7\"}}}",
+    "request": null,
+    "status": 204,
+    "response": "",
+    "output": null
+  }
+]

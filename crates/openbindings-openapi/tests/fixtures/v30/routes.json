@@ -1,0 +1,12 @@
+{
+  "Lookup": {
+    "parameters": [{"$ref": "./parameters.json#/Key"}],
+    "get": {
+      "parameters": [{"name": "key", "in": "query", "schema": {"type": "string"}}],
+      "responses": {
+        "200": {"description": "Record", "content": {"application/json": {"schema": {"type": "object", "properties": {"sequence": {"type": "integer"}}}}}},
+        "404": {"description": "Not found", "content": {"text/plain": {"schema": {"type": "string"}}}}
+      }
+    }
+  }
+}

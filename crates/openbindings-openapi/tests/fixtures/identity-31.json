@@ -1,0 +1,64 @@
+{
+  "openapi": "3.1.2",
+  "info": {
+    "title": "Adapter readiness fixture",
+    "version": "1"
+  },
+  "servers": [
+    {
+      "url": "https://fixture.invalid"
+    }
+  ],
+  "paths": {
+    "/a~b/c": {
+      "get": {
+        "operationId": "list.items-v2",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/unnamed": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/unicode": {
+      "get": {
+        "operationId": "lireÉléments",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

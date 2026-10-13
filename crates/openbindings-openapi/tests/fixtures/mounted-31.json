@@ -1,0 +1,38 @@
+{
+  "openapi": "3.1.2",
+  "info": {
+    "title": "Adapter readiness fixture",
+    "version": "1"
+  },
+  "servers": [
+    {
+      "url": "https://fixture.invalid"
+    }
+  ],
+  "paths": {
+    "/mounted": {
+      "$ref": "#/components/pathItems/Shared"
+    }
+  },
+  "components": {
+    "pathItems": {
+      "Shared": {
+        "get": {
+          "operationId": "mounted",
+          "responses": {
+            "200": {
+              "description": "Success",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

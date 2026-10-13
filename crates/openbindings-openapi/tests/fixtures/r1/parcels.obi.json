@@ -1,0 +1,45 @@
+{
+  "openbindings": "0.2.0",
+  "name": "Manual parcels",
+  "operations": {
+    "lookup": {},
+    "create": {},
+    "health": {}
+  },
+  "sources": {
+    "authoredApi": {
+      "kind": "local.openapi-json-probe.r1",
+      "content": {
+        "document": "{\n  \"openapi\": \"3.1.2\",\n  \"info\": {\n    \"title\": \"Parcel service experiment\",\n    \"version\": \"1\"\n  },\n  \"servers\": [\n    {\n      \"url\": \"https://parcel.example.invalid/api\"\n    }\n  ],\n  \"paths\": {\n    \"/parcels/{parcelId}\": {\n      \"get\": {\n        \"parameters\": [\n          {\n            \"name\": \"parcelId\",\n            \"in\": \"path\",\n            \"required\": true,\n            \"schema\": {\n              \"type\": \"string\"\n            }\n          },\n          {\n            \"name\": \"parcelId\",\n            \"in\": \"query\",\n            \"schema\": {\n              \"type\": \"string\"\n            }\n          }\n        ],\n        \"responses\": {\n          \"200\": {\n            \"description\": \"A parcel\",\n            \"content\": {\n              \"application/json\": {\n                \"schema\": {\n                  \"type\": \"object\"\n                }\n              }\n            }\n          },\n          \"404\": {\n            \"description\": \"Parcel absent\",\n            \"content\": {\n              \"application/json\": {\n                \"schema\": {\n                  \"type\": \"object\"\n                }\n              }\n            }\n          }\n        }\n      }\n    },\n    \"/parcels\": {\n      \"post\": {\n        \"operationId\": \"createParcel\",\n        \"requestBody\": {\n          \"required\": false,\n          \"content\": {\n            \"application/json\": {\n              \"schema\": true\n            }\n          }\n        },\n        \"responses\": {\n          \"201\": {\n            \"description\": \"Created\",\n            \"content\": {\n              \"application/json\": {\n                \"schema\": true\n              }\n            }\n          },\n          \"204\": {\n            \"description\": \"Accepted without representation\"\n          }\n        }\n      }\n    },\n    \"/health\": {\n      \"get\": {\n        \"operationId\": \"health\",\n        \"responses\": {\n          \"204\": {\n            \"description\": \"Healthy\"\n          }\n        }\n      }\n    }\n  },\n  \"x-exact-source\": 9007199254740993\n}\n",
+        "retrievalUri": "https://descriptions.example.invalid/parcels.json"
+      },
+      "x-preserved": 9007199254740993
+    }
+  },
+  "bindings": {
+    "lookupBinding": {
+      "operation": "lookup",
+      "source": "authoredApi",
+      "content": {
+        "path": "/parcels/{parcelId}",
+        "method": "get"
+      }
+    },
+    "createBinding": {
+      "operation": "create",
+      "source": "authoredApi",
+      "content": {
+        "path": "/parcels",
+        "method": "post"
+      }
+    },
+    "healthBinding": {
+      "operation": "health",
+      "source": "authoredApi",
+      "content": {
+        "path": "/health",
+        "method": "get"
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "openapi": "3.0.4",
+  "info": {"title": "Archive desk", "version": "2026-10"},
+  "servers": [{"url": "https://archive.example.invalid/root"}],
+  "paths": {
+    "/records/{key}": {"$ref": "./pieces/routes.json#/Lookup"},
+    "/records": {
+      "post": {
+        "servers": [{"url": "https://archive.example.invalid/write"}],
+        "requestBody": {"content": {"application/json": {"schema": {"type": "object", "nullable": true, "additionalProperties": true}}}},
+        "responses": {
+          "201": {"description": "Stored", "content": {"application/json": {"schema": {"type": "object", "nullable": true}}}},
+          "204": {"description": "No entity"}
+        }
+      }
+    }
+  }
+}

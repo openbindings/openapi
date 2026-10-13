@@ -1,0 +1,20 @@
+{
+  "openapi": "3.1.2",
+  "info": {
+    "title": "Parcel service experiment",
+    "version": "1"
+  },
+  "servers": [
+    {
+      "url": "https://parcel.example.invalid/api"
+    }
+  ],
+  "paths": {
+    "/mounted/{parcelId}": {
+      "$ref": "./fragments/parts.json#/components/pathItems/Parcel"
+    },
+    "/alternate/{parcelId}": {
+      "$ref": "./fragments/parts.json#/components/pathItems/Parcel"
+    }
+  }
+}

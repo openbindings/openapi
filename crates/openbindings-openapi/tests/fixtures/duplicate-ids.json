@@ -1,0 +1,1 @@
+{"openapi":"3.1.2","paths":{"/first":{"get":{"operationId":"same"}},"/second":{"get":{"operationId":"same"}}}}

@@ -1,0 +1,39 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "Adapter readiness fixture",
+    "version": "1"
+  },
+  "servers": [
+    {
+      "url": "https://fixture.invalid"
+    }
+  ],
+  "paths": {
+    "/items": {
+      "get": {
+        "operationId": "listItems",
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Nullable": {
+        "type": "string",
+        "nullable": true
+      }
+    }
+  }
+}

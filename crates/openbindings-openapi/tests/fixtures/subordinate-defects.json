@@ -1,0 +1,1 @@
+{"openapi":"3.1.2","paths":{"/usable":{"get":{"servers":false,"parameters":42,"responses":"wrong","security":false,"$ref":"unsupported"}}}}

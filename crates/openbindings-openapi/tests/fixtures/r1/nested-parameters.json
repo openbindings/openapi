@@ -1,0 +1,20 @@
+{
+  "openapi": "3.1.2",
+  "info": {
+    "title": "Referenced parameter",
+    "version": "1"
+  },
+  "paths": {},
+  "components": {
+    "parameters": {
+      "ParcelId": {
+        "name": "parcelId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

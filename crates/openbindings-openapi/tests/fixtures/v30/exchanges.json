@@ -1,0 +1,48 @@
+[
+  {
+    "method": "GET",
+    "target": "/root/records/a-7?key=alias-9",
+    "input": "{\"parameters\":{\"path\":{\"key\":\"a-7\"},\"query\":{\"key\":\"alias-9\"}}}",
+    "request": null,
+    "status": 200,
+    "response": "{\"sequence\":9007199254740993}",
+    "output": "{\"sequence\":9007199254740993}"
+  },
+  {
+    "method": "POST",
+    "target": "/write/records",
+    "input": "{\"body\":{\"sequence\":9007199254740993,\"label\":\"雪\"}}",
+    "request": "{\"sequence\":9007199254740993,\"label\":\"雪\"}",
+    "status": 201,
+    "response": "{\"sequence\":9007199254740993}",
+    "output": "{\"sequence\":9007199254740993}"
+  },
+  {
+    "method": "POST",
+    "target": "/write/records",
+    "input": "{}",
+    "request": null,
+    "status": 204,
+    "response": "",
+    "output": null
+  },
+  {
+    "method": "POST",
+    "target": "/write/records",
+    "input": "{\"body\":null}",
+    "request": "null",
+    "status": 201,
+    "response": "null",
+    "output": "null"
+  },
+  {
+    "method": "GET",
+    "target": "/root/records/missing",
+    "input": "{\"parameters\":{\"path\":{\"key\":\"missing\"}}}",
+    "request": null,
+    "status": 404,
+    "response": "missing record",
+    "error": "local.openapi30-json-probe.r1.http-status",
+    "errorData": "{\"status\":404}"
+  }
+]
