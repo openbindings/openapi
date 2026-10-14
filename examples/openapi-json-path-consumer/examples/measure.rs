@@ -2,8 +2,8 @@
 use dynamic_openapi_client as client;
 use openapi_json_path_consumer::{reply, source};
 use openbindings::{
-    Binding, ContractPreparation, DocumentBuilder, JsonValue, Operation, ParsedDocument,
-    ResourceSet, Side, ValueOutcome,
+    Binding, Direction, Document, JsonValue, Operation, ParsedDocument, ResourceSet,
+    ValueContractPreparation, ValueOutcome,
 };
 use openbindings_interface_synthesis::{SynthesisRequest, SynthesisSource, Synthesizer};
 use openbindings_invocation::{BindingRequest, BindingValue, binding, operation};
@@ -57,7 +57,7 @@ fn schema() -> JsonValue {
     JsonValue::parse(r#"{"type":"object","properties":{"parameters":{"type":"object","properties":{"path":{"type":"object","properties":{},"required":[],"additionalProperties":false},"query":{"type":"object","properties":{},"required":[],"additionalProperties":false}},"required":[],"additionalProperties":false}},"required":[],"additionalProperties":false}"#).unwrap()
 }
 fn authored(source: &openbindings::Source, document: &client::Document) -> ParsedDocument {
-    let mut draft = DocumentBuilder::new();
+    let mut draft = Document::new();
     draft.sources = Some(BTreeMap::from([("api".into(), source.clone())]));
     let mut bindings = BTreeMap::new();
     let schema = schema();
@@ -94,7 +94,7 @@ fn authored(source: &openbindings::Source, document: &client::Document) -> Parse
     }
     draft.bindings = Some(bindings);
     let parsed = ParsedDocument::from_json(draft.to_json().unwrap());
-    assert!(parsed.assess().unwrap().validated().is_some());
+    assert!(parsed.validate().unwrap().validated().is_some());
     parsed
 }
 struct Echo(JsonValue);
@@ -109,7 +109,7 @@ impl binding::BindingInvoker for Echo {
         &'a self,
         _: BindingRequest<'a>,
         io: openbindings_invocation::ProviderIo,
-        _: openbindings::WorkControl,
+        _: openbindings_source_inspection::CancellationToken,
     ) -> Self::Invocation<'a> {
         Box::pin(async move {
             let (mut input, mut output) = io.split();
@@ -156,7 +156,7 @@ fn main() {
         let facade = Synthesizer::new(&provider);
         let initial = ready(facade.synthesize_with_coverage(&req)).unwrap();
         assert_eq!(
-            DocumentBuilder::from_json(initial.document().parsed().value())
+            Document::from_json(initial.document().parsed().value())
                 .unwrap()
                 .operations
                 .len(),
@@ -292,7 +292,7 @@ fn main() {
                 assert!(job.outcome().unwrap().is_ok());
             });
             rows.push(serde_json::json!({"workload":"stage","stage":"checked-binding-lifecycle","method":method,"bytes":bytes,"samples_ns":samples}));
-            let mut draft = DocumentBuilder::new();
+            let mut draft = Document::new();
             draft.operations.insert("call".into(), Operation::default());
             draft.sources = Some(BTreeMap::from([("api".into(), src.clone())]));
             draft.bindings = Some(BTreeMap::from([(
@@ -379,16 +379,19 @@ fn main() {
             let contracts = doc
                 .value_contracts(evaluator.clone(), ResourceSet::default())
                 .unwrap();
-            let ContractPreparation::Ready(contract) = contracts.prepare("call", Side::Input)
+            let ValueContractPreparation::Ready(contract) =
+                contracts.prepare("call", Direction::Input)
             else {
                 panic!()
             };
             let validated = operation::Invoker::new(doc, &provider)
                 .with_evaluator(evaluator, ResourceSet::default())
                 .unwrap();
+            // Retain compiled contracts for the warm workload now that core has no cache.
+            let prepared_operation = validated.prepare("call").unwrap();
             let samples = sample(|| {
                 if candidate {
-                    let mut job = validated.invoke(operation::Request::operation("call"));
+                    let mut job = prepared_operation.invoke(operation::Attempt::new());
                     ready(job.write(value.clone())).unwrap();
                     job.close();
                     while let Some(v) = ready(job.next()) {

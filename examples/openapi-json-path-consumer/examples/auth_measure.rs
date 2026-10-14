@@ -1,7 +1,7 @@
 //! Registered, interleaved CPU comparisons. Manufactured credentials only.
 use dynamic_openapi_client as client;
 use openapi_json_path_consumer::{reply, source};
-use openbindings::{Binding, DocumentBuilder, JsonValue, Operation, ParsedDocument};
+use openbindings::{Binding, Document, JsonValue, Operation, ParsedDocument};
 use openbindings_invocation::{BindingRequest, BindingValue, binding, operation};
 use openbindings_openapi::OpenApi;
 use std::{
@@ -389,7 +389,7 @@ fn main() {
                                     }),
                                 ));
                             } else {
-                                let mut draft = DocumentBuilder::new();
+                                let mut draft = Document::new();
                                 draft.sources = Some(BTreeMap::from([("api".into(), src)]));
                                 draft.operations.insert("call".into(), Operation::default());
                                 draft.bindings = Some(BTreeMap::from([(

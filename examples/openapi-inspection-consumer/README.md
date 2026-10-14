@@ -1,6 +1,6 @@
 # Independent OpenAPI inspection consumer
 
-`src/lib.rs` uses the public SDK packages to inspect, select, author, assess and
+`src/lib.rs` uses the public SDK packages to inspect, select, author, validate and
 reload an OBI. Tests independently create a binding and prove direct/referenced
 mounted-target correspondence using the public OpenAPI client. The author owns
 operation/source keys; unknown schema dialect and exact numeric content survive.

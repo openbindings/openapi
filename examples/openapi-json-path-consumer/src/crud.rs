@@ -4,7 +4,7 @@ use dynamic_openapi_client::{
     BodyState, Cancellation, DeliveredBody, Header, HeaderDelivery, HostCapabilities,
     PreparedRequest, Provenance, ResponseInput, TransportResult, UploadState,
 };
-use openbindings::{DocumentBuilder, JsonValue, ParsedDocument};
+use openbindings::{Document, JsonValue, ParsedDocument};
 use openbindings_interface_synthesis::{
     CoverageStatus, SynthesisRequest, SynthesisSource, Synthesizer,
 };
@@ -58,7 +58,7 @@ pub async fn suite(v30: bool) {
         serde_json::from_str(include_str!("crud-fixtures/exchanges.json")).unwrap();
     for saved in [manual, &saved] {
         let parsed = ParsedDocument::parse(saved).unwrap();
-        let draft = DocumentBuilder::from_json(parsed.value()).unwrap();
+        let draft = Document::from_json(parsed.value()).unwrap();
         assert_eq!(
             draft.sources.as_ref().unwrap()["recordsApi"]
                 .content

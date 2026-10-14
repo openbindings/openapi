@@ -7,7 +7,7 @@ use dynamic_openapi_client::{
     BodyState, Cancellation, DeliveredBody, Header, HeaderDelivery, HostCapabilities,
     PreparedRequest, Provenance, ResponseInput, TransportResult, UploadState,
 };
-use openbindings::{DocumentBuilder, JsonValue, Source};
+use openbindings::{Document, JsonValue, Source};
 use openbindings_interface_synthesis::{
     CoverageScope, CoverageStatus, SynthesisRequest, SynthesisSource, Synthesizer,
 };
@@ -413,7 +413,7 @@ pub async fn suite(v30: bool) {
     );
     let (saved, coverage) = authored(&preserved).await;
     let parsed = openbindings::ParsedDocument::parse(&saved).unwrap();
-    let draft = DocumentBuilder::from_json(parsed.value()).unwrap();
+    let draft = Document::from_json(parsed.value()).unwrap();
     let output_source = &draft.sources.as_ref().unwrap()["api"];
     assert_eq!(
         output_source.content.as_ref().unwrap().text(),

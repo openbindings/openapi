@@ -1,5 +1,5 @@
 //! Second-edition acceptance: author-owned fixtures and literal wire expectations.
-use openbindings::{DocumentBuilder, JsonValue, ParsedDocument, Source};
+use openbindings::{Document, JsonValue, ParsedDocument, Source};
 use openbindings_interface_synthesis::{
     CoverageStatus, SynthesisRequest, SynthesisSource, Synthesizer,
 };
@@ -181,7 +181,7 @@ async fn preflight_makes_no_prediction_without_dispatch() {
         context: None,
     };
     assert!(facade.preflight(request).await.unwrap().is_none());
-    let control = openbindings::WorkControl::new();
+    let control = openbindings_source_inspection::CancellationToken::new();
     control.cancel();
     assert_eq!(
         facade
@@ -344,7 +344,7 @@ async fn parameter_types_require_a_supported_lexical_schema_dialect() {
         );
         let report = synth(&provider, &src).await.unwrap();
         assert_eq!(report.coverage().strict_eligible(), represented);
-        let draft = DocumentBuilder::from_json(report.document().parsed().value()).unwrap();
+        let draft = Document::from_json(report.document().parsed().value()).unwrap();
         assert_eq!(draft.operations.len(), usize::from(represented));
         assert_eq!(calls.get(), 0, "authoring must not dispatch");
         if represented {
@@ -483,7 +483,7 @@ async fn schema_dialect_boundaries_do_not_invent_a_caller_contract() {
                     .any(|e| e.status == CoverageStatus::ImplementationUnsupported)
             );
             assert!(
-                DocumentBuilder::from_json(generated.document().parsed().value())
+                Document::from_json(generated.document().parsed().value())
                     .unwrap()
                     .operations
                     .is_empty()
@@ -513,7 +513,7 @@ async fn schema_dialect_boundaries_do_not_invent_a_caller_contract() {
     let report = synth(&provider, &src).await.unwrap();
     assert!(report.coverage().strict_eligible());
     assert!(!report.coverage().fully_represented());
-    let draft = DocumentBuilder::from_json(report.document().parsed().value()).unwrap();
+    let draft = Document::from_json(report.document().parsed().value()).unwrap();
     let op = draft.operations.values().next().unwrap();
     assert!(op.output.is_none());
     assert_eq!(
@@ -646,7 +646,7 @@ async fn independent_manual_and_synthesized_reloaded_consumers_use_real_http() {
         .replace("https://archive.example.invalid", &origin);
     let saved = {
         let parsed = ParsedDocument::parse(&manual).unwrap();
-        let draft = DocumentBuilder::from_json(parsed.value()).unwrap();
+        let draft = Document::from_json(parsed.value()).unwrap();
         let src = &draft.sources.as_ref().unwrap()["archive"];
         let count = Rc::new(Cell::new(0));
         let provider = OpenApi::new(resources()).unwrap().with_transport(transport(
@@ -669,7 +669,7 @@ async fn independent_manual_and_synthesized_reloaded_consumers_use_real_http() {
         assert!(generated.coverage().strict_eligible());
         assert!(!generated.coverage().fully_represented());
         assert_eq!(count.get(), 0);
-        let new = DocumentBuilder::from_json(generated.document().parsed().value()).unwrap();
+        let new = Document::from_json(generated.document().parsed().value()).unwrap();
         assert_eq!(
             new.sources.as_ref().unwrap()["archive"]
                 .content
@@ -687,7 +687,7 @@ async fn independent_manual_and_synthesized_reloaded_consumers_use_real_http() {
     };
     for text in [&manual, &saved] {
         let parsed = ParsedDocument::parse(text).unwrap();
-        let draft = DocumentBuilder::from_json(parsed.value()).unwrap();
+        let draft = Document::from_json(parsed.value()).unwrap();
         let client = dynamic_openapi_client_reqwest::Client::new().unwrap();
         let provider = OpenApi::new(resources()).unwrap().with_transport(
             move |request: PreparedRequest, cancel: Cancellation| {
@@ -734,7 +734,7 @@ async fn independent_manual_and_synthesized_reloaded_consumers_use_real_http() {
         }
     }
     wire.join().unwrap();
-    let draft = DocumentBuilder::from_json(ParsedDocument::parse(saved).unwrap().value()).unwrap();
+    let draft = Document::from_json(ParsedDocument::parse(saved).unwrap().value()).unwrap();
     let src = &draft.sources.as_ref().unwrap()["archive"];
     let count = Rc::new(Cell::new(0));
     let missing = OpenApi::default().with_transport(transport(
@@ -976,7 +976,7 @@ async fn get_request_body_uses_the_source_edition_semantics() {
         );
         let result = synth(&provider, &src).await.unwrap();
         assert!(result.coverage().strict_eligible());
-        let draft = DocumentBuilder::from_json(result.document().parsed().value()).unwrap();
+        let draft = Document::from_json(result.document().parsed().value()).unwrap();
         let input = draft
             .operations
             .values()

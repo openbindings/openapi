@@ -1,6 +1,7 @@
 use super::*;
 use dynamic_openapi_client::{Cancellation, HostCapabilities, Outcome, PreparedRequest};
-use openbindings::{DocumentBuilder, WorkControl};
+use openbindings::Document;
+use openbindings_source_inspection::CancellationToken;
 use std::{cell::Cell, rc::Rc, task::Poll};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
@@ -38,7 +39,7 @@ pub async fn exact_roundtrip(
         });
     let facade = invoker(&saved, provider);
     let parsed = ParsedDocument::parse(&saved).unwrap();
-    let draft = DocumentBuilder::from_json(parsed.value()).unwrap();
+    let draft = Document::from_json(parsed.value()).unwrap();
     let name = draft.operations.keys().next().unwrap();
     let result = call(&facade, operation::Request::operation(name), input)
         .await
@@ -81,9 +82,9 @@ pub async fn pending_cleanup(kind: &str, description: &str, abandon: bool) -> Re
     );
     let facade = invoker(&saved, provider);
     let parsed = ParsedDocument::parse(&saved).unwrap();
-    let draft = DocumentBuilder::from_json(parsed.value()).unwrap();
+    let draft = Document::from_json(parsed.value()).unwrap();
     let name = draft.operations.keys().next().unwrap();
-    let control = WorkControl::new();
+    let control = CancellationToken::new();
     let mut job = facade.invoke_with_control(operation::Request::operation(name), &control);
     job.write(JsonValue::parse(INPUT).unwrap()).await.unwrap();
     job.close();

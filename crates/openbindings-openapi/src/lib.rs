@@ -16,7 +16,8 @@ pub use dynamic_openapi_client::{GraphLimits, Limits, ResourceInput, ResourceLay
 pub use invocation::{InvocationFuture, Transport};
 use openbindings::{JsonValue, Source, WorkControl};
 use openbindings_source_inspection::{
-    InspectionError, InspectionErrorKind, SourceInspection, SourceInspector, SupportedKind,
+    CancellationToken, InspectionError, InspectionErrorKind, SourceInspection, SourceInspector,
+    SupportedKind,
 };
 use std::{
     future::{Ready, ready},
@@ -230,7 +231,7 @@ impl<T> OpenApi<T> {
     fn prepare(
         &self,
         source: &Source,
-        control: &WorkControl,
+        control: &dyn WorkControl,
     ) -> Result<Arc<analysis::Prepared>, Error> {
         self.prepare_with(source, control, |kind, content| {
             analysis::prepare(kind, content, &self.options, control)
@@ -239,7 +240,7 @@ impl<T> OpenApi<T> {
     fn prepare_with(
         &self,
         source: &Source,
-        control: &WorkControl,
+        control: &dyn WorkControl,
         analyze: impl FnOnce(Kind, &JsonValue) -> Result<analysis::Prepared, Error>,
     ) -> Result<Arc<analysis::Prepared>, Error> {
         check(control)?;
@@ -302,7 +303,11 @@ impl<T> SourceInspector for OpenApi<T> {
             })
             .collect()
     }
-    fn inspect<'a>(&'a self, source: &'a Source, control: WorkControl) -> Self::Inspection<'a> {
+    fn inspect<'a>(
+        &'a self,
+        source: &'a Source,
+        control: CancellationToken,
+    ) -> Self::Inspection<'a> {
         ready(
             self.prepare(source, &control)
                 .map(|p| p.inspection())
@@ -310,7 +315,7 @@ impl<T> SourceInspector for OpenApi<T> {
         )
     }
 }
-fn check(control: &WorkControl) -> Result<(), Error> {
+fn check(control: &dyn WorkControl) -> Result<(), Error> {
     if control.is_cancelled() {
         Err(Error::new(ErrorKind::Cancelled, "cancelled"))
     } else {
@@ -331,7 +336,7 @@ mod cache_tests {
     #[test]
     fn one_source_cache_checks_content_base_and_fixed_options() {
         let provider = OpenApi::default();
-        let control = WorkControl::new();
+        let control = CancellationToken::new();
         let a = source("https://a.invalid/doc.json");
         let first = provider.prepare(&a, &control).unwrap();
         let same = provider.prepare(&a.clone(), &control).unwrap();
@@ -384,7 +389,7 @@ mod cache_tests {
         let analyzing = std::sync::Barrier::new(2);
         let (started, entered) = std::sync::mpsc::channel();
         let analyze = |source: &Source, started: Option<std::sync::mpsc::Sender<()>>| {
-            let control = WorkControl::new();
+            let control = CancellationToken::new();
             provider
                 .prepare_with(source, &control, |kind, content| {
                     // No other thread can be in cache lookup at this checkpoint.
@@ -414,7 +419,7 @@ mod cache_tests {
                 Kind::OpenApi31,
                 source.content.as_ref().unwrap(),
                 &provider.options,
-                &WorkControl::new(),
+                &CancellationToken::new(),
             )
             .unwrap();
             assert_eq!(
@@ -431,7 +436,7 @@ mod cache_tests {
     #[test]
     fn failed_analysis_evicts_previous_entry_and_preserves_result_budget() {
         let provider = OpenApi::default();
-        let control = WorkControl::new();
+        let control = CancellationToken::new();
         let valid = source("https://a.invalid/doc.json");
         let weak = Arc::downgrade(&provider.prepare(&valid, &control).unwrap());
         let malformed = Source {

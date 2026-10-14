@@ -1,8 +1,9 @@
-use openbindings::{DocumentBuilder, JsonValue, Source, WorkControl};
+use openbindings::{Document, JsonValue, Source};
 use openbindings_interface_synthesis::{
     CoverageStatus, SynthesisErrorKind, SynthesisRequest, SynthesisSource, Synthesizer,
 };
 use openbindings_openapi::{EXPERIMENTAL_KIND, OpenApi, Options, ResourceInput};
+use openbindings_source_inspection::CancellationToken;
 use openbindings_source_inspection::Inspector;
 fn source(text: &str) -> Source {
     Source{kind:EXPERIMENTAL_KIND.into(),content:Some(JsonValue::parse(serde_json_compat::json!({"document":text,"retrievalUri":"https://descriptions.example.invalid/root.json"}).to_string()).unwrap()),..Default::default()}
@@ -20,7 +21,7 @@ async fn skeleton_preservation_and_composition_boundaries() {
         })
         .await
         .unwrap();
-    let draft = DocumentBuilder::from_json(skeleton.parsed().value()).unwrap();
+    let draft = Document::from_json(skeleton.parsed().value()).unwrap();
     assert!(draft.operations.is_empty());
     assert!(draft.sources.is_none());
     assert_eq!(draft.name.as_deref(), Some("Empty"));
@@ -36,7 +37,7 @@ async fn skeleton_preservation_and_composition_boundaries() {
     let result = facade.synthesize_with_coverage(&request).await.unwrap();
     assert!(result.coverage().strict_eligible());
     assert!(!result.coverage().fully_represented());
-    let draft = DocumentBuilder::from_json(result.document().parsed().value()).unwrap();
+    let draft = Document::from_json(result.document().parsed().value()).unwrap();
     assert_eq!(
         draft.sources.as_ref().unwrap()["user_source"]
             .content
@@ -57,7 +58,7 @@ async fn skeleton_preservation_and_composition_boundaries() {
             .kind(),
         SynthesisErrorKind::UnsupportedRequest
     );
-    let cancelled = WorkControl::new();
+    let cancelled = CancellationToken::new();
     cancelled.cancel();
     assert_eq!(
         facade
@@ -172,7 +173,7 @@ async fn fresh_nested_resources_preserve_mounts_and_reference_bases() {
         .await
         .unwrap();
     assert!(result.coverage().strict_eligible());
-    let draft = DocumentBuilder::from_json(result.document().parsed().value()).unwrap();
+    let draft = Document::from_json(result.document().parsed().value()).unwrap();
     let paths: std::collections::BTreeSet<_> = draft
         .bindings
         .unwrap()
@@ -347,7 +348,7 @@ async fn absent_and_repeated_operation_ids_are_not_binding_identity_or_effects()
         })
         .await
         .unwrap();
-    let draft = DocumentBuilder::from_json(result.parsed().value()).unwrap();
+    let draft = Document::from_json(result.parsed().value()).unwrap();
     assert_eq!(draft.operations.len(), 3);
     assert_eq!(draft.bindings.unwrap().len(), 3);
     assert_eq!(entries.get(), 0);

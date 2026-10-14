@@ -4,7 +4,7 @@ use dynamic_openapi_client::{
     BodyState, Cancellation, DeliveredBody, Header, HeaderDelivery, HostCapabilities, Outcome,
     PreparedRequest, Provenance, ResponseInput, TransportResult, UploadState,
 };
-use openbindings::{DocumentBuilder, JsonValue, ParsedDocument, Source};
+use openbindings::{Document, JsonValue, ParsedDocument, Source};
 use openbindings_interface_synthesis::{SynthesisRequest, SynthesisSource, Synthesizer};
 use openbindings_invocation::{BindingRequest, BindingValue, InvocationError, binding, operation};
 use openbindings_openapi::{OpenApi, Options};
@@ -206,7 +206,7 @@ pub async fn suite(v30: bool) {
             .count(),
         6
     );
-    let mut generated = DocumentBuilder::from_json(synthesis.document().parsed().value()).unwrap();
+    let mut generated = Document::from_json(synthesis.document().parsed().value()).unwrap();
     // Rename all generated operation keys. Binding path/method remains the authority.
     for (index, b) in generated
         .bindings
@@ -245,8 +245,7 @@ pub async fn suite(v30: bool) {
         );
         assert_wire(&seen, row);
         for doc in [manual, &saved] {
-            let draft =
-                DocumentBuilder::from_json(ParsedDocument::parse(doc).unwrap().value()).unwrap();
+            let draft = Document::from_json(ParsedDocument::parse(doc).unwrap().value()).unwrap();
             let key = &draft
                 .bindings
                 .as_ref()
@@ -659,7 +658,7 @@ pub async fn suite(v30: bool) {
         .await
         .unwrap();
     let saved = result.document().parsed().value().text();
-    let draft = DocumentBuilder::from_json(result.document().parsed().value()).unwrap();
+    let draft = Document::from_json(result.document().parsed().value()).unwrap();
     let name = &draft
         .bindings
         .as_ref()
@@ -708,7 +707,7 @@ pub async fn suite(v30: bool) {
 
 /// Repeated resource/effect mix including a pending host and independent sibling.
 pub async fn cycle(v30: bool) {
-    use openbindings::WorkControl;
+    use openbindings_source_inspection::CancellationToken;
     use std::task::Poll;
     let (kind, text, _, _) = edition(v30);
     let src = source(kind, text);
@@ -811,7 +810,7 @@ pub async fn cycle(v30: bool) {
             content: Some(value(json!({"path":"/items","method":"get"}))),
             ..Default::default()
         };
-        let control = WorkControl::new();
+        let control = CancellationToken::new();
         let mut job = invoker.invoke_with_control(
             BindingRequest {
                 source: &src,
@@ -850,7 +849,7 @@ pub async fn cycle(v30: bool) {
         }
         drop(job);
         assert_eq!(live.get(), 0);
-        let cancelled = WorkControl::new();
+        let cancelled = CancellationToken::new();
         cancelled.cancel();
         let mut before = invoker.invoke_with_control(
             BindingRequest {

@@ -1,6 +1,6 @@
-use dynamic_openapi_client::{Document, Limits, Method};
+use dynamic_openapi_client::{Document as ClientDocument, Limits, Method};
 use openapi_inspection_consumer::{author, inspect_and_author, source};
-use openbindings::{Binding, DocumentBuilder, JsonValue};
+use openbindings::{Binding, Document, JsonValue};
 
 fn carrier(document: &str) -> String {
     serde_json::to_string(&serde_json::json!({
@@ -20,10 +20,10 @@ async fn public_inspection_manual_authoring_and_exact_reload() {
         .unwrap();
     assert!(result.text().contains("9007199254740993"));
     assert!(result.text().contains("urn:example:unknown-dialect"));
-    let reloaded = DocumentBuilder::from_json(&result).unwrap();
+    let reloaded = Document::from_json(&result).unwrap();
     let source = &reloaded.sources.as_ref().unwrap()["catalog-source"];
     let document = source.content.as_ref().unwrap().get("document").unwrap();
-    let client = Document::parse(
+    let client = ClientDocument::parse(
         document.as_str().unwrap(),
         Some("https://fixture.invalid/openapi.json"),
         Limits::default(),
@@ -67,7 +67,7 @@ async fn public_inspection_manual_authoring_and_exact_reload() {
         },
     )
     .unwrap();
-    let manual_reload = DocumentBuilder::from_json(&manual).unwrap();
+    let manual_reload = Document::from_json(&manual).unwrap();
     let manual_binding = manual_reload.bindings.as_ref().unwrap()["catalog-binding"]
         .content
         .as_ref()
@@ -75,11 +75,11 @@ async fn public_inspection_manual_authoring_and_exact_reload() {
     assert_eq!(manual_binding.get("path").unwrap().as_str(), Some("/a~b/c"));
     assert_eq!(manual_binding.get("method").unwrap().as_str(), Some("get"));
     assert!(
-        DocumentBuilder::from_json(&manual)
+        Document::from_json(&manual)
             .unwrap()
             .build()
             .unwrap()
-            .assess()
+            .validate()
             .unwrap()
             .validated()
             .is_some()
@@ -114,7 +114,7 @@ async fn real_resource_recovery_from_public_packages() {
         full.targets.into_iter().next().unwrap(),
     )
     .unwrap();
-    let reloaded = DocumentBuilder::from_json(&authored).unwrap();
+    let reloaded = Document::from_json(&authored).unwrap();
     let source = &reloaded.sources.as_ref().unwrap()["catalog-source"];
     let content = source.content.as_ref().unwrap();
     let mut graph = dynamic_openapi_client::DocumentBuilder::new(
@@ -198,14 +198,15 @@ async fn inspected_neighbors_remain_preparable_after_manual_authoring_and_reload
         // r1 inspection includes known unsupported targets; authoring selects
         // the neighbor whose direct client preparation succeeds.
         let authored = inspect_and_author(&content, target).await.unwrap();
-        let reloaded = DocumentBuilder::from_json(&authored).unwrap();
+        let reloaded = Document::from_json(&authored).unwrap();
         let document = reloaded.sources.as_ref().unwrap()["catalog-source"]
             .content
             .as_ref()
             .unwrap()
             .get("document")
             .unwrap();
-        let client = Document::parse(document.as_str().unwrap(), None, Limits::default()).unwrap();
+        let client =
+            ClientDocument::parse(document.as_str().unwrap(), None, Limits::default()).unwrap();
         let operation = client.operation("/x", method.clone()).unwrap();
         let request = operation.prepare(&Input::default()).unwrap();
         assert_eq!(request.method(), method);
