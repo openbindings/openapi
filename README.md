@@ -1,7 +1,7 @@
 The OpenBindings implementation of the source-inspection, interface-synthesis and binding-invocation roles for OpenAPI, built on [`openapi-client`](https://github.com/openbindings/openapi-client).
 
 The packages are unpublished. This repository depends on the SDK at
-`9ba62d3d56b6874f2da35768b25cc95e5500d102` and the independent client at
+`f82a5135aabb146b398553f0344d107bea7f52ec` and the independent client at
 `62d0a05ee9ff3f01512a2e0855a449157dbd9d45`. The SDK defines the roles and supplies
 no kind-specific instances. This project supplies the OpenAPI provider.
 
@@ -16,7 +16,9 @@ guards dependency isolation.
 The private `local.openapi-json-probe.r1` and `local.openapi30-json-probe.r1` kinds
 retain their meanings. Sources carry exact JSON text in `document` and optional
 `retrievalUri`; bindings carry `path` and lowercase `method`. This extraction changes
-no adapter source or public API. It implements no published OpenAPI binding standard.
+no adapter behavior. The current SDK pin uses `Document`, validation vocabulary
+and companion-owned `CancellationToken` role signatures. It implements no
+published OpenAPI binding standard.
 
 The existing finite JSON profile admits GET, POST, PUT, PATCH and DELETE for OpenAPI
 3.0 and 3.1, supplied references, scalar path/query parameters, finite JSON bodies,

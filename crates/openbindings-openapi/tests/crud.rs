@@ -3,12 +3,13 @@ use dynamic_openapi_client::{
     BodyState, Cancellation, DeliveredBody, Header, HeaderDelivery, HostCapabilities,
     PreparedRequest, Provenance, ResponseInput, TransportResult, UploadState,
 };
-use openbindings::{JsonValue, Source, WorkControl};
+use openbindings::{JsonValue, Source};
 use openbindings_interface_synthesis::{
     CoverageStatus, SynthesisRequest, SynthesisSource, Synthesizer,
 };
 use openbindings_invocation::{BindingRequest, BindingValue, binding};
 use openbindings_openapi::{EXPERIMENTAL_KIND, EXPERIMENTAL_KIND_30, OpenApi};
+use openbindings_source_inspection::CancellationToken;
 use serde_json_compat::{Value, json};
 use std::{cell::Cell, rc::Rc, sync::Arc};
 
@@ -93,7 +94,7 @@ async fn invoke(
         ),
         ..Default::default()
     };
-    let control = WorkControl::new();
+    let control = CancellationToken::new();
     if cancelled {
         control.cancel();
     }

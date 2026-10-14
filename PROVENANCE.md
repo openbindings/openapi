@@ -5,7 +5,7 @@ Imported from SDK commit `78724ae`, full revision
 [openbindings/sdk](https://github.com/openbindings/sdk).
 This repository receives one clean source import, with no filtered history.
 Historical adapter evidence and role-loop records are archived outside both product
-repositories. All adapter `src/` and test `.rs` files and all fixture bytes are identical.
+repositories. At import, all adapter `src/` and test `.rs` files and all fixture bytes were identical.
 The stopped measurement examples remain sources, compiled but never executed by CI.
 
 The root development manifest, CI workflow, shared qualification helper and
@@ -13,9 +13,18 @@ dependency attribution files are new extraction plumbing. The consumer test bina
 serializes its own tests with a local lock because they count process-global owners.
 `NOTICE` describes this resolved graph. No SDK implementation is copied into this
 product repository. Dependencies are immutable Git pins: the SDK at
-`9ba62d3d56b6874f2da35768b25cc95e5500d102` (main after the Phase 2 fix slices)
+`f82a5135aabb146b398553f0344d107bea7f52ec` (vocabulary, S6a and S6b working-draft contracts)
 and the client at
 `62d0a05ee9ff3f01512a2e0855a449157dbd9d45`.
+
+The subsequent SDK migration to `f82a5135aabb146b398553f0344d107bea7f52ec`
+adapts SDK vocabulary and cancellation signatures while preserving the adapter
+profile and client pin. Synchronous helpers observe `&dyn WorkControl`; role
+providers own their companion's `CancellationToken`. The warm validated-invocation
+measurement retains a caller-owned `PreparedOperation` and uses `Attempt` to
+preserve compiled-contract reuse after removal of the core preparation cache.
+The adapter's separate bounded source-analysis cache is retained. The table below
+records the original extraction dispositions.
 
 | Imported file | SDK source at the pinned commit | Disposition |
 | --- | --- | --- |

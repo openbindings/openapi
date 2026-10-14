@@ -312,7 +312,7 @@ async fn synthesized_reloaded_document_repeats_the_independent_wire_call() {
         },
     ]);
     let saved = {
-        let draft = openbindings::DocumentBuilder::from_json(document(&origin).value()).unwrap();
+        let draft = openbindings::Document::from_json(document(&origin).value()).unwrap();
         let source = &draft.sources.as_ref().unwrap()["authoredApi"];
         let provider = OpenApi::default();
         let sources = [SynthesisSource {
@@ -334,7 +334,7 @@ async fn synthesized_reloaded_document_repeats_the_independent_wire_call() {
     };
     // All authoring owners are gone; a new provider loads a persisted document.
     let parsed = ParsedDocument::parse(saved).unwrap();
-    let draft = openbindings::DocumentBuilder::from_json(parsed.value()).unwrap();
+    let draft = openbindings::Document::from_json(parsed.value()).unwrap();
     let binding = draft
         .bindings
         .as_ref()
@@ -462,7 +462,7 @@ async fn cold_reloaded_mounts_use_supplied_reference_bases_on_real_http() {
         result.parsed().value().text().to_owned()
     };
     let doc = ParsedDocument::parse(&saved).unwrap();
-    let draft = openbindings::DocumentBuilder::from_json(doc.value()).unwrap();
+    let draft = openbindings::Document::from_json(doc.value()).unwrap();
     let keys: Vec<_> = ["/mounted/{parcelId}", "/alternate/{parcelId}"]
         .into_iter()
         .map(|path| {
@@ -648,7 +648,7 @@ async fn real_http_redirect_and_post_receipt_cancellation_have_one_effect() {
             },
         );
         let invoker = operation::Invoker::new(document(&origin), provider);
-        let control = openbindings::WorkControl::new();
+        let control = openbindings_source_inspection::CancellationToken::new();
         let mut job =
             invoker.invoke_with_control(operation::Request::operation("create"), &control);
         job.write(JsonValue::parse("{}").unwrap()).await.unwrap();

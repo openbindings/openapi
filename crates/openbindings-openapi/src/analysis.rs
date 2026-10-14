@@ -133,7 +133,7 @@ pub(crate) fn prepare(
     kind: Kind,
     content: &JsonValue,
     options: &Options,
-    control: &WorkControl,
+    control: &dyn WorkControl,
 ) -> Result<Prepared, Error> {
     object(content.view(), &["document", "retrievalUri"])?;
     let text = content

@@ -1,9 +1,9 @@
 use crate::{Error, ErrorKind, Kind, OpenApi, check};
-use openbindings::{Binding, DocumentBuilder, Operation, ParsedDocument, WorkControl};
+use openbindings::{Binding, Document, Operation, ParsedDocument, WorkControl};
 use openbindings_interface_synthesis::{
-    CoverageDraft, CoverageEntry, CoverageLimitation, CoverageScope, CoverageStatus,
-    InterfaceSynthesizer, SupportedKind, SynthesisCandidate, SynthesisError, SynthesisErrorKind,
-    SynthesisRequest,
+    CancellationToken, CoverageDraft, CoverageEntry, CoverageLimitation, CoverageScope,
+    CoverageStatus, InterfaceSynthesizer, SupportedKind, SynthesisCandidate, SynthesisError,
+    SynthesisErrorKind, SynthesisRequest,
 };
 use std::{
     collections::BTreeMap,
@@ -50,7 +50,7 @@ impl<T> InterfaceSynthesizer for OpenApi<T> {
     fn synthesize<'a>(
         &'a self,
         request: &'a SynthesisRequest<'a>,
-        control: WorkControl,
+        control: CancellationToken,
     ) -> Self::Synthesis<'a> {
         ready(self.derive(request, &control))
     }
@@ -59,7 +59,7 @@ impl<T> OpenApi<T> {
     fn derive(
         &self,
         request: &SynthesisRequest<'_>,
-        control: &WorkControl,
+        control: &dyn WorkControl,
     ) -> Result<SynthesisCandidate, SynthesisError> {
         check(control).map_err(|e| e.synthesis())?;
         if request.sources.len() > 1 {
@@ -69,7 +69,7 @@ impl<T> OpenApi<T> {
                 "This experiment accepts at most one supplied source",
             ));
         }
-        let mut draft = DocumentBuilder::new();
+        let mut draft = Document::new();
         if let Some(version) = request.openbindings_version {
             draft.openbindings = version.into();
         }

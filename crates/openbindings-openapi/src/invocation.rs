@@ -5,7 +5,8 @@ use dynamic_openapi_client::{
 };
 use openbindings::{JsonKind, JsonRef, JsonValue, WorkControl};
 use openbindings_invocation::{
-    BindingRequest, ContextChallenge, InvocationError, ProviderInput, ProviderIo, ProviderOutput,
+    BindingRequest, CancellationToken, ContextChallenge, InvocationError, ProviderInput,
+    ProviderIo, ProviderOutput,
     binding::{BindingInvoker, SupportedKind},
 };
 use std::{
@@ -85,9 +86,9 @@ pub struct InvocationFuture<'a, T: Transport> {
     output: Option<ProviderOutput>,
     execution: Option<Pin<Box<T::Execution<'a>>>>,
     emitting: Option<Emit>,
-    control: openbindings::Cancellation,
+    control: openbindings_invocation::Cancellation,
     cancellation: Cancellation,
-    work: WorkControl,
+    work: CancellationToken,
     empty_responses: analysis::EmptyResponses,
     done: bool,
 }
@@ -193,7 +194,7 @@ impl<T: Transport> BindingInvoker for OpenApi<T> {
         &'a self,
         request: BindingRequest<'a>,
         io: ProviderIo,
-        work: WorkControl,
+        work: CancellationToken,
     ) -> Self::Invocation<'a> {
         let (input, output) = io.split();
         InvocationFuture {
@@ -216,7 +217,7 @@ fn prepare_request<T>(
     provider: &OpenApi<T>,
     request: BindingRequest<'_>,
     value: &JsonValue,
-    control: &WorkControl,
+    control: &dyn WorkControl,
 ) -> Result<(PreparedRequest, analysis::EmptyResponses), InvocationError> {
     let refused = || InvocationError::refused();
     let p = provider.prepare(request.source, control).map_err(|_| {

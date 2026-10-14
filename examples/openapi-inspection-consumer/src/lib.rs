@@ -1,5 +1,5 @@
 //! Public Rust consumer. Host instrumentation is qualification-only.
-use openbindings::{Binding, DocumentBuilder, JsonValue, Operation, Source};
+use openbindings::{Binding, Document, JsonValue, Operation, Source};
 use openbindings_openapi::{EXPERIMENTAL_KIND, OpenApi};
 use openbindings_source_inspection::{BindableTarget, Inspector};
 use std::collections::BTreeMap;
@@ -14,19 +14,19 @@ pub fn source(content: &str) -> Result<Source, openbindings::InputError> {
 
 /// Author-owned keys intentionally differ from operationId/sourceRef suggestions.
 pub fn author(source: Source, binding: Binding) -> Result<JsonValue, Box<dyn std::error::Error>> {
-    let mut draft = DocumentBuilder::new();
+    let mut draft = Document::new();
     draft
         .operations
         .insert("catalog.lookup".into(), Operation::default());
     draft.sources = Some(BTreeMap::from([("catalog-source".into(), source)]));
     draft.bindings = Some(BTreeMap::from([("catalog-binding".into(), binding)]));
     let parsed = draft.build()?;
-    let assessment = parsed.assess()?;
-    if assessment.validated().is_none() {
+    let validation = parsed.validate()?;
+    if validation.validated().is_none() {
         return Err("authored OBI does not conform".into());
     }
     let encoded = draft.to_json()?;
-    let reloaded = DocumentBuilder::from_json(&encoded)?;
+    let reloaded = Document::from_json(&encoded)?;
     assert_eq!(
         reloaded.bindings.as_ref().unwrap()["catalog-binding"].operation,
         "catalog.lookup"
@@ -67,7 +67,7 @@ pub async fn inspect_and_author(
 #[cfg(all(target_arch = "wasm32", feature = "wasm-probe"))]
 mod wasm {
     use super::*;
-    use openbindings::WorkControl;
+    use openbindings_source_inspection::CancellationToken;
     use std::rc::Rc;
     use wasm_bindgen::prelude::*;
     #[wasm_bindgen(js_name=inspectSource)]
@@ -75,7 +75,7 @@ mod wasm {
         let source = source(&content).map_err(|e| JsValue::from_str(&e.to_string()))?;
         drop(content);
         let provider = Rc::new(OpenApi::default());
-        let control = WorkControl::new();
+        let control = CancellationToken::new();
         if cancelled {
             control.cancel();
         }

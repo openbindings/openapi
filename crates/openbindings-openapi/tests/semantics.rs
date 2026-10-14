@@ -2,9 +2,10 @@ use dynamic_openapi_client::{
     BodyState, Cancellation, DeliveredBody, Header, HeaderDelivery, HostCapabilities, Outcome,
     PreparedRequest, Provenance, ResponseInput, TransportResult, UploadState,
 };
-use openbindings::{DocumentBuilder, JsonValue, ParsedDocument, WorkControl};
+use openbindings::{Document, JsonValue, ParsedDocument};
 use openbindings_invocation::{BindingRequest, BindingValue, InvocationError, binding, operation};
 use openbindings_openapi::{OpenApi, SERVER_POINT};
+use openbindings_source_inspection::CancellationToken;
 use std::{cell::Cell, rc::Rc, sync::Arc, time::Duration};
 fn json(t: &str) -> JsonValue {
     JsonValue::parse(t).unwrap()
@@ -60,7 +61,7 @@ async fn invoke<P: binding::BindingInvoker>(
     input: Vec<JsonValue>,
     context: Option<&JsonValue>,
 ) -> Result<Vec<JsonValue>, InvocationError> {
-    let draft = DocumentBuilder::from_json(document().value()).unwrap();
+    let draft = Document::from_json(document().value()).unwrap();
     let source = &draft.sources.as_ref().unwrap()["authoredApi"];
     let binding = BindingValue::from(&draft.bindings.as_ref().unwrap()["healthBinding"]);
     let facade = binding::Invoker::new(provider);
@@ -235,7 +236,7 @@ async fn pending_local_host_cancellation_and_drop_release_owners() {
             },
         );
         let invoker = operation::Invoker::new(document(), provider);
-        let control = WorkControl::new();
+        let control = CancellationToken::new();
         let mut job =
             invoker.invoke_with_control(operation::Request::operation("health"), &control);
         job.write(json("{}")).await.unwrap();
@@ -280,7 +281,7 @@ async fn exact_integer_parameters_agree_with_the_operation_schema() {
         .await
         .unwrap();
     let parsed = ParsedDocument::parse(generated.parsed().value().text()).unwrap();
-    let draft = DocumentBuilder::from_json(parsed.value()).unwrap();
+    let draft = Document::from_json(parsed.value()).unwrap();
     let (name, binding) = draft.bindings.as_ref().unwrap().iter().next().unwrap();
     let value = BindingValue::from(binding);
     let direct = binding::Invoker::new(&provider);
@@ -354,7 +355,7 @@ async fn incomplete_headers_and_pre_cancel_are_not_success() {
     let provider =
         OpenApi::default().with_transport(host(calls.clone(), 204, "", BodyState::Complete));
     let facade = operation::Invoker::new(document(), provider);
-    let control = WorkControl::new();
+    let control = CancellationToken::new();
     control.cancel();
     let mut job = facade.invoke_with_control(operation::Request::operation("health"), &control);
     let _ = job.write(json("{}")).await;
@@ -373,7 +374,7 @@ async fn generic_selection_and_author_contracts_remain_in_the_operation_layer() 
     let calls = Rc::new(Cell::new(0));
     let provider =
         OpenApi::default().with_transport(host(calls.clone(), 200, "null", BodyState::Complete));
-    let mut draft = DocumentBuilder::from_json(document().value()).unwrap();
+    let mut draft = Document::from_json(document().value()).unwrap();
     let b = draft.bindings.as_ref().unwrap()["healthBinding"].clone();
     draft
         .bindings
@@ -398,7 +399,7 @@ async fn generic_selection_and_author_contracts_remain_in_the_operation_layer() 
     assert_eq!(calls.get(), 1);
     drop(job);
     for (side, expected_calls) in [("input", 1), ("output", 2)] {
-        let mut draft = DocumentBuilder::from_json(document().value()).unwrap();
+        let mut draft = Document::from_json(document().value()).unwrap();
         if side == "input" {
             draft.operations.get_mut("health").unwrap().input = Some(json("false"));
         } else {
@@ -433,7 +434,7 @@ async fn required_values_duplicates_media_and_body_budget_are_checked() {
     let count = Rc::new(Cell::new(0));
     let provider =
         OpenApi::default().with_transport(host(count.clone(), 204, "", BodyState::Complete));
-    let draft = DocumentBuilder::from_json(document().value()).unwrap();
+    let draft = Document::from_json(document().value()).unwrap();
     let source = &draft.sources.as_ref().unwrap()["authoredApi"];
     let facade = binding::Invoker::new(&provider);
     for (key, input) in [

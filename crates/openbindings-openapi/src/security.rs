@@ -38,7 +38,7 @@ pub(crate) fn apply(
     context: Option<&JsonValue>,
     target: Target<'_>,
     options: &Options,
-    work: &WorkControl,
+    work: &dyn WorkControl,
     input: &mut Input,
 ) -> Result<(), InvocationError> {
     let fail = InvocationError::refused;
