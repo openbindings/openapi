@@ -92,7 +92,7 @@ pub fn reply(body: &str) -> TransportResult {
 pub fn owners() -> (usize, usize) {
     (
         openbindings_internal_json::backend::live_arenas(),
-        dynamic_openapi_client::live_json_owners(),
+        dynamic_openapi_client::qualification::live_owners(),
     )
 }
 #[cfg(all(target_arch = "wasm32", feature = "wasm-probe"))]

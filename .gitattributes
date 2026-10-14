@@ -1,2 +1,5 @@
 # Frozen consumer sources must match the exact text embedded in manual documents.
 /examples/openapi-json-path-consumer/src/crud-fixtures/** -text
+# Generated attribution inventories retain their exact bytes on every platform.
+/DEPENDENCIES.json -text
+/THIRD-PARTY-NOTICES.txt -text

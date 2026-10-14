@@ -158,6 +158,43 @@ async fn invoke<P: binding::BindingInvoker>(
     Ok(values)
 }
 #[tokio::test]
+async fn preflight_makes_no_prediction_without_dispatch() {
+    // The adapter implements no provider preflight; the facade admits the
+    // request and predicts nothing, without dispatching.
+    let count = Rc::new(Cell::new(0));
+    let provider = OpenApi::default().with_transport(transport(
+        count.clone(),
+        Rc::new(RefCell::new(Vec::new())),
+        204,
+        "",
+        BodyState::Complete,
+    ));
+    let facade = binding::Invoker::new(&provider);
+    let src = source(KIND_30, SIMPLE);
+    let value = BindingValue {
+        content: Some(json(r#"{"path":"/ping","method":"get"}"#)),
+        ..Default::default()
+    };
+    let request = BindingRequest {
+        source: &src,
+        binding: &value,
+        context: None,
+    };
+    assert!(facade.preflight(request).await.unwrap().is_none());
+    let control = openbindings::WorkControl::new();
+    control.cancel();
+    assert_eq!(
+        facade
+            .preflight_with_control(request, &control)
+            .await
+            .unwrap_err()
+            .code(),
+        "ERR_CANCELLED"
+    );
+    assert_eq!(count.get(), 0);
+}
+
+#[tokio::test]
 async fn kinds_are_advertised_and_crossed_editions_never_dispatch() {
     use openbindings_openapi::{
         EXPERIMENTAL_KIND_30, HTTP_STATUS_ERROR, HTTP_STATUS_ERROR_30, SERVER_POINT,

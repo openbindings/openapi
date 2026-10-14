@@ -99,7 +99,7 @@ mod wasm {
     }
     #[wasm_bindgen(js_name=liveClientOwners)]
     pub fn client_owners() -> usize {
-        dynamic_openapi_client::live_json_owners()
+        dynamic_openapi_client::qualification::live_owners()
     }
     #[wasm_bindgen(js_name=liveSdkOwners)]
     pub fn sdk_owners() -> usize {

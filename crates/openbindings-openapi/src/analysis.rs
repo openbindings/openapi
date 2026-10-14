@@ -106,7 +106,7 @@ impl Prepared {
         if self.exhaustive && !self.extra_interactions {
             SourceInspection::complete(targets)
         } else {
-            SourceInspection::partial(targets, InspectionLimitation { code: "openbindings.openapi.inventory-incomplete".into(), message: "Supplied resources or this implementation do not establish every interaction; omitted interactions are not declared invalid".into(), details: None })
+            SourceInspection::partial(targets, InspectionLimitation { code: "openbindings.openapi.inventory-incomplete".into(), message: "Supplied resources or this implementation do not establish every interaction; omitted interactions are not declared invalid".into(), details: None, additional_fields: Default::default() })
         }
     }
 }
