@@ -4,8 +4,11 @@ use crate::{
     wire_json::{Value, json},
 };
 use dynamic_openapi_client::{
-    BodyState, Cancellation, DeliveredBody, Header, HeaderDelivery, HostCapabilities,
-    PreparedRequest, Provenance, ResponseInput, TransportResult, UploadState,
+    Cancellation, Header,
+    transport::{
+        BodyState, HeaderDelivery, HostCapabilities, PreparedRequest, Provenance, ResponseInput,
+        TransportResult, UploadState,
+    },
 };
 use openbindings::{Document, JsonValue, Source};
 use openbindings_interface_synthesis::{
@@ -493,11 +496,9 @@ pub async fn suite(v30: bool) {
                         let mut response = ResponseInput::new(
                             200,
                             vec![Header::new("content-type", "application/json")],
-                            DeliveredBody {
-                                bytes: Arc::from(OUTPUT.as_bytes()),
-                                state: BodyState::Truncated,
-                                provenance: Provenance::Wire,
-                            },
+                            Arc::from(OUTPUT.as_bytes()),
+                            BodyState::Truncated,
+                            Provenance::Wire,
                         );
                         response.header_delivery = HeaderDelivery::Complete;
                         TransportResult {

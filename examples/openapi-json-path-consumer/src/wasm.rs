@@ -1,5 +1,8 @@
 use super::*;
-use dynamic_openapi_client::{Cancellation, HostCapabilities, Outcome, PreparedRequest};
+use dynamic_openapi_client::{
+    Cancellation, Outcome,
+    transport::{HostCapabilities, PreparedRequest},
+};
 use openbindings::Document;
 use openbindings_source_inspection::CancellationToken;
 use std::{cell::Cell, rc::Rc, task::Poll};

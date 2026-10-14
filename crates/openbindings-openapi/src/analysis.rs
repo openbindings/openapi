@@ -1,7 +1,11 @@
 use crate::{Error, ErrorKind, Kind, Options, check, json};
 use dynamic_openapi_client::{
-    Document, DocumentBuilder, Method, Operation, ParameterLocation, ResourceInput, SchemaProfile,
-    SourceFormat, ValueKind,
+    Document, Operation, ParameterLocation,
+    exact::ValueKind,
+    graph::{DocumentBuilder, ResourceInput},
+    inspect::Method,
+    schema::SchemaProfile,
+    source::SourceFormat,
 };
 use openbindings::{JsonRef, JsonValue, WorkControl};
 use openbindings_source_inspection::{
@@ -37,7 +41,9 @@ pub(crate) struct Profile {
 #[derive(Clone, Copy, Default)]
 pub(crate) struct EmptyResponses(u128);
 impl EmptyResponses {
-    fn from_descriptions(responses: &[dynamic_openapi_client::ResponseDescription]) -> Self {
+    fn from_descriptions(
+        responses: &[dynamic_openapi_client::inspect::ResponseDescription],
+    ) -> Self {
         let fallback = ["2XX", "default"]
             .into_iter()
             .find_map(|key| responses.iter().find(|r| r.status == key));
@@ -197,7 +203,7 @@ pub(crate) fn prepare(
         let established = document
             .protocol_at(
                 &item_pointer,
-                dynamic_openapi_client::ReferenceKind::PathItem,
+                dynamic_openapi_client::graph::ReferenceKind::PathItem,
             )
             .and_then(|site| document.resolve_protocol(&site));
         if let Ok(item) = &established
@@ -287,7 +293,7 @@ fn profile(operation: &Operation, kind: Kind) -> Result<Profile, &'static str> {
                 .iter()
                 .map(|r| {
                     use crate::security::Family;
-                    use dynamic_openapi_client::SecurityScheme;
+                    use dynamic_openapi_client::inspect::SecurityScheme;
                     if !r.scopes.is_empty() {
                         return Err("security-roles-unimplemented");
                     }

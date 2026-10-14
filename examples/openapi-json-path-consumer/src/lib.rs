@@ -1,7 +1,9 @@
 //! External consumer: inspection, synthesis, save/reload and finite invocation.
 use dynamic_openapi_client::{
-    BodyState, DeliveredBody, Header, HeaderDelivery, Provenance, ResponseInput, TransportResult,
-    UploadState,
+    Header,
+    transport::{
+        BodyState, HeaderDelivery, Provenance, ResponseInput, TransportResult, UploadState,
+    },
 };
 use openbindings::{JsonValue, ParsedDocument, Source};
 use openbindings_interface_synthesis::{SynthesisRequest, SynthesisSource, Synthesizer};
@@ -76,11 +78,9 @@ pub fn reply(body: &str) -> TransportResult {
     let mut response = ResponseInput::new(
         200,
         vec![Header::new("content-type", "application/json")],
-        DeliveredBody {
-            bytes: Arc::from(body.as_bytes()),
-            state: BodyState::Complete,
-            provenance: Provenance::Wire,
-        },
+        Arc::from(body.as_bytes()),
+        BodyState::Complete,
+        Provenance::Wire,
     );
     response.header_delivery = HeaderDelivery::Complete;
     TransportResult {

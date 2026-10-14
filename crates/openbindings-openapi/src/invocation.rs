@@ -1,7 +1,8 @@
 use crate::{Kind, OpenApi, analysis, json};
 use dynamic_openapi_client::{
-    Body, BodyState, Cancellation, ExactJson, HeaderDelivery, Input, Outcome, ParameterInput,
-    ParameterLocation, PreparedRequest,
+    Cancellation, Outcome, ParameterLocation,
+    exact::Value,
+    transport::{BodyState, HeaderDelivery, PreparedRequest},
 };
 use openbindings::{JsonKind, JsonRef, JsonValue, WorkControl};
 use openbindings_invocation::{
@@ -27,7 +28,7 @@ use std::{
 /// Implementations must disable automatic redirects, replay/retries and ambient
 /// authentication (including cookies), apply their own capability admission
 /// before dispatch, and preserve the prepared target and headers. Dispatch through
-/// [`PreparedRequest::invoke`] with honest [`dynamic_openapi_client::HostCapabilities`]
+/// [`PreparedRequest::invoke`] with honest [`dynamic_openapi_client::transport::HostCapabilities`]
 /// so the client's strict admission runs before the HTTP callback. A capability
 /// declaration is not proof that the underlying HTTP client obeys it; the adapter
 /// does not obtain or check the host's declaration itself.
@@ -126,11 +127,16 @@ impl<T: Transport> Future for InvocationFuture<'_, T> {
                 let Some(value) = this.value.take() else {
                     break Poll::Ready(Err(InvocationError::refused()));
                 };
-                let (prepared, empty_responses) =
-                    match prepare_request(this.provider, this.request, &value, &this.work) {
-                        Ok(p) => p,
-                        Err(e) => break Poll::Ready(Err(e)),
-                    };
+                let (prepared, empty_responses) = match prepare_request(
+                    this.provider,
+                    this.request,
+                    &value,
+                    &this.work,
+                    &this.cancellation,
+                ) {
+                    Ok(p) => p,
+                    Err(e) => break Poll::Ready(Err(e)),
+                };
                 this.empty_responses = empty_responses;
                 if this.work.is_cancelled() {
                     break Poll::Ready(Err(InvocationError::cancelled()));
@@ -218,6 +224,7 @@ fn prepare_request<T>(
     request: BindingRequest<'_>,
     value: &JsonValue,
     control: &dyn WorkControl,
+    cancellation: &Cancellation,
 ) -> Result<(PreparedRequest, analysis::EmptyResponses), InvocationError> {
     let refused = || InvocationError::refused();
     let p = provider.prepare(request.source, control).map_err(|_| {
@@ -252,10 +259,10 @@ fn prepare_request<T>(
     if value.has_duplicate_names() {
         return Err(refused());
     }
-    let mut input = Input::default();
+    let mut input = unit.operation.request().cancellation(cancellation.clone());
     if let Some(parameters) = value.get("parameters") {
         analysis::object(parameters, &["path", "query"]).map_err(|_| refused())?;
-        let supplied = ["path", "query"]
+        ["path", "query"]
             .into_iter()
             .filter_map(|name| parameters.get(name))
             .try_fold(0usize, |n, value| {
@@ -271,7 +278,6 @@ fn prepare_request<T>(
                 }
                 Ok(total)
             })?;
-        input.parameters.reserve(supplied);
         for (location, location_name) in [
             (ParameterLocation::Path, "path"),
             (ParameterLocation::Query, "query"),
@@ -305,15 +311,9 @@ fn prepare_request<T>(
                     if !valid {
                         return Err(refused());
                     }
-                    let value =
-                        ExactJson::parse(member.value.text(), provider.options.limits.clone())
-                            .map_err(|_| refused())?
-                            .root();
-                    input.parameters.push(ParameterInput {
-                        location,
-                        name: name.into(),
-                        value,
-                    });
+                    let value = Value::parse(member.value.text(), provider.options.limits.clone())
+                        .map_err(|_| refused())?;
+                    input = input.parameter_exact(location, name, &value);
                 }
             }
         }
@@ -322,10 +322,8 @@ fn prepare_request<T>(
         if !profile.has_body {
             return Err(refused());
         }
-        input.body = Body::Json(
-            ExactJson::parse(body.text(), provider.options.limits.clone())
-                .map_err(|_| refused())?
-                .root(),
+        input = input.json_exact(
+            &Value::parse(body.text(), provider.options.limits.clone()).map_err(|_| refused())?,
         );
     }
     let servers = &profile.servers;
@@ -347,27 +345,28 @@ fn prepare_request<T>(
         None if servers.iter().all(|s| s == &servers[0]) => Some(0),
         None => None,
     };
-    input.selection.server = Some(selected.ok_or_else(|| {
+    let selected = selected.ok_or_else(|| {
         let choices: std::collections::BTreeSet<_> = servers.iter().map(|s| s.as_str()).collect();
         let target = serde_json_compat::json!([p.kind.label(), request.source.content.as_ref().and_then(|v| v.get("retrievalUri")).and_then(JsonRef::as_str), path, method, choices]).to_string();
         let shape = json(&serde_json_compat::json!({"target":target,"alternatives":[{"requirements":[{"type":"config.value","point":server_point,"path":"","schema":{"type":"string","enum":choices}}]}]}));
         shape.ok().and_then(|v| ContextChallenge::new(v).ok()).map(InvocationError::challenge).unwrap_or_else(refused)
-    })?);
-    crate::security::apply(
+    })?;
+    input = input.server(selected);
+    input = crate::security::apply(
         profile,
         request.context,
         crate::security::Target {
             kind: p.kind,
             path,
             method,
-            server: &servers[input.selection.server.expect("selected")],
+            server: &servers[selected],
         },
         &provider.options,
         control,
-        &mut input,
+        input,
     )?;
-    unit.operation
-        .prepare(&input)
+    dynamic_openapi_client::advanced::prepare(input)
+        .0
         .map(|request| (request, profile.empty_responses))
         .map_err(|_| refused())
 }
@@ -376,39 +375,39 @@ fn accept(
     kind: Kind,
     empty_responses: analysis::EmptyResponses,
 ) -> Result<Option<JsonValue>, InvocationError> {
-    if outcome.cancelled {
+    if outcome.cancelled() {
         return Err(InvocationError::cancelled());
     }
     // A host outcome is evidence, not permission to infer absence of effects.
-    if outcome.error.is_some()
-        || outcome.dispatch != dynamic_openapi_client::DispatchEvidence::Dispatched
+    if outcome.error().is_some()
+        || outcome.dispatch() != dynamic_openapi_client::transport::DispatchEvidence::Dispatched
     {
         return Err(InvocationError::execution_failed());
     }
-    let response = outcome
-        .response
+    let status = outcome
+        .status()
         .ok_or_else(InvocationError::execution_failed)?;
-    if response.body_state() != BodyState::Complete
-        || response.header_delivery() != HeaderDelivery::Complete
-        || response.omitted_header_lines() != 0
+    if outcome.body_state() != Some(BodyState::Complete)
+        || outcome.header_delivery() != Some(HeaderDelivery::Complete)
+        || outcome.omitted_header_lines() != Some(0)
     {
         return Err(InvocationError::execution_failed());
     }
-    if !(200..300).contains(&response.status()) {
-        let data = json(&serde_json_compat::json!({"status":response.status()}))
+    if !(200..300).contains(&status) {
+        let data = json(&serde_json_compat::json!({"status":status}))
             .map_err(|_| InvocationError::execution_failed())?;
         return Err(InvocationError::new(kind.status_error(), Some(data))
             .expect("fixed governed error shape"));
     }
-    if matches!(response.status(), 204 | 205) || empty_responses.contains(response.status()) {
-        return if response.raw().is_empty() {
+    if matches!(status, 204 | 205) || empty_responses.contains(status) {
+        return if outcome.raw().is_some_and(<[u8]>::is_empty) {
             Ok(None)
         } else {
             Err(InvocationError::execution_failed())
         };
     }
-    let decoded = response
-        .json()
+    let decoded = outcome
+        .received_2xx_json_exact()
         .map_err(|_| InvocationError::execution_failed())?;
     JsonValue::parse(decoded.source())
         .map(Some)

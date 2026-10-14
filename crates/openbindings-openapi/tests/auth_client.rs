@@ -1,7 +1,5 @@
 //! Gate A capability probes against fresh, independently authored expectations.
-use dynamic_openapi_client::{
-    Body, Credential, CredentialValue, Document, ExactJson, Input, Limits,
-};
+use dynamic_openapi_client::{Credential, Document, Limits, exact};
 use serde_json_compat::Value;
 
 #[test]
@@ -23,31 +21,34 @@ fn pinned_client_auth_wire_and_origin_capabilities() {
                 .unwrap();
             let description = op.describe().unwrap();
             let chosen = row["securitySchemes"].as_array().unwrap();
-            let mut input = Input::default();
-            input.selection.security = description.security.iter().position(|a| {
-                a.requirements.len() == chosen.len()
-                    && a.requirements
-                        .iter()
-                        .all(|r| chosen.contains(&Value::String(r.name.clone())))
-            });
-            for name in chosen.iter().map(|x| x.as_str().unwrap()) {
-                let v = row["credentials"][name].as_str().unwrap().to_owned();
-                input.credentials.insert(
-                    name.into(),
-                    Credential {
-                        value: if name == "ServiceToken" {
-                            CredentialValue::Bearer(v)
-                        } else {
-                            CredentialValue::ApiKey(v)
-                        },
-                        origins: vec!["HTTPS://API.EXAMPLE.TEST:443".into()],
-                    },
-                );
-            }
-            if let Some(body) = row["bodyText"].as_str() {
-                input.body = Body::Json(ExactJson::parse(body, Limits::default()).unwrap().root());
-            }
-            let request = op.prepare(&input).unwrap();
+            let build = |origin: &str| {
+                let selected = description.security.iter().position(|a| {
+                    a.requirements.len() == chosen.len()
+                        && a.requirements
+                            .iter()
+                            .all(|r| chosen.contains(&Value::String(r.name.clone())))
+                });
+                let mut input = op.request();
+                if let Some(selected) = selected {
+                    input = input.security(selected);
+                }
+                for name in chosen.iter().map(|x| x.as_str().unwrap()) {
+                    let v = row["credentials"][name].as_str().unwrap();
+                    let origins = vec![origin.into()];
+                    let credential = if name == "ServiceToken" {
+                        Credential::bearer(v, origins)
+                    } else {
+                        Credential::api_key(v, origins)
+                    };
+                    input = input.credential(name, credential);
+                }
+                if let Some(body) = row["bodyText"].as_str() {
+                    input =
+                        input.json_exact(&exact::Value::parse(body, Limits::default()).unwrap());
+                }
+                input.prepare()
+            };
+            let request = build("HTTPS://API.EXAMPLE.TEST:443").unwrap();
             for (name, value) in row["authHeaders"].as_object().unwrap() {
                 let matches: Vec<_> = request
                     .headers()
@@ -58,10 +59,7 @@ fn pinned_client_auth_wire_and_origin_capabilities() {
                 assert_eq!(matches[0].value(), value.as_str().unwrap().as_bytes());
             }
             if !chosen.is_empty() {
-                for c in input.credentials.values_mut() {
-                    c.origins = vec!["https://different.example.test".into()];
-                }
-                assert!(op.prepare(&input).is_err());
+                assert!(build("https://different.example.test").is_err());
             }
         }
     }

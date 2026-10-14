@@ -124,7 +124,7 @@ fn main() {
         }
         let after = owners();
         assert_eq!(before, after);
-        workloads.push(json!({"operations":count,"sourceBytes":bytes.len(),"samples":samples,"ownerCycles":1000,"clientOwnerDelta":after.0 as i64-before.0 as i64,"sdkOwnerDelta":after.1 as i64-before.1 as i64,"clientAccountedRetainedBytes":document.retained_bytes(),"resultJsonBytes":check(ready(inspector.inspect(&source)).unwrap()).to_json().unwrap().text().len()}));
+        workloads.push(json!({"operations":count,"sourceBytes":bytes.len(),"samples":samples,"ownerCycles":1000,"clientOwnerDelta":after.0 as i64-before.0 as i64,"sdkOwnerDelta":after.1 as i64-before.1 as i64,"clientAccountedRetainedBytes":dynamic_openapi_client::qualification::document_retained_bytes(&document),"resultJsonBytes":check(ready(inspector.inspect(&source)).unwrap()).to_json().unwrap().text().len()}));
     }
     println!("{}",serde_json::to_string_pretty(&json!({"mode":mode,"workloads":workloads,"scope":"native release, generation/input-carrier construction excluded, result destruction included; logical owner accounting is not total heap or RSS"})).unwrap());
 }

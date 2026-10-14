@@ -72,8 +72,11 @@ async fn correct_editions_and_kind_sensitive_cache() {
 }
 
 use dynamic_openapi_client::{
-    BodyState, Cancellation, DeliveredBody, Header, HeaderDelivery, HostCapabilities, Outcome,
-    PreparedRequest, Provenance, ResponseInput, TransportResult, UploadState,
+    Cancellation, Header, Outcome,
+    transport::{
+        BodyState, HeaderDelivery, HostCapabilities, PreparedRequest, Provenance, ResponseInput,
+        TransportResult, UploadState,
+    },
 };
 use openbindings_invocation::{BindingRequest, BindingValue, InvocationError, binding, operation};
 use std::{
@@ -98,15 +101,13 @@ fn transport(
                     &HostCapabilities::programmable(),
                     move |wire, _| async move {
                         count.set(count.get() + 1);
-                        targets.borrow_mut().push(wire.target);
+                        targets.borrow_mut().push(wire.target().to_owned());
                         let mut response = ResponseInput::new(
                             status,
                             vec![Header::new("content-type", "application/json")],
-                            DeliveredBody {
-                                bytes: Arc::from(body.as_bytes()),
-                                state,
-                                provenance: Provenance::Wire,
-                            },
+                            Arc::from(body.as_bytes()),
+                            state,
+                            Provenance::Wire,
                         );
                         response.header_delivery = HeaderDelivery::Complete;
                         TransportResult {
@@ -544,7 +545,7 @@ async fn schema_dialect_boundaries_do_not_invent_a_caller_contract() {
     assert_eq!(count.get(), 1);
 }
 fn resources() -> Options {
-    use dynamic_openapi_client::{Edition, ReferenceKind};
+    use dynamic_openapi_client::{graph::ReferenceKind, inspect::Edition};
     use openbindings_openapi::ResourceLayout;
     let mut options = Options::default();
     options.resources = vec![
@@ -692,7 +693,10 @@ async fn independent_manual_and_synthesized_reloaded_consumers_use_real_http() {
         let provider = OpenApi::new(resources()).unwrap().with_transport(
             move |request: PreparedRequest, cancel: Cancellation| {
                 let client = client.clone();
-                async move { client.execute(&request, cancel).await }
+                async move {
+                    dynamic_openapi_client_reqwest::advanced::execute(&client, &request, cancel)
+                        .await
+                }
             },
         );
         let invoker = operation::Invoker::new(parsed, provider)
@@ -946,7 +950,7 @@ async fn get_request_body_uses_the_source_edition_semantics() {
                                 // Both invoke paths below check literal body bytes via the prepared wire request.
                                 sent.set(sent.get() + 1);
                                 assert_eq!(
-                                    wire.body.as_deref(),
+                                    wire.body().map(AsRef::as_ref),
                                     if has_body {
                                         Some(b"null".as_slice())
                                     } else {
@@ -956,11 +960,9 @@ async fn get_request_body_uses_the_source_edition_semantics() {
                                 let mut response = ResponseInput::new(
                                     204,
                                     vec![],
-                                    DeliveredBody {
-                                        bytes: Arc::from([]),
-                                        state: BodyState::Complete,
-                                        provenance: Provenance::Wire,
-                                    },
+                                    Arc::from([]),
+                                    BodyState::Complete,
+                                    Provenance::Wire,
                                 );
                                 response.header_delivery = HeaderDelivery::Complete;
                                 TransportResult {

@@ -2,7 +2,7 @@ The OpenBindings implementation of the source-inspection, interface-synthesis an
 
 The packages are unpublished. This repository depends on the SDK at
 `f82a5135aabb146b398553f0344d107bea7f52ec` and the independent client at
-`62d0a05ee9ff3f01512a2e0855a449157dbd9d45`. The SDK defines the roles and supplies
+`7de316b1ec5d970284cf244ec38eb56b565019d8`. The SDK defines the roles and supplies
 no kind-specific instances. This project supplies the OpenAPI provider.
 
 Use `OpenApi::default()` with the SDK's checked `Inspector` or `Synthesizer`.

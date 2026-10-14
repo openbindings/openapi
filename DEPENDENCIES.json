@@ -454,7 +454,7 @@
       "version": "0.0.0",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/openapi-client",
-      "source": "git+https://github.com/openbindings/openapi-client?rev=62d0a05ee9ff3f01512a2e0855a449157dbd9d45#62d0a05ee9ff3f01512a2e0855a449157dbd9d45",
+      "source": "git+https://github.com/openbindings/openapi-client?rev=7de316b1ec5d970284cf244ec38eb56b565019d8#7de316b1ec5d970284cf244ec38eb56b565019d8",
       "notices": [
         {
           "path": "LICENSE",
@@ -467,7 +467,7 @@
       "version": "0.0.0",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/openapi-client",
-      "source": "git+https://github.com/openbindings/openapi-client?rev=62d0a05ee9ff3f01512a2e0855a449157dbd9d45#62d0a05ee9ff3f01512a2e0855a449157dbd9d45",
+      "source": "git+https://github.com/openbindings/openapi-client?rev=7de316b1ec5d970284cf244ec38eb56b565019d8#7de316b1ec5d970284cf244ec38eb56b565019d8",
       "notices": [
         {
           "path": "repository/LICENSE",

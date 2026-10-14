@@ -1,8 +1,11 @@
 //! Public consumer with independently authored documents and literal exchanges.
 use crate::{call, invoker, source};
 use dynamic_openapi_client::{
-    BodyState, Cancellation, DeliveredBody, Header, HeaderDelivery, HostCapabilities,
-    PreparedRequest, Provenance, ResponseInput, TransportResult, UploadState,
+    Cancellation, Header,
+    transport::{
+        BodyState, HeaderDelivery, HostCapabilities, PreparedRequest, Provenance, ResponseInput,
+        TransportResult, UploadState,
+    },
 };
 use openbindings::{Document, JsonValue, ParsedDocument};
 use openbindings_interface_synthesis::{
@@ -108,19 +111,19 @@ pub async fn suite(v30: bool) {
                                     move |wire, _| async move {
                                         recorded.set(recorded.get() + 1);
                                         assert_eq!(
-                                            wire.method.as_str(),
+                                            wire.method().as_str(),
                                             expected["method"].as_str().unwrap()
                                         );
                                         assert_eq!(
-                                            wire.target,
+                                            wire.target(),
                                             expected["target"].as_str().unwrap()
                                         );
                                         assert_eq!(
-                                            wire.body.as_deref(),
+                                            wire.body().map(AsRef::as_ref),
                                             expected["request"].as_str().map(str::as_bytes)
                                         );
                                         let auth: Vec<_> = wire
-                                            .headers
+                                            .headers()
                                             .iter()
                                             .filter(|h| {
                                                 h.name().eq_ignore_ascii_case("authorization")
@@ -143,11 +146,9 @@ pub async fn suite(v30: bool) {
                                                     "application/json",
                                                 )]
                                             },
-                                            DeliveredBody {
-                                                bytes: Arc::from(body.as_bytes()),
-                                                state: BodyState::Complete,
-                                                provenance: Provenance::Wire,
-                                            },
+                                            Arc::from(body.as_bytes()),
+                                            BodyState::Complete,
+                                            Provenance::Wire,
                                         );
                                         response.header_delivery = HeaderDelivery::Complete;
                                         TransportResult {

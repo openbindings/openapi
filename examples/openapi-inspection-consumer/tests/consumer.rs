@@ -1,4 +1,4 @@
-use dynamic_openapi_client::{Document as ClientDocument, Limits, Method};
+use dynamic_openapi_client::{Document as ClientDocument, Limits, inspect::Method};
 use openapi_inspection_consumer::{author, inspect_and_author, source};
 use openbindings::{Binding, Document, JsonValue};
 
@@ -117,9 +117,9 @@ async fn real_resource_recovery_from_public_packages() {
     let reloaded = Document::from_json(&authored).unwrap();
     let source = &reloaded.sources.as_ref().unwrap()["catalog-source"];
     let content = source.content.as_ref().unwrap();
-    let mut graph = dynamic_openapi_client::DocumentBuilder::new(
+    let mut graph = dynamic_openapi_client::graph::DocumentBuilder::new(
         Limits::default(),
-        dynamic_openapi_client::GraphLimits::default(),
+        dynamic_openapi_client::graph::GraphLimits::default(),
     );
     let entry = graph
         .add(
@@ -162,7 +162,7 @@ async fn real_resource_recovery_from_public_packages() {
 
 #[tokio::test]
 async fn inspected_neighbors_remain_preparable_after_manual_authoring_and_reload() {
-    use dynamic_openapi_client::{Code, Input};
+    use dynamic_openapi_client::diagnostics::Code;
     use openbindings_openapi::OpenApi;
     use openbindings_source_inspection::Inspector;
     for (path_item, target, method, expected_targets) in [
@@ -208,7 +208,7 @@ async fn inspected_neighbors_remain_preparable_after_manual_authoring_and_reload
         let client =
             ClientDocument::parse(document.as_str().unwrap(), None, Limits::default()).unwrap();
         let operation = client.operation("/x", method.clone()).unwrap();
-        let request = operation.prepare(&Input::default()).unwrap();
+        let request = operation.request().prepare().unwrap();
         assert_eq!(request.method(), method);
         assert_eq!(request.target(), "https://api.example/x");
         if method == Method::Post {
@@ -216,7 +216,8 @@ async fn inspected_neighbors_remain_preparable_after_manual_authoring_and_reload
                 client
                     .operation("/x", Method::Get)
                     .unwrap()
-                    .prepare(&Input::default())
+                    .request()
+                    .prepare()
                     .unwrap_err()
                     .code(),
                 Code::AmbiguousReference

@@ -329,7 +329,7 @@ async fn absent_and_repeated_operation_ids_are_not_binding_identity_or_effects()
     let entries = Rc::new(Cell::new(0));
     let recorded = entries.clone();
     let provider = OpenApi::default().with_transport(
-        move |_: dynamic_openapi_client::PreparedRequest,
+        move |_: dynamic_openapi_client::transport::PreparedRequest,
               _: dynamic_openapi_client::Cancellation| {
             recorded.set(recorded.get() + 1);
             std::future::pending::<dynamic_openapi_client::Outcome>()

@@ -1,4 +1,7 @@
-use dynamic_openapi_client::{Cancellation, HostCapabilities, PreparedRequest};
+use dynamic_openapi_client::{
+    Cancellation,
+    transport::{HostCapabilities, PreparedRequest},
+};
 use openapi_json_path_consumer::*;
 use openbindings_invocation::operation;
 use openbindings_openapi::OpenApi;

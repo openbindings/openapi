@@ -15,7 +15,7 @@ serializes its own tests with a local lock because they count process-global own
 product repository. Dependencies are immutable Git pins: the SDK at
 `f82a5135aabb146b398553f0344d107bea7f52ec` (vocabulary, S6a and S6b working-draft contracts)
 and the client at
-`62d0a05ee9ff3f01512a2e0855a449157dbd9d45`.
+`7de316b1ec5d970284cf244ec38eb56b565019d8`.
 
 The subsequent SDK migration to `f82a5135aabb146b398553f0344d107bea7f52ec`
 adapts SDK vocabulary and cancellation signatures while preserving the adapter
@@ -25,6 +25,24 @@ measurement retains a caller-owned `PreparedOperation` and uses `Attempt` to
 preserve compiled-contract reuse after removal of the core preparation cache.
 The adapter's separate bounded source-analysis cache is retained. The table below
 records the original extraction dispositions.
+
+The later migration to the client's call-surface redesign pins both `dynamic-openapi-client` and
+`dynamic-openapi-client-reqwest` to `7de316b1ec5d970284cf244ec38eb56b565019d8`,
+keeping the SDK at `f82a5135aabb146b398553f0344d107bea7f52ec`. Request translation
+uses checked builders with exact setters, scoped credential constructors, and
+`advanced::prepare`. Inspection imports use the graph/schema/inspect modules;
+hosts use `transport::PreparedRequest`, flattened `ResponseInput`, and immutable
+`Outcome` reads. Native hosts use the companion's advanced execution route, without
+adding client credential defaults. Examples and qualification use the same tuple.
+Existing fixtures and test expectations are preserved; additional regressions
+distinguish client read policy from the adapter's cancellation/header policy.
+See the package guide for those adapter-visible boundaries and request ownership.
+
+Lockfile changes: only the two client Git source identities changed, from
+`62d0a05ee9ff3f01512a2e0855a449157dbd9d45` to the revision above. Both remain
+version `0.0.0`; there are no package version changes, additions or removals.
+The offline attribution generator updates their source identities in
+`DEPENDENCIES.json`; regenerated `THIRD-PARTY-NOTICES.txt` is byte-identical.
 
 | Imported file | SDK source at the pinned commit | Disposition |
 | --- | --- | --- |

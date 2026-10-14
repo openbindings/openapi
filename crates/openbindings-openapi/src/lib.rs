@@ -11,8 +11,11 @@ mod invocation;
 mod security;
 mod synthesis;
 
-use dynamic_openapi_client::DocumentBuilder;
-pub use dynamic_openapi_client::{GraphLimits, Limits, ResourceInput, ResourceLayout};
+use dynamic_openapi_client::graph::DocumentBuilder;
+pub use dynamic_openapi_client::{
+    Limits,
+    graph::{GraphLimits, ResourceInput, ResourceLayout},
+};
 pub use invocation::{InvocationFuture, Transport};
 use openbindings::{JsonValue, Source, WorkControl};
 use openbindings_source_inspection::{
@@ -61,10 +64,10 @@ impl Kind {
             Self::OpenApi30 => EXPERIMENTAL_KIND_30,
         }
     }
-    fn edition(self) -> dynamic_openapi_client::Edition {
+    fn edition(self) -> dynamic_openapi_client::inspect::Edition {
         match self {
-            Self::OpenApi31 => dynamic_openapi_client::Edition::OpenApi31,
-            Self::OpenApi30 => dynamic_openapi_client::Edition::OpenApi30,
+            Self::OpenApi31 => dynamic_openapi_client::inspect::Edition::OpenApi31,
+            Self::OpenApi30 => dynamic_openapi_client::inspect::Edition::OpenApi30,
         }
     }
     fn server_point(self) -> &'static str {

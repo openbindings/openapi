@@ -1,4 +1,4 @@
-use dynamic_openapi_client::{Cancellation, PreparedRequest};
+use dynamic_openapi_client::{Cancellation, transport::PreparedRequest};
 use openbindings::{JsonValue, ParsedDocument};
 use openbindings_invocation::{InvocationError, operation};
 use openbindings_openapi::OpenApi;
@@ -69,7 +69,10 @@ async fn crud_methods_and_empty_success_over_native_http() {
         let provider = OpenApi::default().with_transport(
             move |request: PreparedRequest, cancel: Cancellation| {
                 let client = client.clone();
-                async move { client.execute(&request, cancel).await }
+                async move {
+                    dynamic_openapi_client_reqwest::advanced::execute(&client, &request, cancel)
+                        .await
+                }
             },
         );
         let invoker = operation::Invoker::new(ParsedDocument::parse(saved).unwrap(), provider);
@@ -225,7 +228,10 @@ async fn authored_bindings_make_real_http_calls_and_preserve_exact_values() {
     let provider = OpenApi::default().with_transport(
         move |request: PreparedRequest, cancellation: Cancellation| {
             let client = client.clone();
-            async move { client.execute(&request, cancellation).await }
+            async move {
+                dynamic_openapi_client_reqwest::advanced::execute(&client, &request, cancellation)
+                    .await
+            }
         },
     );
     let invoker = operation::Invoker::new(document(&origin), provider);
@@ -282,7 +288,9 @@ fn native_provider_future_retains_send() {
     fn send<T: Send>(_: T) {}
     let provider = OpenApi::default().with_transport(|_: PreparedRequest, _: Cancellation| {
         std::future::ready(dynamic_openapi_client::Outcome::not_dispatched(
-            dynamic_openapi_client::Diagnostic::new(dynamic_openapi_client::Code::HostCapability),
+            dynamic_openapi_client::Diagnostic::new(
+                dynamic_openapi_client::diagnostics::Code::HostCapability,
+            ),
             false,
             None,
         ))
@@ -370,7 +378,10 @@ async fn synthesized_reloaded_document_repeats_the_independent_wire_call() {
     let provider = OpenApi::default().with_transport(
         move |request: PreparedRequest, cancellation: Cancellation| {
             let client = client.clone();
-            async move { client.execute(&request, cancellation).await }
+            async move {
+                dynamic_openapi_client_reqwest::advanced::execute(&client, &request, cancellation)
+                    .await
+            }
         },
     );
     let invoker = operation::Invoker::new(parsed, provider)
@@ -481,7 +492,9 @@ async fn cold_reloaded_mounts_use_supplied_reference_bases_on_real_http() {
     let provider = OpenApi::new(options()).unwrap().with_transport(
         move |request: PreparedRequest, cancel: Cancellation| {
             let client = client.clone();
-            async move { client.execute(&request, cancel).await }
+            async move {
+                dynamic_openapi_client_reqwest::advanced::execute(&client, &request, cancel).await
+            }
         },
     );
     let invoker = operation::Invoker::new(doc, provider)
@@ -511,7 +524,9 @@ async fn cold_reloaded_mounts_use_supplied_reference_bases_on_real_http() {
         panic!("missing resource must refuse before host entry");
         #[allow(unreachable_code)]
         std::future::ready(dynamic_openapi_client::Outcome::not_dispatched(
-            dynamic_openapi_client::Diagnostic::new(dynamic_openapi_client::Code::HostCapability),
+            dynamic_openapi_client::Diagnostic::new(
+                dynamic_openapi_client::diagnostics::Code::HostCapability,
+            ),
             false,
             None,
         ))
@@ -570,7 +585,7 @@ async fn manual_mount_and_renamed_unicode_target_use_literal_locations() {
     let client = dynamic_openapi_client_reqwest::Client::new().unwrap();
     let host = move |request: PreparedRequest, cancel: Cancellation| {
         let client = client.clone();
-        async move { client.execute(&request, cancel).await }
+        async move { dynamic_openapi_client_reqwest::advanced::execute(&client, &request, cancel).await }
     };
     let provider = OpenApi::new(options).unwrap().with_transport(host.clone());
     assert!(
@@ -644,7 +659,10 @@ async fn real_http_redirect_and_post_receipt_cancellation_have_one_effect() {
         let provider = OpenApi::default().with_transport(
             move |request: PreparedRequest, cancel: Cancellation| {
                 let client = client.clone();
-                async move { client.execute(&request, cancel).await }
+                async move {
+                    dynamic_openapi_client_reqwest::advanced::execute(&client, &request, cancel)
+                        .await
+                }
             },
         );
         let invoker = operation::Invoker::new(document(&origin), provider);

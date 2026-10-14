@@ -1,5 +1,5 @@
 //! Real loopback wire evidence with manufactured credentials and a no-follow host.
-use dynamic_openapi_client::{Cancellation, PreparedRequest};
+use dynamic_openapi_client::{Cancellation, transport::PreparedRequest};
 use openbindings::{JsonValue, Source};
 use openbindings_invocation::{BindingRequest, BindingValue, binding};
 use openbindings_openapi::OpenApi;
@@ -56,7 +56,10 @@ async fn authenticated_wire_and_status_effects() {
         let p = OpenApi::default().with_transport(
             move |request: PreparedRequest, cancel: Cancellation| {
                 let client = client.clone();
-                async move { client.execute(&request, cancel).await }
+                async move {
+                    dynamic_openapi_client_reqwest::advanced::execute(&client, &request, cancel)
+                        .await
+                }
             },
         );
         let invoker = binding::Invoker::new(p);

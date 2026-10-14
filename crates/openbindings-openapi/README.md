@@ -86,6 +86,16 @@ the kind's status error with data `{"status":404}` and no output:
 Malformed, incomplete or unsupported successful delivery produces `ERR_EXECUTION_FAILED`.
 Cancellation and other post-dispatch failures do not promise rollback or authorize retry.
 
+Response acceptance requires affirmative `HeaderDelivery::Complete` and zero
+core header omissions, including for empty and non-2xx responses. The client's
+received-2xx reads also accept `Unspecified`; this adapter keeps its stricter
+experiment policy. The adapter checks cancellation before an execution diagnostic,
+so their coexistence still produces `ERR_CANCELLED`. The client's ordinary read
+instead returns the actual diagnostic first; both refuse success. Other execution
+or JSON-admission diagnostics map to `ERR_EXECUTION_FAILED`, while request
+construction diagnostics map to `ERR_REFUSED`. These mappings expose no arbitrary
+diagnostic text or credential material. Upload evidence remains independent.
+
 The adapter constructs finite requests under `Options` limits, enters `Transport::execute`
 at most once per attempt, follows no redirects, and never replays after any outcome.
 It attaches only explicitly selected per-attempt credentials with caller-approved
@@ -99,6 +109,20 @@ admission before dispatch, using `PreparedRequest::invoke` with honest
 The adapter does not obtain or check that declaration, and declarations alone do
 not prove the underlying HTTP client's behavior. Hosts also own honest outcome
 evidence, cancellation and cleanup.
+
+Since the client's call-surface redesign, custom hosts use `transport::PreparedRequest` and its immutable
+getters. The adapter builds through `RequestBuilder` exact setters and
+`advanced::prepare`; SDK JSON tokens never pass through a machine-number projection.
+For the native companion, execute the supplied plan with
+`dynamic_openapi_client_reqwest::advanced::execute(&client, &request, cancellation)`.
+That route applies no configured credential defaults after preparation. Ordinary
+native `Client::send` applies configured credentials after eager input setters;
+duplicates refuse, and an earlier setter diagnostic takes precedence. The adapter
+continues to supply only selected per-attempt credentials before preparation, so
+this ordering change does not alter its credential selection or wire headers.
+Retaining a callback's owned `PreparedRequest` now retains its operation and source
+graph; release it after extracting needed transport facts. A cloned body Arc alone
+does not retain that graph.
 
 **SSRF:** server URLs come from the OpenAPI document. A host invoking untrusted
 documents must restrict destinations, applying policy at every network hop after

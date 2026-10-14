@@ -7,7 +7,7 @@ Imported path identities and extraction changes are recorded in PROVENANCE.md.
 
 This project depends on the OpenBindings SDK role contracts and exact JSON/schema
 implementation at f82a5135aabb146b398553f0344d107bea7f52ec and on the independent
-Apache-2.0 openapi-client at 62d0a05ee9ff3f01512a2e0855a449157dbd9d45. It supplies no copy of the SDK itself.
+Apache-2.0 openapi-client at 7de316b1ec5d970284cf244ec38eb56b565019d8. It supplies no copy of the SDK itself.
 The SDK's private dependency packages preserve their upstream licenses; their
 package-specific notices, including embedded schema attribution, are reproduced
 with the other dependencies' notices in THIRD-PARTY-NOTICES.txt.

@@ -204,30 +204,32 @@ fn main() {
                 "{}".into()
             };
             let value = JsonValue::parse(&envelope).unwrap();
-            let mut input = client::Input::default();
-            if method == "post" {
-                input.body = client::Body::Json(
-                    client::ExactJson::parse(&body, client::Limits::default())
-                        .unwrap()
-                        .root(),
-                );
-            }
+            let input_body = (method == "post")
+                .then(|| client::exact::Value::parse(&body, client::Limits::default()).unwrap());
+            let prepare = |operation: &client::Operation| {
+                let mut request = operation.request();
+                if let Some(body) = &input_body {
+                    request = request.json_exact(body);
+                }
+                request.prepare().unwrap()
+            };
             let response = body.clone();
-            let host = move |request: client::PreparedRequest, cancel: client::Cancellation| {
+            let host = move |request: client::transport::PreparedRequest,
+                             cancel: client::Cancellation| {
                 let response = response.clone();
                 async move {
                     request
                         .invoke(
                             cancel,
-                            &client::HostCapabilities::programmable(),
+                            &client::transport::HostCapabilities::programmable(),
                             move |_, _| async move { reply(&response) },
                         )
                         .await
                 }
             };
-            let prepared = op.prepare(&input).unwrap();
+            let prepared = prepare(&op);
             let exact_response =
-                client::ExactJson::parse(&body, client::Limits::default()).unwrap();
+                client::exact::Value::parse(&body, client::Limits::default()).unwrap();
             let retained = JsonValue::parse(&body).unwrap();
             for stage in [
                 "request-preparation",
@@ -238,21 +240,19 @@ fn main() {
             ] {
                 let samples = sample(|| match stage {
                     "request-preparation" => {
-                        black_box(op.prepare(&input).unwrap());
+                        black_box(prepare(&op));
                     }
                     "dispatch-and-client-decode" => {
                         black_box(
                             ready(host(prepared.clone(), client::Cancellation::default()))
-                                .response
-                                .unwrap()
-                                .json()
+                                .received_2xx_json_exact()
                                 .unwrap(),
                         );
                     }
                     "input-bridge" => {
                         if let Some(body) = value.get("body") {
                             black_box(
-                                client::ExactJson::parse(body.text(), client::Limits::default())
+                                client::exact::Value::parse(body.text(), client::Limits::default())
                                     .unwrap(),
                             );
                         } else {
@@ -333,9 +333,9 @@ fn main() {
                             black_box(out);
                         }
                     } else {
-                        let prepared = op.prepare(&input).unwrap();
+                        let prepared = prepare(&op);
                         let outcome = ready(host(prepared, client::Cancellation::default()));
-                        let output = outcome.response.unwrap().json().unwrap();
+                        let output = outcome.received_2xx_json_exact().unwrap();
                         assert_eq!(output.source().len(), bytes);
                         black_box(output);
                     }
@@ -360,12 +360,10 @@ fn main() {
                 } else {
                     let d = client_doc(&text);
                     let op = d.operations().next().unwrap();
-                    let prepared = op.prepare(&input).unwrap();
+                    let prepared = prepare(&op);
                     black_box(
                         ready(host(prepared, client::Cancellation::default()))
-                            .response
-                            .unwrap()
-                            .json()
+                            .received_2xx_json_exact()
                             .unwrap(),
                     );
                 }
@@ -400,12 +398,10 @@ fn main() {
                     assert!(job.outcome().unwrap().is_ok());
                 } else {
                     assert!(matches!(contract.validate(&value), ValueOutcome::Satisfies));
-                    let prepared = op.prepare(&input).unwrap();
+                    let prepared = prepare(&op);
                     black_box(
                         ready(host(prepared, client::Cancellation::default()))
-                            .response
-                            .unwrap()
-                            .json()
+                            .received_2xx_json_exact()
                             .unwrap(),
                     );
                 }
