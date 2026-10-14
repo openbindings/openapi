@@ -1,8 +1,11 @@
 //! Authenticated consumers shared by native and local Wasm qualification.
 use crate::wire_json::{Value, json};
 use dynamic_openapi_client::{
-    BodyState, Cancellation, DeliveredBody, Header, HeaderDelivery, HostCapabilities, Outcome,
-    PreparedRequest, Provenance, ResponseInput, TransportResult, UploadState,
+    Cancellation, Header, Outcome,
+    transport::{
+        BodyState, HeaderDelivery, HostCapabilities, PreparedRequest, Provenance, ResponseInput,
+        TransportResult, UploadState,
+    },
 };
 use openbindings::{Document, JsonValue, ParsedDocument, Source};
 use openbindings_interface_synthesis::{SynthesisRequest, SynthesisSource, Synthesizer};
@@ -77,8 +80,8 @@ pub fn host(
             // Count adapter-to-host entry too, including a client-side dispatch refusal.
             seen.calls.set(seen.calls.get() + 1);
             request.invoke(cancel,&HostCapabilities::programmable(),move |wire,_|async move{
-            seen.wires.borrow_mut().push(json!({"target":wire.target,"headers":wire.headers.iter().map(|h|(h.name().to_lowercase(),String::from_utf8(h.value().to_vec()).unwrap())).collect::<Vec<_>>(),"body":wire.body.as_deref().map(|b|String::from_utf8(b.to_vec()).unwrap())}));
-            let mut response=ResponseInput::new(status,vec![Header::new("content-type","application/json")],DeliveredBody{bytes:Arc::from(body.as_bytes()),state:BodyState::Complete,provenance:Provenance::Wire});response.header_delivery=HeaderDelivery::Complete;
+            seen.wires.borrow_mut().push(json!({"target":wire.target(),"headers":wire.headers().iter().map(|h|(h.name().to_lowercase(),String::from_utf8(h.value().to_vec()).unwrap())).collect::<Vec<_>>(),"body":wire.body().map(AsRef::as_ref).map(|b|String::from_utf8(b.to_vec()).unwrap())}));
+            let mut response=ResponseInput::new(status,vec![Header::new("content-type","application/json")],Arc::from(body.as_bytes()), BodyState::Complete, Provenance::Wire);response.header_delivery=HeaderDelivery::Complete;
             TransportResult{upload:UploadState::Complete,response:Some(response),error_detail:None}
         }).await
         })
@@ -787,11 +790,9 @@ pub async fn cycle(v30: bool) {
                                 let mut response = ResponseInput::new(
                                     200,
                                     vec![Header::new("content-type", "application/json")],
-                                    DeliveredBody {
-                                        bytes: Arc::from(OUTPUT.as_bytes()),
-                                        state: BodyState::Complete,
-                                        provenance: Provenance::Wire,
-                                    },
+                                    Arc::from(OUTPUT.as_bytes()),
+                                    BodyState::Complete,
+                                    Provenance::Wire,
                                 );
                                 response.header_delivery = HeaderDelivery::Complete;
                                 TransportResult {

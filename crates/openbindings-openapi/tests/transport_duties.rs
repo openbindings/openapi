@@ -1,6 +1,9 @@
 use dynamic_openapi_client::{
-    BodyState, Cancellation, DeliveredBody, Header, HeaderDelivery, HostCapabilities,
-    PreparedRequest, Provenance, ResponseInput, TransportResult, UploadState,
+    Cancellation, Header,
+    transport::{
+        BodyState, HeaderDelivery, HostCapabilities, PreparedRequest, Provenance, ResponseInput,
+        TransportResult, UploadState,
+    },
 };
 use openbindings::{JsonValue, Source};
 use openbindings_invocation::{BindingRequest, BindingValue, InvocationError, binding};
@@ -48,11 +51,9 @@ fn response(status: u16, headers: Vec<Header>) -> TransportResult {
     let mut response = ResponseInput::new(
         status,
         headers,
-        DeliveredBody {
-            bytes: Arc::from([]),
-            state: BodyState::Complete,
-            provenance: Provenance::Wire,
-        },
+        Arc::from([]),
+        BodyState::Complete,
+        Provenance::Wire,
     );
     response.header_delivery = HeaderDelivery::Complete;
     TransportResult {
@@ -98,7 +99,7 @@ async fn finite_body_budget_precedes_transport_entry() {
         let provider = OpenApi::new(options).unwrap().with_transport(
             move |request: PreparedRequest, cancellation: Cancellation| {
                 entries.set(entries.get() + 1);
-                assert_eq!(request.body(), Some(b"null".as_slice()));
+                assert_eq!(request.body().map(AsRef::as_ref), Some(b"null".as_slice()));
                 async move {
                     request
                         .invoke(

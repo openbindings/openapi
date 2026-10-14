@@ -1,6 +1,9 @@
 use dynamic_openapi_client::{
-    BodyState, Cancellation, DeliveredBody, Header, HeaderDelivery, HostCapabilities, Outcome,
-    PreparedRequest, Provenance, ResponseInput, TransportResult, UploadState,
+    Cancellation, Header, Outcome,
+    transport::{
+        BodyState, HeaderDelivery, HostCapabilities, PreparedRequest, Provenance, ResponseInput,
+        TransportResult, UploadState,
+    },
 };
 use openbindings::{Document, JsonValue, ParsedDocument};
 use openbindings_invocation::{BindingRequest, BindingValue, InvocationError, binding, operation};
@@ -21,11 +24,9 @@ fn outcome_input(status: u16, body: &str, state: BodyState) -> TransportResult {
         } else {
             vec![Header::new("content-type", "application/json")]
         },
-        DeliveredBody {
-            bytes: Arc::from(body.as_bytes()),
-            state,
-            provenance: Provenance::Wire,
-        },
+        Arc::from(body.as_bytes()),
+        state,
+        Provenance::Wire,
     );
     response.header_delivery = HeaderDelivery::Complete;
     TransportResult {
@@ -168,7 +169,7 @@ async fn destination_context_is_membership_and_new_attempt() {
                         &HostCapabilities::programmable(),
                         move |request, _| async move {
                             calls.set(calls.get() + 1);
-                            observed.borrow_mut().push(request.target);
+                            observed.borrow_mut().push(request.target().to_owned());
                             outcome_input(204, "", BodyState::Complete)
                         },
                     )
@@ -330,7 +331,7 @@ async fn incomplete_headers_and_pre_cancel_are_not_success() {
     for delivery in [HeaderDelivery::Unspecified, HeaderDelivery::Incomplete] {
         let provider = OpenApi::default().with_transport(
             move |request: PreparedRequest, cancel: Cancellation| async move {
-                request
+                let outcome = request
                     .invoke(
                         cancel,
                         &HostCapabilities::programmable(),
@@ -340,7 +341,22 @@ async fn incomplete_headers_and_pre_cancel_are_not_success() {
                             result
                         },
                     )
-                    .await
+                    .await;
+                if delivery == HeaderDelivery::Unspecified {
+                    assert_eq!(outcome.received_2xx_json_exact().unwrap().raw(), "null");
+                    assert_eq!(
+                        outcome
+                            .received_2xx_json::<serde_json_compat::Value>()
+                            .unwrap(),
+                        serde_json_compat::Value::Null
+                    );
+                } else {
+                    assert_eq!(
+                        outcome.received_2xx_json_exact().unwrap_err().code(),
+                        dynamic_openapi_client::diagnostics::Code::IncompleteHeaders
+                    );
+                }
+                outcome
             },
         );
         assert_eq!(
@@ -556,10 +572,59 @@ fn pinned_client_literal_unicode_limitation_is_reproduced_independently() {
         .operations()
         .next()
         .unwrap()
-        .prepare(&Default::default())
+        .request()
+        .prepare()
         .unwrap_err();
     assert_eq!(
         error.code(),
-        dynamic_openapi_client::Code::InvalidDestination
+        dynamic_openapi_client::diagnostics::Code::InvalidDestination
+    );
+}
+
+#[tokio::test]
+async fn cancellation_keeps_adapter_priority_over_the_client_execution_diagnostic() {
+    use dynamic_openapi_client::diagnostics::Code;
+    let provider = OpenApi::default().with_transport(
+        |request: PreparedRequest, cancel: Cancellation| async move {
+            let outcome = request
+                .invoke(
+                    cancel,
+                    &HostCapabilities::programmable(),
+                    |_, cancel| async move {
+                        cancel.cancel();
+                        let mut result =
+                            outcome_input(422, "{\"error\":\"rejected\"}", BodyState::Complete);
+                        result.error_detail = Some(Arc::from("manufactured transport failure"));
+                        result
+                    },
+                )
+                .await;
+            assert!(outcome.cancelled());
+            assert_eq!(outcome.error().unwrap().code(), Code::TransportFailure);
+            assert_eq!(
+                outcome.received_2xx_json_exact().unwrap_err().code(),
+                Code::TransportFailure
+            );
+            assert_eq!(
+                outcome
+                    .received_2xx_json::<serde_json_compat::Value>()
+                    .unwrap_err()
+                    .code(),
+                Code::TransportFailure
+            );
+            // Body-only inspection survives both execution failure and non-2xx status.
+            assert_eq!(
+                outcome.body_json().unwrap().raw(),
+                "{\"error\":\"rejected\"}"
+            );
+            outcome
+        },
+    );
+    assert_eq!(
+        invoke(provider, vec![json("{}")], None)
+            .await
+            .unwrap_err()
+            .code(),
+        "ERR_CANCELLED"
     );
 }

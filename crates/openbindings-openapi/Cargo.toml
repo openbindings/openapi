@@ -17,11 +17,11 @@ openbindings = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindi
 openbindings-source-inspection = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "f82a5135aabb146b398553f0344d107bea7f52ec" }
 openbindings-interface-synthesis = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "f82a5135aabb146b398553f0344d107bea7f52ec" }
 openbindings-invocation = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "f82a5135aabb146b398553f0344d107bea7f52ec" }
-dynamic-openapi-client = { git = "https://github.com/openbindings/openapi-client", rev = "62d0a05ee9ff3f01512a2e0855a449157dbd9d45", version = "=0.0.0" }
+dynamic-openapi-client = { git = "https://github.com/openbindings/openapi-client", rev = "7de316b1ec5d970284cf244ec38eb56b565019d8", version = "=0.0.0" }
 serde_json_compat = { package = "serde_json", version = "1.0.151", features = ["raw_value"] }
 fluent-uri = "0.4.1"
 
 [dev-dependencies]
 tokio = { version = "1.53.2", features = ["rt", "macros", "time", "net", "io-util"] }
-dynamic-openapi-client-reqwest = { git = "https://github.com/openbindings/openapi-client", rev = "62d0a05ee9ff3f01512a2e0855a449157dbd9d45", version = "=0.0.0" }
+dynamic-openapi-client-reqwest = { git = "https://github.com/openbindings/openapi-client", rev = "7de316b1ec5d970284cf244ec38eb56b565019d8", version = "=0.0.0" }
 openbindings-json-schema-evaluator = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "f82a5135aabb146b398553f0344d107bea7f52ec" }

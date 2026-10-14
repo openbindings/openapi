@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SDK_URL = "https://github.com/openbindings/sdk"
 SDK_REV = "f82a5135aabb146b398553f0344d107bea7f52ec"
 CLIENT_URL = "https://github.com/openbindings/openapi-client"
-CLIENT_REV = "62d0a05ee9ff3f01512a2e0855a449157dbd9d45"
+CLIENT_REV = "7de316b1ec5d970284cf244ec38eb56b565019d8"
 SDK_PATHS = [
     "crates/openbindings", "crates/openbindings-internal-json",
     "crates/openbindings-internal-cancellation",

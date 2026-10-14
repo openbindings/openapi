@@ -1,7 +1,10 @@
 //! Finite success correspondence, independently specified at the public role seam.
 use dynamic_openapi_client::{
-    BodyState, Cancellation, DeliveredBody, Header, HeaderDelivery, HostCapabilities,
-    PreparedRequest, Provenance, ResponseInput, TransportResult, UploadState,
+    Cancellation, Header,
+    transport::{
+        BodyState, HeaderDelivery, HostCapabilities, PreparedRequest, Provenance, ResponseInput,
+        TransportResult, UploadState,
+    },
 };
 use openbindings::{JsonValue, Source};
 use openbindings_interface_synthesis::{
@@ -66,15 +69,13 @@ async fn invoke(
                         &HostCapabilities::programmable(),
                         move |wire, _| async move {
                             recorded.set(recorded.get() + 1);
-                            assert_eq!(wire.body.as_deref(), expected_body.as_deref());
+                            assert_eq!(wire.body().map(AsRef::as_ref), expected_body.as_deref());
                             let mut response = ResponseInput::new(
                                 delivery.status,
                                 vec![Header::new("content-type", "application/json")],
-                                DeliveredBody {
-                                    bytes: Arc::from(delivery.body.as_bytes()),
-                                    state: delivery.state,
-                                    provenance: Provenance::Wire,
-                                },
+                                Arc::from(delivery.body.as_bytes()),
+                                delivery.state,
+                                Provenance::Wire,
                             );
                             response.header_delivery = delivery.headers;
                             TransportResult {

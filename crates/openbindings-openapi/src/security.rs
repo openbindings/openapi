@@ -1,6 +1,6 @@
 //! Private experiment policy. Source interpretation and HTTP encoding stay in the client.
 use crate::{Kind, Options, analysis::Profile};
-use dynamic_openapi_client::{Credential, CredentialValue, Input};
+use dynamic_openapi_client::{Credential, RequestBuilder};
 use openbindings::{JsonRef, JsonValue, WorkControl};
 use openbindings_invocation::{ContextChallenge, InvocationError};
 use serde_json_compat::{Value, json as j};
@@ -39,13 +39,15 @@ pub(crate) fn apply(
     target: Target<'_>,
     options: &Options,
     work: &dyn WorkControl,
-    input: &mut Input,
-) -> Result<(), InvocationError> {
+    mut input: RequestBuilder,
+) -> Result<RequestBuilder, InvocationError> {
     let fail = InvocationError::refused;
     let kind = target.kind;
     if !profile.security.iter().any(|a| !a.is_empty()) {
-        input.selection.security = (!profile.security.is_empty()).then_some(0);
-        return Ok(());
+        if !profile.security.is_empty() {
+            input = input.security(0);
+        }
+        return Ok(input);
     }
     if let Some(c) = context
         && (c.bytes().len() > options.context_bytes
@@ -126,10 +128,10 @@ pub(crate) fn apply(
         }
         return Err(challenge.finish()?);
     };
-    input.selection.security = Some(index);
+    input = input.security(index);
     let selected = &profile.security[index];
     if selected.is_empty() {
-        return Ok(());
+        return Ok(input);
     }
     let credentials = member_object(root, "credentials")?;
     let keys = member_object(root, "apiKeys")?;
@@ -201,19 +203,17 @@ pub(crate) fn apply(
         }
         if let (Some(value), Some(origins)) = (material, grant) {
             let value = match family {
-                Family::Bearer => CredentialValue::Bearer(value.into()),
-                Family::Key => CredentialValue::ApiKey(value.into()),
+                Family::Bearer => Credential::bearer(value, origins),
+                Family::Key => Credential::api_key(value, origins),
             };
-            input
-                .credentials
-                .insert(name.clone(), Credential { value, origins });
+            input = input.credential(name, value);
         }
     }
     if let Some(mut challenge) = missing {
         challenge.end_alternative()?;
         return Err(challenge.finish()?);
     }
-    Ok(())
+    Ok(input)
 }
 fn member_object<'a>(
     parent: Option<JsonRef<'a>>,

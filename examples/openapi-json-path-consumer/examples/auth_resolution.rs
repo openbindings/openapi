@@ -21,19 +21,19 @@ struct Oracle {
     body: Option<String>,
 }
 impl Oracle {
-    fn record(&self, wire: &client::DispatchRequest) {
+    fn record(&self, wire: &client::transport::PreparedRequest) {
         if !self.active.get() {
             return;
         }
         self.calls.set(self.calls.get() + 1);
-        assert_eq!(wire.target, "https://measure.invalid/p0");
+        assert_eq!(wire.target(), "https://measure.invalid/p0");
         assert_eq!(
-            wire.body.as_deref(),
+            wire.body().map(AsRef::as_ref),
             self.body.as_deref().map(str::as_bytes)
         );
         for name in ["authorization", "x-key"] {
             let actual: Vec<_> = wire
-                .headers
+                .headers()
                 .iter()
                 .filter(|h| h.name().eq_ignore_ascii_case(name))
                 .collect();
@@ -148,17 +148,16 @@ fn factory(
         functions.push((
             "call",
             Box::new(move || {
-                let mut supplied = client::Input::default();
-                supplied.selection.server = Some(0);
+                let mut supplied = op.request();
+                supplied = supplied.server(0);
                 if let Some(body) = input.get("body") {
-                    supplied.body = client::Body::Json(
-                        client::ExactJson::parse(body.text(), client::Limits::default())
-                            .unwrap()
-                            .root(),
+                    supplied = supplied.json_exact(
+                        &client::exact::Value::parse(body.text(), client::Limits::default())
+                            .unwrap(),
                     );
                 }
                 if authenticated {
-                    supplied.selection.security = Some(0);
+                    supplied = supplied.security(0);
                     for name in &names {
                         let raw = context
                             .get("credentials")
@@ -167,30 +166,32 @@ fn factory(
                             .unwrap()
                             .as_str()
                             .unwrap();
-                        supplied.credentials.insert(
-                            (*name).into(),
-                            client::Credential {
-                                value: if *name == "Token" {
-                                    client::CredentialValue::Bearer(raw.into())
-                                } else {
-                                    client::CredentialValue::ApiKey(raw.into())
-                                },
-                                origins: vec!["https://measure.invalid".into()],
+                        supplied = supplied.credential(
+                            *name,
+                            if *name == "Token" {
+                                client::Credential::bearer(
+                                    raw,
+                                    vec!["https://measure.invalid".into()],
+                                )
+                            } else {
+                                client::Credential::api_key(
+                                    raw,
+                                    vec!["https://measure.invalid".into()],
+                                )
                             },
                         );
                     }
                 }
-                let req = op.prepare(&supplied).unwrap();
+                let req = supplied.prepare().unwrap();
                 let outcome = ready(req.invoke(
                     client::Cancellation::default(),
-                    &client::HostCapabilities::programmable(),
+                    &client::transport::HostCapabilities::programmable(),
                     |wire, _| {
                         oracle.record(&wire);
                         async { reply(&body) }
                     },
                 ));
-                let response = outcome.response.unwrap();
-                let exact = response.json().unwrap();
+                let exact = outcome.received_2xx_json_exact().unwrap();
                 let value = JsonValue::parse(exact.source()).unwrap();
                 oracle.output(&value, &body);
                 black_box(value);
@@ -201,14 +202,14 @@ fn factory(
         let expected_body = body.clone();
         let host_oracle = oracle.clone();
         let p = OpenApi::default().with_transport(
-            move |request: client::PreparedRequest, cancel: client::Cancellation| {
+            move |request: client::transport::PreparedRequest, cancel: client::Cancellation| {
                 let body = body.clone();
                 let host_oracle = host_oracle.clone();
                 async move {
                     request
                         .invoke(
                             cancel,
-                            &client::HostCapabilities::programmable(),
+                            &client::transport::HostCapabilities::programmable(),
                             |wire, _| {
                                 host_oracle.record(&wire);
                                 async { reply(&body) }
