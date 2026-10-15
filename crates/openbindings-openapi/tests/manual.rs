@@ -75,7 +75,15 @@ async fn crud_methods_and_empty_success_over_native_http() {
                 }
             },
         );
-        let invoker = operation::Invoker::new(ParsedDocument::parse(saved).unwrap(), provider);
+        let invoker = operation::Invoker::new(
+            ParsedDocument::parse(saved)
+                .unwrap()
+                .validate()
+                .unwrap()
+                .validated()
+                .expect("conformant invocation document"),
+            provider,
+        );
         assert_eq!(
             call(&invoker, "replace", r#"{"body":{"n":9007199254740993}}"#)
                 .await
@@ -234,7 +242,14 @@ async fn authored_bindings_make_real_http_calls_and_preserve_exact_values() {
             }
         },
     );
-    let invoker = operation::Invoker::new(document(&origin), provider);
+    let invoker = operation::Invoker::new(
+        document(&origin)
+            .validate()
+            .unwrap()
+            .validated()
+            .expect("conformant invocation document"),
+        provider,
+    );
     assert_eq!(
         call(
             &invoker,
@@ -295,7 +310,14 @@ fn native_provider_future_retains_send() {
             None,
         ))
     });
-    let invoker = operation::Invoker::new(document("http://127.0.0.1:1"), provider);
+    let invoker = operation::Invoker::new(
+        document("http://127.0.0.1:1")
+            .validate()
+            .unwrap()
+            .validated()
+            .expect("conformant invocation document"),
+        provider,
+    );
     send(invoker.invoke(operation::Request::operation("health")));
 }
 
@@ -384,12 +406,18 @@ async fn synthesized_reloaded_document_repeats_the_independent_wire_call() {
             }
         },
     );
-    let invoker = operation::Invoker::new(parsed, provider)
-        .with_evaluator(
-            std::sync::Arc::new(DefaultEvaluator::new()),
-            openbindings::ResourceSet::default(),
-        )
-        .unwrap();
+    let invoker = operation::Invoker::new(
+        parsed
+            .validate()
+            .unwrap()
+            .validated()
+            .expect("conformant invocation document"),
+        provider,
+    )
+    .with_evaluator(
+        std::sync::Arc::new(DefaultEvaluator::new()),
+        openbindings::ResourceSet::default(),
+    );
     let output = call(
         &invoker,
         &operation,
@@ -497,12 +525,17 @@ async fn cold_reloaded_mounts_use_supplied_reference_bases_on_real_http() {
             }
         },
     );
-    let invoker = operation::Invoker::new(doc, provider)
-        .with_evaluator(
-            std::sync::Arc::new(DefaultEvaluator::new()),
-            openbindings::ResourceSet::default(),
-        )
-        .unwrap();
+    let invoker = operation::Invoker::new(
+        doc.validate()
+            .unwrap()
+            .validated()
+            .expect("conformant invocation document"),
+        provider,
+    )
+    .with_evaluator(
+        std::sync::Arc::new(DefaultEvaluator::new()),
+        openbindings::ResourceSet::default(),
+    );
     for key in &keys {
         assert_eq!(
             call(
@@ -531,12 +564,19 @@ async fn cold_reloaded_mounts_use_supplied_reference_bases_on_real_http() {
             None,
         ))
     });
-    let invoker = operation::Invoker::new(ParsedDocument::parse(saved).unwrap(), no_resources)
-        .with_evaluator(
-            std::sync::Arc::new(DefaultEvaluator::new()),
-            openbindings::ResourceSet::default(),
-        )
-        .unwrap();
+    let invoker = operation::Invoker::new(
+        ParsedDocument::parse(saved)
+            .unwrap()
+            .validate()
+            .unwrap()
+            .validated()
+            .expect("conformant invocation document"),
+        no_resources,
+    )
+    .with_evaluator(
+        std::sync::Arc::new(DefaultEvaluator::new()),
+        openbindings::ResourceSet::default(),
+    );
     assert_eq!(
         call(
             &invoker,
@@ -590,7 +630,13 @@ async fn manual_mount_and_renamed_unicode_target_use_literal_locations() {
     let provider = OpenApi::new(options).unwrap().with_transport(host.clone());
     assert!(
         call(
-            &operation::Invoker::new(doc, provider),
+            &operation::Invoker::new(
+                doc.validate()
+                    .unwrap()
+                    .validated()
+                    .expect("conformant invocation document"),
+                provider
+            ),
             "lookup",
             r#"{"parameters":{"path":{"parcelId":"box-7"}}}"#
         )
@@ -609,7 +655,12 @@ async fn manual_mount_and_renamed_unicode_target_use_literal_locations() {
         .replace("authoredApi", "chosen_source")
         .replace("lookup", "chosen_operation");
     let invoker = operation::Invoker::new(
-        ParsedDocument::parse(text).unwrap(),
+        ParsedDocument::parse(text)
+            .unwrap()
+            .validate()
+            .unwrap()
+            .validated()
+            .expect("conformant invocation document"),
         OpenApi::default().with_transport(host),
     );
     assert!(
@@ -665,7 +716,14 @@ async fn real_http_redirect_and_post_receipt_cancellation_have_one_effect() {
                 }
             },
         );
-        let invoker = operation::Invoker::new(document(&origin), provider);
+        let invoker = operation::Invoker::new(
+            document(&origin)
+                .validate()
+                .unwrap()
+                .validated()
+                .expect("conformant invocation document"),
+            provider,
+        );
         let control = openbindings_source_inspection::CancellationToken::new();
         let mut job =
             invoker.invoke_with_control(operation::Request::operation("create"), &control);

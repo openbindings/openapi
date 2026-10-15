@@ -11,16 +11,15 @@ import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
 SDK_URL = "https://github.com/openbindings/sdk"
-SDK_REV = "f82a5135aabb146b398553f0344d107bea7f52ec"
+SDK_REV = "f79cc70964ced113030dcb7051b4da0d838fb0c7"
 CLIENT_URL = "https://github.com/openbindings/openapi-client"
-CLIENT_REV = "7de316b1ec5d970284cf244ec38eb56b565019d8"
+CLIENT_REV = "fbcb868ea31a34fd4fd566244b7e40857f7df771"
 SDK_PATHS = [
     "crates/openbindings", "crates/openbindings-internal-json",
-    "crates/openbindings-internal-cancellation",
+    "crates/openbindings-internal-cancellation", "crates/openbindings-internal-schema",
     "crates/openbindings-source-inspection", "crates/openbindings-interface-synthesis",
     "crates/openbindings-invocation", "crates/openbindings-json-schema-evaluator",
-    "vendor/openbindings-internal-jsonschema", "vendor/openbindings-internal-jsonschema-value",
-    "vendor/openbindings-internal-serde-json", "vendor/openbindings-internal-referencing",
+    "vendor/openbindings-internal-jsonschema",
     "vendor/openbindings-internal-regress",
 ]
 SDK_NAMES = {Path(p).name for p in SDK_PATHS}
@@ -54,6 +53,12 @@ def check_pins():
 
 def check_metadata(metadata, sources=None):
     sources = sources or {}
+    json_packages = [p for p in metadata["packages"] if p["name"] == "serde_json"]
+    if len(json_packages) != 1 or not json_packages[0].get("source", "").startswith("registry+"):
+        raise SystemExit("Expected one registry serde_json identity")
+    removed = {"openbindings-internal-serde-json", "openbindings-internal-referencing", "openbindings-internal-jsonschema-value"}
+    if any(p["name"] in removed for p in metadata["packages"]):
+        raise SystemExit("Removed SDK fork in resolved graph")
     identities = {}
     for package in metadata["packages"]:
         name = package["name"]
@@ -281,3 +286,13 @@ def qualify_minimal():
         raise SystemExit("Qualification inputs changed")
     (run.out / "receipt.json").write_text(json.dumps({"status": "pass", "testedInputs": started, "sources": identities, "archiveReceiptSha256": sha(archive_receipt) if archive_receipt else None, "commands": run.commands}, indent=2) + "\n")
     print("Minimal invocation-only consumer passed")
+
+
+if __name__ == "__main__":
+    check_pins()
+    graph = subprocess.check_output(
+        ["cargo", "metadata", "--locked", "--offline", "--format-version", "1"],
+        cwd=ROOT, text=True,
+    )
+    check_metadata(json.loads(graph))
+    print("Pinned sources and single serde_json identity verified offline.")

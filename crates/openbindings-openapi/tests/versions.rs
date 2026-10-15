@@ -699,12 +699,18 @@ async fn independent_manual_and_synthesized_reloaded_consumers_use_real_http() {
                 }
             },
         );
-        let invoker = operation::Invoker::new(parsed, provider)
-            .with_evaluator(
-                Arc::new(openbindings_json_schema_evaluator::DefaultEvaluator::new()),
-                openbindings::ResourceSet::default(),
-            )
-            .unwrap();
+        let invoker = operation::Invoker::new(
+            parsed
+                .validate()
+                .unwrap()
+                .validated()
+                .expect("conformant invocation document"),
+            provider,
+        )
+        .with_evaluator(
+            Arc::new(openbindings_json_schema_evaluator::DefaultEvaluator::new()),
+            openbindings::ResourceSet::default(),
+        );
         for row in &exchanges {
             let method = row["method"].as_str().unwrap().to_ascii_lowercase();
             let name = &draft

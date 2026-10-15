@@ -9,7 +9,15 @@ and binding invoker roles for two private experiments in one `OpenApi<T>` provid
 | `local.openapi30-json-probe.r1` | 3.0 | `EXPERIMENTAL_KIND_30` | 3.0.4 |
 
 Use `openbindings-invocation::operation::Invoker` for document-based operation selection
-and declared value contracts. Core and the published roles do not depend on OpenAPI.
+and declared value contracts. Construct it with the `ValidatedDocument` returned
+by `parsed.validate()?.validated()` after checking that proof exists. The checked
+synthesizer already returns validated proof; saving and reloading requires fresh
+validation. `proof.value_contracts(evaluator, resources)` and invoker
+`with_evaluator` are infallible. Default evaluator failures use coarse diagnostics
+with a fixed message, no problems and incomplete detail; select
+`Diagnostics::Upstream` explicitly for the library's first error. See
+[the migration record](../../PROVENANCE.md) for diagnostic and reference behavior.
+Core and the published roles do not depend on OpenAPI.
 This package does not implement a published OpenAPI binding specification.
 
 Both use the same finite JSON request profile and public role APIs. The source kind

@@ -305,7 +305,15 @@ fn main() {
                 },
             )]));
             let parsed = ParsedDocument::from_json(draft.to_json().unwrap());
-            let operations = operation::Invoker::new(parsed.clone(), &provider);
+            let operations = operation::Invoker::new(
+                parsed
+                    .clone()
+                    .validate()
+                    .unwrap()
+                    .validated()
+                    .expect("conformant invocation document"),
+                &provider,
+            );
             for layer in ["binding", "operation"] {
                 let samples = sample(|| {
                     if candidate {
@@ -372,19 +380,20 @@ fn main() {
             // Separate matched contract overhead, not attributed to protocol adaptation.
             draft.operations.get_mut("call").unwrap().input =
                 Some(JsonValue::parse(r#"{"type":"object"}"#).unwrap());
-            let doc = ParsedDocument::from_json(draft.to_json().unwrap());
+            let doc = ParsedDocument::from_json(draft.to_json().unwrap())
+                .validate()
+                .unwrap()
+                .validated()
+                .expect("conformant contract document");
             let evaluator = Arc::new(openbindings_json_schema_evaluator::DefaultEvaluator::new());
-            let contracts = doc
-                .value_contracts(evaluator.clone(), ResourceSet::default())
-                .unwrap();
+            let contracts = doc.value_contracts(evaluator.clone(), ResourceSet::default());
             let ValueContractPreparation::Ready(contract) =
                 contracts.prepare("call", Direction::Input)
             else {
                 panic!()
             };
             let validated = operation::Invoker::new(doc, &provider)
-                .with_evaluator(evaluator, ResourceSet::default())
-                .unwrap();
+                .with_evaluator(evaluator, ResourceSet::default());
             // Retain compiled contracts for the warm workload now that core has no cache.
             let prepared_operation = validated.prepare("call").unwrap();
             let samples = sample(|| {

@@ -44,12 +44,19 @@ pub async fn author(kind: &str, text: &str) -> String {
     result.document().parsed().value().text().to_owned()
 }
 pub fn invoker<P: BindingInvoker>(saved: &str, provider: P) -> operation::Invoker<P> {
-    operation::Invoker::new(ParsedDocument::parse(saved).unwrap(), provider)
-        .with_evaluator(
-            Arc::new(openbindings_json_schema_evaluator::DefaultEvaluator::new()),
-            openbindings::ResourceSet::default(),
-        )
-        .unwrap()
+    operation::Invoker::new(
+        ParsedDocument::parse(saved)
+            .unwrap()
+            .validate()
+            .unwrap()
+            .validated()
+            .expect("conformant invocation document"),
+        provider,
+    )
+    .with_evaluator(
+        Arc::new(openbindings_json_schema_evaluator::DefaultEvaluator::new()),
+        openbindings::ResourceSet::default(),
+    )
 }
 /// Caller policy for this finite, at-most-one-output experiment. Preserve the
 /// authoritative terminal after a local write error; retain output until success.

@@ -263,8 +263,14 @@ fn factory(
                     ..Default::default()
                 },
             )]));
-            let facade =
-                operation::Invoker::new(ParsedDocument::from_json(draft.to_json().unwrap()), p);
+            let facade = operation::Invoker::new(
+                ParsedDocument::from_json(draft.to_json().unwrap())
+                    .validate()
+                    .unwrap()
+                    .validated()
+                    .expect("conformant invocation document"),
+                p,
+            );
             functions.push((
                 "call",
                 Box::new(move || {
