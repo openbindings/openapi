@@ -436,7 +436,7 @@ fn main() {
                     );
                 }
             });
-            rows.push(serde_json::json!({"workload":"validated-invocation","method":method,"bytes":bytes,"payload":envelope.len()+bytes,"samples_ns":samples}));
+            rows.push(serde_json::json!({"workload":"conformant-invocation","method":method,"bytes":bytes,"payload":envelope.len()+bytes,"samples_ns":samples}));
         }
     }
     println!(

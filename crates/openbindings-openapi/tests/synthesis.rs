@@ -433,3 +433,45 @@ async fn synthesized_contracts_keep_verdicts_with_explicit_diagnostics() {
         }
     }
 }
+// A synthesized document that exceeds the SDK's JSON limits fails as a document edit and
+// carries the SDK's editing code, whether a metadata value or the committed batch is too large.
+#[tokio::test]
+async fn document_limits_surface_editing_codes() {
+    let provider = OpenApi::default();
+    let facade = Synthesizer::new(&provider);
+    let description = "a".repeat(64 * 1024 * 1024);
+    let failure = facade
+        .synthesize(&SynthesisRequest {
+            description: Some(&description),
+            ..Default::default()
+        })
+        .await
+        .unwrap_err();
+    assert_eq!(failure.kind(), SynthesisErrorKind::ProviderFailure);
+    assert_eq!(failure.code(), "openbindings.synthesis.byte-limit");
+    // The source's extension members are copied into the document; enough of them
+    // exceed the SDK's node limit once the batch is committed.
+    let mut input = source(
+        &serde_json_compat::json!({"openapi":"3.1.2","info":{"title":"Nodes","version":"1"},
+            "servers":[{"url":"https://nodes.example.invalid"}],
+            "paths":{"/items":{"get":{"responses":{"204":{"description":"empty"}}}}}})
+        .to_string(),
+    );
+    input.additional_fields.insert(
+        "x-many".into(),
+        JsonValue::parse(format!("[{}0]", "0,".repeat(999_980))).unwrap(),
+    );
+    let sources = [SynthesisSource {
+        name: None,
+        source: &input,
+    }];
+    let failure = facade
+        .synthesize(&SynthesisRequest {
+            sources: &sources,
+            ..Default::default()
+        })
+        .await
+        .unwrap_err();
+    assert_eq!(failure.kind(), SynthesisErrorKind::ProviderFailure);
+    assert_eq!(failure.code(), "openbindings.synthesis.node-limit");
+}

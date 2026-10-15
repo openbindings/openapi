@@ -1,5 +1,5 @@
 use crate::{Error, ErrorKind, Kind, OpenApi, check};
-use openbindings::{Binding, Document, Edit, JsonValue, Operation, WorkControl};
+use openbindings::{Binding, Document, Edit, EditError, JsonValue, Operation, WorkControl};
 use openbindings_interface_synthesis::{
     CancellationToken, CoverageDraft, CoverageEntry, CoverageLimitation, CoverageScope,
     CoverageStatus, InterfaceSynthesizer, SupportedKind, SynthesisCandidate, SynthesisError,
@@ -188,12 +188,12 @@ impl<T> OpenApi<T> {
         .into_iter()
         .filter_map(|(pointer, value)| value.map(|value| (pointer, value)))
         .map(|(pointer, value)| {
+            // A value too large to admit is an editing failure, like the batch below.
             JsonValue::string(value)
                 .map(|value| (pointer, value))
-                .map_err(|_| Error::new(ErrorKind::Limit, "result-limit"))
+                .map_err(|error| SynthesisError::from(EditError::from(error)))
         })
-        .collect::<Result<_, _>>()
-        .map_err(|error| error.synthesis())?;
+        .collect::<Result<_, _>>()?;
         let mut edits: Vec<_> = metadata
             .iter()
             .map(|(pointer, value)| Edit::Set { pointer, value })

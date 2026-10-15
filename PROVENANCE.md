@@ -24,8 +24,8 @@ bounded source-analysis cache and the existing finite OpenAPI profile.
 The current SDK migration requires conformance proof before operation invocation or
 normative value-contract preparation. Consumers validate reloaded documents
 and pass the resulting `Conformant<Document>` directly; attaching an evaluator and
-creating its contract context are infallible. Parsed editor reads stay fallible.
-Validated typed reads use the SDK's infallible views. No local compatibility API
+creating its contract context are infallible. Reads on a plain `Document` stay
+fallible; reads on a conformant document use the SDK's infallible views. No local compatibility API
 restores the unproven-document contract route.
 
 Default contract failures now carry the fixed message `value does not satisfy the
