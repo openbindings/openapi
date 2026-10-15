@@ -12,15 +12,15 @@ crate-type = ["rlib", "cdylib"]
 [features]
 wasm-probe = ["dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:js-sys"]
 [dependencies]
-openbindings = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "ca4c63a624d0a4310c0df015824206d7e975960a" }
-openbindings-source-inspection = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "ca4c63a624d0a4310c0df015824206d7e975960a" }
-openbindings-interface-synthesis = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "ca4c63a624d0a4310c0df015824206d7e975960a" }
-openbindings-invocation = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "ca4c63a624d0a4310c0df015824206d7e975960a" }
-openbindings-json-schema-evaluator = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "ca4c63a624d0a4310c0df015824206d7e975960a" }
+openbindings = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "553098f0d76b1fbd985ce5eb9bac2be1a8693fc9" }
+openbindings-source-inspection = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "553098f0d76b1fbd985ce5eb9bac2be1a8693fc9" }
+openbindings-interface-synthesis = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "553098f0d76b1fbd985ce5eb9bac2be1a8693fc9" }
+openbindings-invocation = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "553098f0d76b1fbd985ce5eb9bac2be1a8693fc9" }
+openbindings-json-schema-evaluator = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "553098f0d76b1fbd985ce5eb9bac2be1a8693fc9" }
 openbindings-openapi = { version = "=0.2.0-alpha.1", path = "../../crates/openbindings-openapi" }
 dynamic-openapi-client = { git = "https://github.com/openbindings/openapi-client", rev = "fbcb868ea31a34fd4fd566244b7e40857f7df771", version = "=0.0.0", features = ["qualification"] }
 # Test instrumentation only; the consumer API uses the public packages above.
-openbindings-internal-json = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "ca4c63a624d0a4310c0df015824206d7e975960a" }
+openbindings-internal-json = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "553098f0d76b1fbd985ce5eb9bac2be1a8693fc9" }
 serde_json = "1.0.151"
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = { version = "=0.2.129", optional = true }

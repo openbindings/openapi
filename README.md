@@ -1,7 +1,7 @@
 The OpenBindings implementation of the source-inspection, interface-synthesis and binding-invocation roles for OpenAPI, built on [`openapi-client`](https://github.com/openbindings/openapi-client).
 
 The packages are unpublished. This repository depends on the SDK at
-`ca4c63a624d0a4310c0df015824206d7e975960a` and the independent client at
+`553098f0d76b1fbd985ce5eb9bac2be1a8693fc9` and the independent client at
 `fbcb868ea31a34fd4fd566244b7e40857f7df771`. The SDK defines the roles and supplies
 no kind-specific instances. This project supplies the OpenAPI provider.
 
