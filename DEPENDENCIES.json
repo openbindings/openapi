@@ -2043,7 +2043,7 @@
     },
     {
       "name": "rustls",
-      "version": "0.23.45",
+      "version": "0.23.46",
       "declared_license": "Apache-2.0 OR ISC OR MIT",
       "repository": "https://github.com/rustls/rustls",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
