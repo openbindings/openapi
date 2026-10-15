@@ -2,7 +2,7 @@
 use dynamic_openapi_client as client;
 use openapi_json_path_consumer::{reply, source};
 use openbindings::{
-    Binding, Direction, Document, JsonValue, Operation, ParsedDocument, ResourceSet,
+    Binding, Conformant, Direction, Document, Edit, JsonValue, Operation, ResourceSet,
     ValueContractPreparation, ValueOutcome,
 };
 use openbindings_interface_synthesis::{SynthesisRequest, SynthesisSource, Synthesizer};
@@ -56,9 +56,10 @@ fn client_doc(text: &str) -> client::Document {
 fn schema() -> JsonValue {
     JsonValue::parse(r#"{"type":"object","properties":{"parameters":{"type":"object","properties":{"path":{"type":"object","properties":{},"required":[],"additionalProperties":false},"query":{"type":"object","properties":{},"required":[],"additionalProperties":false}},"required":[],"additionalProperties":false}},"required":[],"additionalProperties":false}"#).unwrap()
 }
-fn authored(source: &openbindings::Source, document: &client::Document) -> ParsedDocument {
+fn authored(source: &openbindings::Source, document: &client::Document) -> Conformant<Document> {
     let mut draft = Document::new();
-    draft.sources = Some(BTreeMap::from([("api".into(), source.clone())]));
+    let sources = BTreeMap::from([("api".into(), source.clone())]);
+    let mut operations = BTreeMap::new();
     let mut bindings = BTreeMap::new();
     let schema = schema();
     for (i, op) in document.operations().enumerate() {
@@ -70,7 +71,7 @@ fn authored(source: &openbindings::Source, document: &client::Document) -> Parse
                 .map(|c| if c.is_ascii_alphanumeric() { c } else { '_' })
                 .collect::<String>()
         );
-        draft.operations.insert(
+        operations.insert(
             key.clone(),
             Operation {
                 input: Some(schema.clone()),
@@ -92,10 +93,14 @@ fn authored(source: &openbindings::Source, document: &client::Document) -> Parse
             },
         );
     }
-    draft.bindings = Some(bindings);
-    let parsed = ParsedDocument::from_json(draft.to_json().unwrap());
-    assert!(parsed.validate().unwrap().validated().is_some());
-    parsed
+    draft
+        .edit(&[
+            Edit::SetOperations { value: &operations },
+            Edit::SetSources { value: &sources },
+            Edit::SetBindings { value: &bindings },
+        ])
+        .unwrap();
+    draft.validate().unwrap().conformant().unwrap()
 }
 struct Echo(JsonValue);
 impl binding::BindingInvoker for Echo {
@@ -156,18 +161,25 @@ fn main() {
         let facade = Synthesizer::new(&provider);
         let initial = ready(facade.synthesize_with_coverage(&req)).unwrap();
         assert_eq!(
-            Document::from_json(initial.document().parsed().value())
+            initial
+                .document()
+                .as_document()
+                .clone()
+                .operations()
                 .unwrap()
-                .operations
                 .len(),
             n
         );
         // Baseline and candidate contain the same authored source and operation schemas.
         assert_eq!(
-            serde_json::from_str::<serde_json::Value>(authored(&src, &document).value().text())
-                .unwrap(),
-            serde_json::from_str::<serde_json::Value>(initial.document().parsed().value().text())
-                .unwrap()
+            serde_json::from_str::<serde_json::Value>(
+                authored(&src, &document).as_document().value().text()
+            )
+            .unwrap(),
+            serde_json::from_str::<serde_json::Value>(
+                initial.document().as_document().value().text()
+            )
+            .unwrap()
         );
         for cold in [false, true] {
             let samples = sample(|| {
@@ -293,9 +305,9 @@ fn main() {
             });
             rows.push(serde_json::json!({"workload":"stage","stage":"checked-binding-lifecycle","method":method,"bytes":bytes,"samples_ns":samples}));
             let mut draft = Document::new();
-            draft.operations.insert("call".into(), Operation::default());
-            draft.sources = Some(BTreeMap::from([("api".into(), src.clone())]));
-            draft.bindings = Some(BTreeMap::from([(
+            let operations = BTreeMap::from([("call".into(), Operation::default())]);
+            let sources = BTreeMap::from([("api".into(), src.clone())]);
+            let bindings = BTreeMap::from([(
                 "call".into(),
                 Binding {
                     operation: "call".into(),
@@ -303,14 +315,21 @@ fn main() {
                     content: binding.content.clone(),
                     ..Default::default()
                 },
-            )]));
-            let parsed = ParsedDocument::from_json(draft.to_json().unwrap());
+            )]);
+            draft
+                .edit(&[
+                    Edit::SetOperations { value: &operations },
+                    Edit::SetSources { value: &sources },
+                    Edit::SetBindings { value: &bindings },
+                ])
+                .unwrap();
+            let document = draft.clone();
             let operations = operation::Invoker::new(
-                parsed
+                document
                     .clone()
                     .validate()
                     .unwrap()
-                    .validated()
+                    .conformant()
                     .expect("conformant invocation document"),
                 &provider,
             );
@@ -378,12 +397,14 @@ fn main() {
             });
             rows.push(serde_json::json!({"workload":"cold-setup-and-invocation","method":method,"bytes":bytes,"source_bytes":text.len(),"samples_ns":samples}));
             // Separate matched contract overhead, not attributed to protocol adaptation.
-            draft.operations.get_mut("call").unwrap().input =
-                Some(JsonValue::parse(r#"{"type":"object"}"#).unwrap());
-            let doc = ParsedDocument::from_json(draft.to_json().unwrap())
+            draft
+                .set_operation_input("call", &JsonValue::parse(r#"{"type":"object"}"#).unwrap())
+                .unwrap();
+            let doc = draft
+                .clone()
                 .validate()
                 .unwrap()
-                .validated()
+                .conformant()
                 .expect("conformant contract document");
             let evaluator = Arc::new(openbindings_json_schema_evaluator::DefaultEvaluator::new());
             let contracts = doc.value_contracts(evaluator.clone(), ResourceSet::default());
@@ -392,10 +413,10 @@ fn main() {
             else {
                 panic!()
             };
-            let validated = operation::Invoker::new(doc, &provider)
+            let checked = operation::Invoker::new(doc, &provider)
                 .with_evaluator(evaluator, ResourceSet::default());
             // Retain compiled contracts for the warm workload now that core has no cache.
-            let prepared_operation = validated.prepare("call").unwrap();
+            let prepared_operation = checked.prepare("call").unwrap();
             let samples = sample(|| {
                 if candidate {
                     let mut job = prepared_operation.invoke(operation::Attempt::new());

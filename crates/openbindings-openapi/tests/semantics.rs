@@ -1,3 +1,5 @@
+#[path = "support/source.rs"]
+mod source_support;
 use dynamic_openapi_client::{
     Cancellation, Header, Outcome,
     transport::{
@@ -5,7 +7,7 @@ use dynamic_openapi_client::{
         TransportResult, UploadState,
     },
 };
-use openbindings::{Document, JsonValue, ParsedDocument};
+use openbindings::{Document, JsonValue};
 use openbindings_invocation::{BindingRequest, BindingValue, InvocationError, binding, operation};
 use openbindings_openapi::{OpenApi, SERVER_POINT};
 use openbindings_source_inspection::CancellationToken;
@@ -13,8 +15,8 @@ use std::{cell::Cell, rc::Rc, sync::Arc, time::Duration};
 fn json(t: &str) -> JsonValue {
     JsonValue::parse(t).unwrap()
 }
-fn document() -> ParsedDocument {
-    ParsedDocument::parse(include_str!("fixtures/r1/parcels.obi.json")).unwrap()
+fn document() -> Document {
+    Document::parse(include_str!("fixtures/r1/parcels.obi.json")).unwrap()
 }
 fn outcome_input(status: u16, body: &str, state: BodyState) -> TransportResult {
     let mut response = ResponseInput::new(
@@ -62,9 +64,11 @@ async fn invoke<P: binding::BindingInvoker>(
     input: Vec<JsonValue>,
     context: Option<&JsonValue>,
 ) -> Result<Vec<JsonValue>, InvocationError> {
-    let draft = Document::from_json(document().value()).unwrap();
-    let source = &draft.sources.as_ref().unwrap()["authoredApi"];
-    let binding = BindingValue::from(&draft.bindings.as_ref().unwrap()["healthBinding"]);
+    let draft = document();
+    let source = &source_support::source(draft.source("authoredApi").unwrap().unwrap());
+    let binding =
+        BindingValue::from_json_ref(draft.binding("healthBinding").unwrap().unwrap().value())
+            .unwrap();
     let facade = binding::Invoker::new(provider);
     let mut job = facade.invoke(BindingRequest {
         source,
@@ -97,7 +101,7 @@ async fn caller_close_and_cardinality_precede_effects() {
         document()
             .validate()
             .unwrap()
-            .validated()
+            .conformant()
             .expect("conformant invocation document"),
         &provider,
     );
@@ -160,7 +164,7 @@ async fn failed_or_incomplete_responses_never_emit_success() {
 }
 #[tokio::test]
 async fn destination_context_is_membership_and_new_attempt() {
-    let doc = ParsedDocument::parse(include_str!("fixtures/r1/destinations.obi.json")).unwrap();
+    let doc = Document::parse(include_str!("fixtures/r1/destinations.obi.json")).unwrap();
     let count = Rc::new(Cell::new(0));
     let observed = Rc::new(std::cell::RefCell::new(Vec::new()));
     let host_observed = observed.clone();
@@ -186,7 +190,7 @@ async fn destination_context_is_membership_and_new_attempt() {
     let invoker = operation::Invoker::new(
         doc.validate()
             .unwrap()
-            .validated()
+            .conformant()
             .expect("conformant invocation document"),
         provider,
     );
@@ -253,7 +257,7 @@ async fn pending_local_host_cancellation_and_drop_release_owners() {
             document()
                 .validate()
                 .unwrap()
-                .validated()
+                .conformant()
                 .expect("conformant invocation document"),
             provider,
         );
@@ -301,17 +305,18 @@ async fn exact_integer_parameters_agree_with_the_operation_schema() {
         })
         .await
         .unwrap();
-    let parsed = ParsedDocument::parse(generated.parsed().value().text()).unwrap();
-    let draft = Document::from_json(parsed.value()).unwrap();
-    let (name, binding) = draft.bindings.as_ref().unwrap().iter().next().unwrap();
-    let value = BindingValue::from(binding);
+    let document = Document::parse(generated.as_document().value().text()).unwrap();
+    let draft = &document;
+    let binding = draft.bindings().unwrap().unwrap().remove(0);
+    let name = binding.key();
+    let value = BindingValue::from_json_ref(binding.value()).unwrap();
     let direct = binding::Invoker::new(&provider);
     let operations = operation::Invoker::new(
-        parsed
+        document
             .clone()
             .validate()
             .unwrap()
-            .validated()
+            .conformant()
             .expect("conformant invocation document"),
         &provider,
     )
@@ -401,7 +406,7 @@ async fn incomplete_headers_and_pre_cancel_are_not_success() {
         document()
             .validate()
             .unwrap()
-            .validated()
+            .conformant()
             .expect("conformant invocation document"),
         provider,
     );
@@ -431,18 +436,17 @@ async fn undefined_author_contracts_withhold_values_and_preserve_unresolved_erro
             "null",
             BodyState::Complete,
         ));
-        let mut draft = Document::from_json(document().value()).unwrap();
-        let operation = draft.operations.get_mut("create").unwrap();
+        let mut draft = document();
         let schema = json(r##"{"$id":"https://contracts.invalid/root","$ref":"#missing"}"##);
         match direction {
-            Direction::Input => operation.input = Some(schema),
-            Direction::Output => operation.output = Some(schema),
+            Direction::Input => draft.set_operation_input("create", &schema).unwrap(),
+            Direction::Output => draft.set_operation_output("create", &schema).unwrap(),
         }
         let facade = operation::Invoker::new(
-            ParsedDocument::from_json(draft.to_json().unwrap())
+            draft
                 .validate()
                 .unwrap()
-                .validated()
+                .conformant()
                 .expect("conformant invocation document"),
             provider,
         )
@@ -480,18 +484,19 @@ async fn generic_selection_and_author_contracts_remain_in_the_operation_layer() 
     let calls = Rc::new(Cell::new(0));
     let provider =
         OpenApi::default().with_transport(host(calls.clone(), 200, "null", BodyState::Complete));
-    let mut draft = Document::from_json(document().value()).unwrap();
-    let b = draft.bindings.as_ref().unwrap()["healthBinding"].clone();
-    draft
-        .bindings
-        .as_mut()
+    let mut draft = document();
+    let b = draft
+        .binding("healthBinding")
         .unwrap()
-        .insert("other_health".into(), b);
+        .unwrap()
+        .value()
+        .to_owned();
+    draft.set("/bindings/other_health", &b).unwrap();
     let facade = operation::Invoker::new(
-        ParsedDocument::from_json(draft.to_json().unwrap())
+        draft
             .validate()
             .unwrap()
-            .validated()
+            .conformant()
             .expect("conformant invocation document"),
         &provider,
     );
@@ -509,17 +514,19 @@ async fn generic_selection_and_author_contracts_remain_in_the_operation_layer() 
     assert_eq!(calls.get(), 1);
     drop(job);
     for (side, expected_calls) in [("input", 1), ("output", 2)] {
-        let mut draft = Document::from_json(document().value()).unwrap();
+        let mut draft = document();
         if side == "input" {
-            draft.operations.get_mut("health").unwrap().input = Some(json("false"));
+            draft.set_operation_input("health", &json("false")).unwrap();
         } else {
-            draft.operations.get_mut("health").unwrap().output = Some(json("false"));
+            draft
+                .set_operation_output("health", &json("false"))
+                .unwrap();
         }
         let facade = operation::Invoker::new(
-            ParsedDocument::from_json(draft.to_json().unwrap())
+            draft
                 .validate()
                 .unwrap()
-                .validated()
+                .conformant()
                 .expect("conformant invocation document"),
             &provider,
         )
@@ -547,14 +554,15 @@ async fn required_values_duplicates_media_and_body_budget_are_checked() {
     let count = Rc::new(Cell::new(0));
     let provider =
         OpenApi::default().with_transport(host(count.clone(), 204, "", BodyState::Complete));
-    let draft = Document::from_json(document().value()).unwrap();
-    let source = &draft.sources.as_ref().unwrap()["authoredApi"];
+    let draft = document();
+    let source = &source_support::source(draft.source("authoredApi").unwrap().unwrap());
     let facade = binding::Invoker::new(&provider);
     for (key, input) in [
         ("lookupBinding", "{}"),
         ("createBinding", r#"{"body":{"x":1,"x":2}}"#),
     ] {
-        let value = BindingValue::from(&draft.bindings.as_ref().unwrap()[key]);
+        let value =
+            BindingValue::from_json_ref(draft.binding(key).unwrap().unwrap().value()).unwrap();
         let mut job = facade.invoke(BindingRequest {
             source,
             binding: &value,
@@ -576,7 +584,9 @@ async fn required_values_duplicates_media_and_body_budget_are_checked() {
             BodyState::Complete,
         ));
         let facade = binding::Invoker::new(provider);
-        let value = BindingValue::from(&draft.bindings.as_ref().unwrap()["createBinding"]);
+        let value =
+            BindingValue::from_json_ref(draft.binding("createBinding").unwrap().unwrap().value())
+                .unwrap();
         let mut job = facade.invoke(BindingRequest {
             source,
             binding: &value,

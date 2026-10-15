@@ -1,5 +1,7 @@
 //! Second-edition acceptance: author-owned fixtures and literal wire expectations.
-use openbindings::{Document, JsonValue, ParsedDocument, Source};
+#[path = "support/source.rs"]
+mod source_support;
+use openbindings::{Document, JsonValue, Source};
 use openbindings_interface_synthesis::{
     CoverageStatus, SynthesisRequest, SynthesisSource, Synthesizer,
 };
@@ -345,21 +347,20 @@ async fn parameter_types_require_a_supported_lexical_schema_dialect() {
         );
         let report = synth(&provider, &src).await.unwrap();
         assert_eq!(report.coverage().strict_eligible(), represented);
-        let draft = Document::from_json(report.document().parsed().value()).unwrap();
-        assert_eq!(draft.operations.len(), usize::from(represented));
+        let draft = report.document().as_document();
+        assert_eq!(draft.operations().unwrap().len(), usize::from(represented));
         assert_eq!(calls.get(), 0, "authoring must not dispatch");
         if represented {
             // Only the explicit modern type is projected; the unresolved reference
             // remains disclosed loss, not an effective schema-validation claim.
             assert!(!report.coverage().fully_represented());
             let input = draft
-                .operations
-                .values()
-                .next()
+                .operations()
                 .unwrap()
-                .input
-                .as_ref()
-                .unwrap();
+                .remove(0)
+                .input()
+                .unwrap()
+                .to_owned();
             assert_eq!(
                 input
                     .get("properties")
@@ -484,9 +485,12 @@ async fn schema_dialect_boundaries_do_not_invent_a_caller_contract() {
                     .any(|e| e.status == CoverageStatus::ImplementationUnsupported)
             );
             assert!(
-                Document::from_json(generated.document().parsed().value())
+                generated
+                    .document()
+                    .as_document()
+                    .clone()
+                    .operations()
                     .unwrap()
-                    .operations
                     .is_empty()
             );
             assert_eq!(
@@ -514,12 +518,11 @@ async fn schema_dialect_boundaries_do_not_invent_a_caller_contract() {
     let report = synth(&provider, &src).await.unwrap();
     assert!(report.coverage().strict_eligible());
     assert!(!report.coverage().fully_represented());
-    let draft = Document::from_json(report.document().parsed().value()).unwrap();
-    let op = draft.operations.values().next().unwrap();
-    assert!(op.output.is_none());
+    let draft = report.document().as_document();
+    let op = draft.operations().unwrap().remove(0);
+    assert!(op.output().is_none());
     assert_eq!(
-        op.input
-            .as_ref()
+        op.input()
             .unwrap()
             .get("properties")
             .unwrap()
@@ -646,9 +649,9 @@ async fn independent_manual_and_synthesized_reloaded_consumers_use_real_http() {
     let manual = include_str!("fixtures/v30/manual.obi.json")
         .replace("https://archive.example.invalid", &origin);
     let saved = {
-        let parsed = ParsedDocument::parse(&manual).unwrap();
-        let draft = Document::from_json(parsed.value()).unwrap();
-        let src = &draft.sources.as_ref().unwrap()["archive"];
+        let document = Document::parse(&manual).unwrap();
+        let draft = &document;
+        let src = &source_support::source(draft.source("archive").unwrap().unwrap());
         let count = Rc::new(Cell::new(0));
         let provider = OpenApi::new(resources()).unwrap().with_transport(transport(
             count.clone(),
@@ -670,25 +673,41 @@ async fn independent_manual_and_synthesized_reloaded_consumers_use_real_http() {
         assert!(generated.coverage().strict_eligible());
         assert!(!generated.coverage().fully_represented());
         assert_eq!(count.get(), 0);
-        let new = Document::from_json(generated.document().parsed().value()).unwrap();
+        let new = generated.document().as_document();
         assert_eq!(
-            new.sources.as_ref().unwrap()["archive"]
-                .content
-                .as_ref()
+            new.source("archive")
+                .unwrap()
+                .unwrap()
+                .content()
                 .unwrap()
                 .text(),
             src.content.as_ref().unwrap().text()
         );
-        assert_eq!(new.sources.as_ref().unwrap()["archive"].kind, KIND_30);
         assert_eq!(
-            new.sources.as_ref().unwrap()["archive"].additional_fields["x-owner"].text(),
+            new.source("archive")
+                .unwrap()
+                .unwrap()
+                .kind()
+                .unwrap()
+                .as_str()
+                .unwrap(),
+            KIND_30
+        );
+        assert_eq!(
+            new.source("archive")
+                .unwrap()
+                .unwrap()
+                .value()
+                .get("x-owner")
+                .unwrap()
+                .text(),
             src.additional_fields["x-owner"].text()
         );
-        generated.document().parsed().value().text().to_owned()
+        generated.document().as_document().value().text().to_owned()
     };
     for text in [&manual, &saved] {
-        let parsed = ParsedDocument::parse(text).unwrap();
-        let draft = Document::from_json(parsed.value()).unwrap();
+        let document = Document::parse(text).unwrap();
+        let draft = &document;
         let client = dynamic_openapi_client_reqwest::Client::new().unwrap();
         let provider = OpenApi::new(resources()).unwrap().with_transport(
             move |request: PreparedRequest, cancel: Cancellation| {
@@ -700,10 +719,10 @@ async fn independent_manual_and_synthesized_reloaded_consumers_use_real_http() {
             },
         );
         let invoker = operation::Invoker::new(
-            parsed
+            document
                 .validate()
                 .unwrap()
-                .validated()
+                .conformant()
                 .expect("conformant invocation document"),
             provider,
         )
@@ -714,15 +733,15 @@ async fn independent_manual_and_synthesized_reloaded_consumers_use_real_http() {
         for row in &exchanges {
             let method = row["method"].as_str().unwrap().to_ascii_lowercase();
             let name = &draft
-                .bindings
-                .as_ref()
+                .bindings()
                 .unwrap()
-                .values()
-                .find(|b| {
-                    b.content.as_ref().unwrap().get("method").unwrap().as_str() == Some(&method)
-                })
                 .unwrap()
-                .operation;
+                .into_iter()
+                .find(|b| b.content().unwrap().get("method").unwrap().as_str() == Some(&method))
+                .unwrap()
+                .operation()
+                .unwrap()
+                .to_owned();
             let mut job = invoker.invoke(operation::Request::operation(name));
             let _ = job.write(json(row["input"].as_str().unwrap())).await;
             job.close();
@@ -744,8 +763,8 @@ async fn independent_manual_and_synthesized_reloaded_consumers_use_real_http() {
         }
     }
     wire.join().unwrap();
-    let draft = Document::from_json(ParsedDocument::parse(saved).unwrap().value()).unwrap();
-    let src = &draft.sources.as_ref().unwrap()["archive"];
+    let draft = Document::parse(saved).unwrap();
+    let src = &source_support::source(draft.source("archive").unwrap().unwrap());
     let count = Rc::new(Cell::new(0));
     let missing = OpenApi::default().with_transport(transport(
         count.clone(),
@@ -984,15 +1003,14 @@ async fn get_request_body_uses_the_source_edition_semantics() {
         );
         let result = synth(&provider, &src).await.unwrap();
         assert!(result.coverage().strict_eligible());
-        let draft = Document::from_json(result.document().parsed().value()).unwrap();
+        let draft = result.document().as_document();
         let input = draft
-            .operations
-            .values()
-            .next()
+            .operations()
             .unwrap()
-            .input
-            .as_ref()
-            .unwrap();
+            .remove(0)
+            .input()
+            .unwrap()
+            .to_owned();
         assert_eq!(
             input.get("properties").unwrap().get("body").is_some(),
             has_body

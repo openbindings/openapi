@@ -46,7 +46,7 @@ async fn authored(src: &Source) -> (String, openbindings_interface_synthesis::Sy
         .await
         .unwrap();
     (
-        output.document().parsed().value().text().to_owned(),
+        output.document().as_document().value().text().to_owned(),
         output.coverage().clone(),
     )
 }
@@ -415,15 +415,19 @@ pub async fn suite(v30: bool) {
         value(json!({"n":9007199254740993u64,"label":"雪"})),
     );
     let (saved, coverage) = authored(&preserved).await;
-    let parsed = openbindings::ParsedDocument::parse(&saved).unwrap();
-    let draft = Document::from_json(parsed.value()).unwrap();
-    let output_source = &draft.sources.as_ref().unwrap()["api"];
+    let document = Document::parse(&saved).unwrap();
+    let draft = &document;
+    let output_source = &draft.source("api").unwrap().unwrap();
     assert_eq!(
-        output_source.content.as_ref().unwrap().text(),
+        output_source.content().unwrap().text(),
         preserved.content.as_ref().unwrap().text()
     );
     assert_eq!(
-        output_source.additional_fields["x-authoring-style"].text(),
+        output_source
+            .value()
+            .get("x-authoring-style")
+            .unwrap()
+            .text(),
         preserved.additional_fields["x-authoring-style"].text()
     );
     for (reference, sizes) in [

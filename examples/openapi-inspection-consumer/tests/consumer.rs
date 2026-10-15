@@ -20,9 +20,9 @@ async fn public_inspection_manual_authoring_and_exact_reload() {
         .unwrap();
     assert!(result.text().contains("9007199254740993"));
     assert!(result.text().contains("urn:example:unknown-dialect"));
-    let reloaded = Document::from_json(&result).unwrap();
-    let source = &reloaded.sources.as_ref().unwrap()["catalog-source"];
-    let document = source.content.as_ref().unwrap().get("document").unwrap();
+    let reloaded = Document::from_json(result.clone());
+    let source = &reloaded.source("catalog-source").unwrap().unwrap();
+    let document = source.content().unwrap().get("document").unwrap();
     let client = ClientDocument::parse(
         document.as_str().unwrap(),
         Some("https://fixture.invalid/openapi.json"),
@@ -35,30 +35,18 @@ async fn public_inspection_manual_authoring_and_exact_reload() {
         client.root().get("x-exact").unwrap().raw(),
         "9007199254740993"
     );
-    let binding = &reloaded.bindings.as_ref().unwrap()["catalog-binding"];
+    let binding = &reloaded.binding("catalog-binding").unwrap().unwrap();
     assert_eq!(
-        binding
-            .content
-            .as_ref()
-            .unwrap()
-            .get("path")
-            .unwrap()
-            .as_str(),
+        binding.content().unwrap().get("path").unwrap().as_str(),
         Some("/a~b/c")
     );
     assert_eq!(
-        binding
-            .content
-            .as_ref()
-            .unwrap()
-            .get("method")
-            .unwrap()
-            .as_str(),
+        binding.content().unwrap().get("method").unwrap().as_str(),
         Some("get")
     );
     // Independent manual OBI construction does not use inspection suggestions.
     let manual = author(
-        source.clone(),
+        openapi_inspection_consumer::source(&content).unwrap(),
         Binding {
             operation: "catalog.lookup".into(),
             source: "catalog-source".into(),
@@ -67,21 +55,16 @@ async fn public_inspection_manual_authoring_and_exact_reload() {
         },
     )
     .unwrap();
-    let manual_reload = Document::from_json(&manual).unwrap();
-    let manual_binding = manual_reload.bindings.as_ref().unwrap()["catalog-binding"]
-        .content
-        .as_ref()
-        .unwrap();
+    let manual_reload = Document::from_json(manual.clone());
+    let manual_view = manual_reload.binding("catalog-binding").unwrap().unwrap();
+    let manual_binding = manual_view.content().unwrap();
     assert_eq!(manual_binding.get("path").unwrap().as_str(), Some("/a~b/c"));
     assert_eq!(manual_binding.get("method").unwrap().as_str(), Some("get"));
     assert!(
-        Document::from_json(&manual)
-            .unwrap()
-            .build()
-            .unwrap()
+        Document::from_json(manual.clone())
             .validate()
             .unwrap()
-            .validated()
+            .conformant()
             .is_some()
     );
 }
@@ -114,9 +97,9 @@ async fn real_resource_recovery_from_public_packages() {
         full.targets.into_iter().next().unwrap(),
     )
     .unwrap();
-    let reloaded = Document::from_json(&authored).unwrap();
-    let source = &reloaded.sources.as_ref().unwrap()["catalog-source"];
-    let content = source.content.as_ref().unwrap();
+    let reloaded = Document::from_json(authored.clone());
+    let source = &reloaded.source("catalog-source").unwrap().unwrap();
+    let content = source.content().unwrap();
     let mut graph = dynamic_openapi_client::graph::DocumentBuilder::new(
         Limits::default(),
         dynamic_openapi_client::graph::GraphLimits::default(),
@@ -149,9 +132,11 @@ async fn real_resource_recovery_from_public_packages() {
     assert_eq!(operation.path(), "/mounted");
     assert_eq!(operation.value().raw(), "{}");
     assert_eq!(
-        reloaded.bindings.as_ref().unwrap()["catalog-binding"]
-            .content
-            .as_ref()
+        reloaded
+            .binding("catalog-binding")
+            .unwrap()
+            .unwrap()
+            .content()
             .unwrap()
             .get("path")
             .unwrap()
@@ -198,13 +183,9 @@ async fn inspected_neighbors_remain_preparable_after_manual_authoring_and_reload
         // r1 inspection includes known unsupported targets; authoring selects
         // the neighbor whose direct client preparation succeeds.
         let authored = inspect_and_author(&content, target).await.unwrap();
-        let reloaded = Document::from_json(&authored).unwrap();
-        let document = reloaded.sources.as_ref().unwrap()["catalog-source"]
-            .content
-            .as_ref()
-            .unwrap()
-            .get("document")
-            .unwrap();
+        let reloaded = Document::from_json(authored.clone());
+        let source_view = reloaded.source("catalog-source").unwrap().unwrap();
+        let document = source_view.content().unwrap().get("document").unwrap();
         let client =
             ClientDocument::parse(document.as_str().unwrap(), None, Limits::default()).unwrap();
         let operation = client.operation("/x", method.clone()).unwrap();

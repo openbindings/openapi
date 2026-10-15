@@ -1,7 +1,7 @@
 The OpenBindings implementation of the source-inspection, interface-synthesis and binding-invocation roles for OpenAPI, built on [`openapi-client`](https://github.com/openbindings/openapi-client).
 
 The packages are unpublished. This repository depends on the SDK at
-`553098f0d76b1fbd985ce5eb9bac2be1a8693fc9` and the independent client at
+`2c242e1b2a98e443ac87ccc58a4ce7c45554eafa` and the independent client at
 `fbcb868ea31a34fd4fd566244b7e40857f7df771`. The SDK defines the roles and supplies
 no kind-specific instances. This project supplies the OpenAPI provider.
 
@@ -17,7 +17,7 @@ The private `local.openapi-json-probe.r1` and `local.openapi30-json-probe.r1` ki
 retain their meanings. Sources carry exact JSON text in `document` and optional
 `retrievalUri`; bindings carry `path` and lowercase `method`. Reloaded documents
 must pass SDK validation before operation invocation or
-value-contract preparation. The current SDK pin uses `Document`, validated typed
+value-contract preparation. The current SDK pin uses one exact `Document`, `Conformant<Document>` proof with infallible typed
 views and companion-owned `CancellationToken` role signatures. Default value
 failures use coarse diagnostics; [migration details](PROVENANCE.md) describe the
 diagnostic and reference boundaries. It implements no
@@ -62,8 +62,8 @@ python3 tools/verify-openapi-inspection.py --archives --wasm --sdk-source <cache
 python3 tools/verify-openapi-invocation-only.py --archives
 ```
 
-The SDK source must have the pinned HEAD, unchanged tracked files and no tracked
-symlinks. Its commit and tree identity are recorded in the generated receipt.
+The SDK source must have the pinned tree, unchanged tracked files and no tracked
+symlinks. The pinned revision, checkout commit and tree identity are recorded in the generated receipt.
 Extracted SDK packages are patched for both their original Git dependencies and
 normalized registry dependencies; no source checkout may escape into the archive
 consumer graph. The minimal archive consumer checks the preceding JSON-path

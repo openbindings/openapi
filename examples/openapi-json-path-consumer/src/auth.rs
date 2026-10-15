@@ -7,7 +7,7 @@ use dynamic_openapi_client::{
         TransportResult, UploadState,
     },
 };
-use openbindings::{Document, JsonValue, ParsedDocument, Source};
+use openbindings::{Document, JsonValue, Source};
 use openbindings_interface_synthesis::{SynthesisRequest, SynthesisSource, Synthesizer};
 use openbindings_invocation::{BindingRequest, BindingValue, InvocationError, binding, operation};
 use openbindings_openapi::{OpenApi, Options};
@@ -135,11 +135,11 @@ pub async fn operation_call<P: binding::BindingInvoker>(
     input: &str,
 ) -> Result<Vec<String>, InvocationError> {
     let invoker = operation::Invoker::new(
-        ParsedDocument::parse(saved)
+        Document::parse(saved)
             .unwrap()
             .validate()
             .unwrap()
-            .validated()
+            .conformant()
             .expect("conformant invocation document"),
         p,
     )
@@ -207,7 +207,7 @@ pub async fn suite(v30: bool) {
     assert_eq!(
         synthesis
             .document()
-            .parsed()
+            .as_document()
             .value()
             .get("operations")
             .unwrap()
@@ -216,22 +216,43 @@ pub async fn suite(v30: bool) {
             .count(),
         6
     );
-    let mut generated = Document::from_json(synthesis.document().parsed().value()).unwrap();
-    // Rename all generated operation keys. Binding path/method remains the authority.
-    for (index, b) in generated
-        .bindings
-        .as_mut()
+    let mut generated = synthesis.into_parts().0.into_inner();
+    // Rename operations and their binding references atomically; keep all other bytes.
+    let mut operations = std::collections::BTreeMap::new();
+    let mut replacements = Vec::new();
+    for (index, binding) in generated
+        .bindings()
         .unwrap()
-        .values_mut()
+        .unwrap()
+        .into_iter()
         .enumerate()
     {
-        let old = b.operation.clone();
+        let old = binding.operation().unwrap();
         let new = format!("renamed_{index}");
-        let op = generated.operations.remove(&old).unwrap();
-        generated.operations.insert(new.clone(), op);
-        b.operation = new;
+        let operation = generated
+            .value()
+            .get("operations")
+            .unwrap()
+            .get(old)
+            .unwrap()
+            .to_owned();
+        operations.insert(new.clone(), operation);
+        let key = binding.key().replace('~', "~0").replace('/', "~1");
+        replacements.push((
+            format!("/bindings/{key}/operation"),
+            JsonValue::from_serializable(&new).unwrap(),
+        ));
     }
-    let saved = generated.to_json().unwrap().text().to_owned();
+    replacements.push((
+        "/operations".into(),
+        JsonValue::parse(crate::wire_json::to_string(&operations).unwrap()).unwrap(),
+    ));
+    let edits: Vec<_> = replacements
+        .iter()
+        .map(|(pointer, value)| openbindings::Edit::Set { pointer, value })
+        .collect();
+    generated.edit(&edits).unwrap();
+    let saved = generated.value().text().to_owned();
     for row in oracle["requests"].as_array().unwrap() {
         let names: Vec<_> = row["securitySchemes"]
             .as_array()
@@ -255,15 +276,17 @@ pub async fn suite(v30: bool) {
         );
         assert_wire(&seen, row);
         for doc in [manual, &saved] {
-            let draft = Document::from_json(ParsedDocument::parse(doc).unwrap().value()).unwrap();
+            let draft = Document::parse(doc).unwrap().clone();
             let key = &draft
-                .bindings
-                .as_ref()
+                .bindings()
                 .unwrap()
-                .values()
-                .find(|b| b.content.as_ref().unwrap().get("path").unwrap().as_str() == Some(path))
                 .unwrap()
-                .operation;
+                .into_iter()
+                .find(|b| b.content().unwrap().get("path").unwrap().as_str() == Some(path))
+                .unwrap()
+                .operation()
+                .unwrap()
+                .to_owned();
             let seen = Rc::new(Seen::default());
             let p = OpenApi::default().with_transport(host(seen.clone(), 200, OUTPUT));
             assert_eq!(
@@ -320,7 +343,7 @@ pub async fn suite(v30: bool) {
         assert!(
             result
                 .document()
-                .parsed()
+                .as_document()
                 .value()
                 .get("operations")
                 .unwrap()
@@ -667,16 +690,18 @@ pub async fn suite(v30: bool) {
         })
         .await
         .unwrap();
-    let saved = result.document().parsed().value().text();
-    let draft = Document::from_json(result.document().parsed().value()).unwrap();
+    let saved = result.document().as_document().value().text();
+    let draft = result.document().as_document();
     let name = &draft
-        .bindings
-        .as_ref()
+        .bindings()
         .unwrap()
-        .values()
-        .find(|b| b.content.as_ref().unwrap().get("path").unwrap().as_str() == Some("/items"))
         .unwrap()
-        .operation;
+        .into_iter()
+        .find(|b| b.content().unwrap().get("path").unwrap().as_str() == Some("/items"))
+        .unwrap()
+        .operation()
+        .unwrap()
+        .to_owned();
     let seen = Rc::new(Seen::default());
     assert!(
         operation_call(

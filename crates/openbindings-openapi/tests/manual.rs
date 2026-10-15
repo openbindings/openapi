@@ -1,5 +1,7 @@
+#[path = "support/source.rs"]
+mod source_support;
 use dynamic_openapi_client::{Cancellation, transport::PreparedRequest};
-use openbindings::{JsonValue, ParsedDocument};
+use openbindings::{Document, JsonValue};
 use openbindings_invocation::{InvocationError, operation};
 use openbindings_openapi::OpenApi;
 use std::{
@@ -76,11 +78,11 @@ async fn crud_methods_and_empty_success_over_native_http() {
             },
         );
         let invoker = operation::Invoker::new(
-            ParsedDocument::parse(saved)
+            Document::parse(saved)
                 .unwrap()
                 .validate()
                 .unwrap()
-                .validated()
+                .conformant()
                 .expect("conformant invocation document"),
             provider,
         );
@@ -166,10 +168,10 @@ fn request(socket: &mut TcpStream) -> (String, Vec<u8>) {
     socket.read_exact(&mut body).unwrap();
     (head, body)
 }
-fn document(origin: &str) -> ParsedDocument {
+fn document(origin: &str) -> Document {
     // Recorded harness substitution before both authoring routes. The source text
     // remains a text value; its exact large integer never passes through a JS number.
-    ParsedDocument::parse(
+    Document::parse(
         include_str!("fixtures/r1/parcels.obi.json")
             .replace("https://parcel.example.invalid", origin),
     )
@@ -246,7 +248,7 @@ async fn authored_bindings_make_real_http_calls_and_preserve_exact_values() {
         document(&origin)
             .validate()
             .unwrap()
-            .validated()
+            .conformant()
             .expect("conformant invocation document"),
         provider,
     );
@@ -314,7 +316,7 @@ fn native_provider_future_retains_send() {
         document("http://127.0.0.1:1")
             .validate()
             .unwrap()
-            .validated()
+            .conformant()
             .expect("conformant invocation document"),
         provider,
     );
@@ -342,8 +344,8 @@ async fn synthesized_reloaded_document_repeats_the_independent_wire_call() {
         },
     ]);
     let saved = {
-        let draft = openbindings::Document::from_json(document(&origin).value()).unwrap();
-        let source = &draft.sources.as_ref().unwrap()["authoredApi"];
+        let draft = document(&origin);
+        let source = &source_support::source(draft.source("authoredApi").unwrap().unwrap());
         let provider = OpenApi::default();
         let sources = [SynthesisSource {
             name: Some("consumerOwnedSource"),
@@ -360,42 +362,41 @@ async fn synthesized_reloaded_document_repeats_the_independent_wire_call() {
             .unwrap();
         assert!(synth.coverage().strict_eligible());
         assert!(!synth.coverage().fully_represented());
-        synth.document().parsed().value().text().to_owned()
+        synth.document().as_document().value().text().to_owned()
     };
     // All authoring owners are gone; a new provider loads a persisted document.
-    let parsed = ParsedDocument::parse(saved).unwrap();
-    let draft = openbindings::Document::from_json(parsed.value()).unwrap();
+    let document = Document::parse(saved).unwrap();
+    let draft = &document;
     let binding = draft
-        .bindings
-        .as_ref()
+        .bindings()
         .unwrap()
-        .values()
+        .unwrap()
+        .into_iter()
         .find(|b| {
-            b.content
-                .as_ref()
+            b.content()
                 .unwrap()
                 .get("path")
                 .and_then(openbindings::JsonRef::as_str)
                 == Some("/parcels/{parcelId}")
         })
         .unwrap();
-    let operation = binding.operation.clone();
+    let operation = binding.operation().unwrap().to_owned();
     let create = draft
-        .bindings
-        .as_ref()
+        .bindings()
         .unwrap()
-        .values()
+        .unwrap()
+        .into_iter()
         .find(|b| {
-            b.content
-                .as_ref()
+            b.content()
                 .unwrap()
                 .get("path")
                 .and_then(openbindings::JsonRef::as_str)
                 == Some("/parcels")
         })
         .unwrap()
-        .operation
-        .clone();
+        .operation()
+        .unwrap()
+        .to_owned();
     let client = dynamic_openapi_client_reqwest::Client::new().unwrap();
     let provider = OpenApi::default().with_transport(
         move |request: PreparedRequest, cancellation: Cancellation| {
@@ -407,10 +408,10 @@ async fn synthesized_reloaded_document_repeats_the_independent_wire_call() {
         },
     );
     let invoker = operation::Invoker::new(
-        parsed
+        document
             .validate()
             .unwrap()
-            .validated()
+            .conformant()
             .expect("conformant invocation document"),
         provider,
     )
@@ -498,22 +499,23 @@ async fn cold_reloaded_mounts_use_supplied_reference_bases_on_real_http() {
             })
             .await
             .unwrap();
-        result.parsed().value().text().to_owned()
+        result.as_document().value().text().to_owned()
     };
-    let doc = ParsedDocument::parse(&saved).unwrap();
-    let draft = openbindings::Document::from_json(doc.value()).unwrap();
+    let doc = Document::parse(&saved).unwrap();
+    let draft = &doc;
     let keys: Vec<_> = ["/mounted/{parcelId}", "/alternate/{parcelId}"]
         .into_iter()
         .map(|path| {
             draft
-                .bindings
-                .as_ref()
+                .bindings()
                 .unwrap()
-                .values()
-                .find(|b| b.content.as_ref().unwrap().get("path").unwrap().as_str() == Some(path))
                 .unwrap()
-                .operation
-                .clone()
+                .into_iter()
+                .find(|b| b.content().unwrap().get("path").unwrap().as_str() == Some(path))
+                .unwrap()
+                .operation()
+                .unwrap()
+                .to_owned()
         })
         .collect();
     let client = dynamic_openapi_client_reqwest::Client::new().unwrap();
@@ -528,7 +530,7 @@ async fn cold_reloaded_mounts_use_supplied_reference_bases_on_real_http() {
     let invoker = operation::Invoker::new(
         doc.validate()
             .unwrap()
-            .validated()
+            .conformant()
             .expect("conformant invocation document"),
         provider,
     )
@@ -565,11 +567,11 @@ async fn cold_reloaded_mounts_use_supplied_reference_bases_on_real_http() {
         ))
     });
     let invoker = operation::Invoker::new(
-        ParsedDocument::parse(saved)
+        Document::parse(saved)
             .unwrap()
             .validate()
             .unwrap()
-            .validated()
+            .conformant()
             .expect("conformant invocation document"),
         no_resources,
     )
@@ -609,7 +611,7 @@ async fn manual_mount_and_renamed_unicode_target_use_literal_locations() {
             body: "null",
         },
     ]);
-    let doc = ParsedDocument::parse(
+    let doc = Document::parse(
         include_str!("fixtures/r1/mounted.obi.json")
             .replace("https://parcel.example.invalid", &origin),
     )
@@ -633,7 +635,7 @@ async fn manual_mount_and_renamed_unicode_target_use_literal_locations() {
             &operation::Invoker::new(
                 doc.validate()
                     .unwrap()
-                    .validated()
+                    .conformant()
                     .expect("conformant invocation document"),
                 provider
             ),
@@ -655,11 +657,11 @@ async fn manual_mount_and_renamed_unicode_target_use_literal_locations() {
         .replace("authoredApi", "chosen_source")
         .replace("lookup", "chosen_operation");
     let invoker = operation::Invoker::new(
-        ParsedDocument::parse(text)
+        Document::parse(text)
             .unwrap()
             .validate()
             .unwrap()
-            .validated()
+            .conformant()
             .expect("conformant invocation document"),
         OpenApi::default().with_transport(host),
     );
@@ -720,7 +722,7 @@ async fn real_http_redirect_and_post_receipt_cancellation_have_one_effect() {
             document(&origin)
                 .validate()
                 .unwrap()
-                .validated()
+                .conformant()
                 .expect("conformant invocation document"),
             provider,
         );

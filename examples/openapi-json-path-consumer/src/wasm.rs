@@ -41,10 +41,10 @@ pub async fn exact_roundtrip(
             }
         });
     let facade = invoker(&saved, provider);
-    let parsed = ParsedDocument::parse(&saved).unwrap();
-    let draft = Document::from_json(parsed.value()).unwrap();
-    let name = draft.operations.keys().next().unwrap();
-    let result = call(&facade, operation::Request::operation(name), input)
+    let document = Document::parse(&saved).unwrap();
+    let draft = &document;
+    let name = draft.operations().unwrap().remove(0).key().to_owned();
+    let result = call(&facade, operation::Request::operation(&name), input)
         .await
         .map_err(|e| JsValue::from_str(e.code()))?;
     assert_eq!(calls.get(), 1);
@@ -84,11 +84,11 @@ pub async fn pending_cleanup(kind: &str, description: &str, abandon: bool) -> Re
         },
     );
     let facade = invoker(&saved, provider);
-    let parsed = ParsedDocument::parse(&saved).unwrap();
-    let draft = Document::from_json(parsed.value()).unwrap();
-    let name = draft.operations.keys().next().unwrap();
+    let document = Document::parse(&saved).unwrap();
+    let draft = &document;
+    let name = draft.operations().unwrap().remove(0).key().to_owned();
     let control = CancellationToken::new();
-    let mut job = facade.invoke_with_control(operation::Request::operation(name), &control);
+    let mut job = facade.invoke_with_control(operation::Request::operation(&name), &control);
     job.write(JsonValue::parse(INPUT).unwrap()).await.unwrap();
     job.close();
     {

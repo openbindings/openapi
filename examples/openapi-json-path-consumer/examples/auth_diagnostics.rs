@@ -56,7 +56,7 @@ fn main() {
             assert_eq!(
                 initial
                     .document()
-                    .parsed()
+                    .as_document()
                     .value()
                     .get("operations")
                     .unwrap()

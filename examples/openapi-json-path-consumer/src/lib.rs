@@ -5,7 +5,7 @@ use dynamic_openapi_client::{
         BodyState, HeaderDelivery, Provenance, ResponseInput, TransportResult, UploadState,
     },
 };
-use openbindings::{JsonValue, ParsedDocument, Source};
+use openbindings::{Document, JsonValue, Source};
 use openbindings_interface_synthesis::{SynthesisRequest, SynthesisSource, Synthesizer};
 use openbindings_invocation::{InvocationError, binding::BindingInvoker, operation};
 use openbindings_openapi::OpenApi;
@@ -41,15 +41,15 @@ pub async fn author(kind: &str, text: &str) -> String {
         .await
         .unwrap();
     assert!(result.coverage().strict_eligible());
-    result.document().parsed().value().text().to_owned()
+    result.document().as_document().value().text().to_owned()
 }
 pub fn invoker<P: BindingInvoker>(saved: &str, provider: P) -> operation::Invoker<P> {
     operation::Invoker::new(
-        ParsedDocument::parse(saved)
+        Document::parse(saved)
             .unwrap()
             .validate()
             .unwrap()
-            .validated()
+            .conformant()
             .expect("conformant invocation document"),
         provider,
     )

@@ -9,9 +9,9 @@ and binding invoker roles for two private experiments in one `OpenApi<T>` provid
 | `local.openapi30-json-probe.r1` | 3.0 | `EXPERIMENTAL_KIND_30` | 3.0.4 |
 
 Use `openbindings-invocation::operation::Invoker` for document-based operation selection
-and declared value contracts. Construct it with the `ValidatedDocument` returned
-by `parsed.validate()?.validated()` after checking that proof exists. The checked
-synthesizer already returns validated proof; saving and reloading requires fresh
+and declared value contracts. Construct it with the `Conformant<Document>` returned
+by `document.validate()?.conformant()` after checking that proof exists. The checked
+synthesizer already returns conformance proof; saving and reloading requires fresh
 validation. `proof.value_contracts(evaluator, resources)` and invoker
 `with_evaluator` are infallible. Default evaluator failures use coarse diagnostics
 with a fixed message, no problems and incomplete detail; select
@@ -225,6 +225,11 @@ AND/OR structure in nonsecret coverage details. Missing runtime credentials are 
 schema loss or a reason to exclude an otherwise supported operation.
 
 ## Synthesis and scope
+
+Synthesis builds typed parts and commits metadata and the complete operations,
+sources and bindings maps in one atomic `Document::edit` batch. A checked result
+exposes `Conformant<Document>`; use `as_document()` for exact bytes and consume
+`into_inner()` to edit it, then establish conformance again.
 
 Zero sources produce a skeleton; one source is preserved; composition of multiple
 sources is currently unsupported. Generated input schemas describe the mechanical
