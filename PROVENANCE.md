@@ -4,8 +4,8 @@ Imported from SDK commit `78724ae`, full revision
 `78724aedca8d0dc104aa3be6254b4a225b7e9b58` in
 [openbindings/sdk](https://github.com/openbindings/sdk).
 This repository receives one clean source import, with no filtered history.
-Historical adapter evidence and role-loop records are archived outside both product
-repositories. At import, all adapter `src/` and test `.rs` files and all fixture bytes were identical.
+Historical adapter evidence and development records are archived outside both
+product repositories. At import, all adapter `src/` and test `.rs` files and all fixture bytes were identical.
 The stopped measurement examples remain sources, compiled but never executed by CI.
 
 The root development manifest, CI workflow, shared qualification helper and
@@ -13,7 +13,7 @@ dependency attribution files are new extraction plumbing. The consumer test bina
 serializes its own tests with a local lock because they count process-global owners.
 `NOTICE` describes this resolved graph. No SDK implementation is copied into this
 product repository. The current immutable Git pins are SDK
-`f79cc70964ced113030dcb7051b4da0d838fb0c7` and client
+`553098f0d76b1fbd985ce5eb9bac2be1a8693fc9` and client
 `fbcb868ea31a34fd4fd566244b7e40857f7df771`.
 
 Earlier migrations adopted validation vocabulary, companion-owned cancellation,
@@ -46,20 +46,32 @@ input contracts contain envelope constraints and scalar types, without `$ref` or
 source schema projection. Consequently static-reference hole evaluation does not
 change their verdicts or refusals: malformed envelopes fail and accepted envelopes
 satisfy. Author-added positive reference contracts may now decide independently of
-a known static defect, or return `NoVerdict` with `Undefined` when proven completions
-disagree. Missing resources and implementation limits remain distinct refusals.
+a known static defect, or return `ValueOutcome::Undefined { detail }` when proven
+completions disagree. This replaces `NoVerdictReason::Undefined`; missing resources
+and implementation limits remain distinct no-verdict refusals. The SDK operation
+invoker maps undefined and no-verdict outcomes to `ERR_SCHEMA_UNRESOLVED` and
+withholds the value. The adapter delegates this check to that invoker and has no
+exhaustive value-outcome match of its own. Its existing satisfies/fails assertions
+and synthesized envelope contracts keep their results.
 
-The client update changes documentation only. The locked graph removes the private
-serde_json, referencing and jsonschema-value forks in favor of their upstream
-registry packages, and carries one serde_json identity. Only the renamed jsonschema
-and regress forks remain. Archive qualification packages the internal schema crate
-and those retained forks. Both attribution inventories are regenerated from cached
-locked sources with `tools/attribution.py`; their content changes with this graph.
+The final SDK pin also requires callers to consume `DocumentValidation` results.
+Public SDK debug formatting redacts caller and document text; this does not change
+wire values or adapter decisions.
+SDK package inventory, crate documentation and TypeScript-only API changes require
+no adapter behavior changes. The adapter keeps its existing Rust 1.99 toolchain,
+which exceeds the SDK's Rust 1.88 minimum.
+
+The client pin is unchanged. The locked graph retains upstream registry serde_json,
+referencing and jsonschema-value packages, with one serde_json identity. Only the
+renamed jsonschema and regress forks remain. Archive qualification packages the
+internal schema crate and those retained forks. `tools/attribution.py` regenerates
+both attribution inventories from cached locked sources: `DEPENDENCIES.json`
+records the new SDK source identities, while notice bytes remain unchanged.
 
 These changes follow the pinned SDK's
-[change log](https://github.com/openbindings/sdk/blob/f79cc70964ced113030dcb7051b4da0d838fb0c7/CHANGELOG.md),
-[migration notes](https://github.com/openbindings/sdk/blob/f79cc70964ced113030dcb7051b4da0d838fb0c7/docs/migration.md)
-and [dependency maintenance contract](https://github.com/openbindings/sdk/blob/f79cc70964ced113030dcb7051b4da0d838fb0c7/DEPENDENCY-MAINTENANCE.md).
+[change log](https://github.com/openbindings/sdk/blob/553098f0d76b1fbd985ce5eb9bac2be1a8693fc9/CHANGELOG.md),
+[migration notes](https://github.com/openbindings/sdk/blob/553098f0d76b1fbd985ce5eb9bac2be1a8693fc9/docs/migration.md)
+and [dependency maintenance contract](https://github.com/openbindings/sdk/blob/553098f0d76b1fbd985ce5eb9bac2be1a8693fc9/DEPENDENCY-MAINTENANCE.md).
 
 The table below records the original extraction dispositions, not a claim that
 migrated consumers remain byte-identical to that import.
