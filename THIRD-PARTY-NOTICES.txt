@@ -21760,7 +21760,7 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
 IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 
-===== rustls 0.23.45: LICENSE-APACHE =====
+===== rustls 0.23.46: LICENSE-APACHE =====
                               Apache License
                         Version 2.0, January 2004
                      http://www.apache.org/licenses/
@@ -21963,7 +21963,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-===== rustls 0.23.45: LICENSE-ISC =====
+===== rustls 0.23.46: LICENSE-ISC =====
 ISC License (ISC)
 Copyright (c) 2016, Joseph Birr-Pixton <jpixton@gmail.com>
 
@@ -21980,7 +21980,7 @@ PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS
 ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
 THIS SOFTWARE.
 
-===== rustls 0.23.45: LICENSE-MIT =====
+===== rustls 0.23.46: LICENSE-MIT =====
 Copyright (c) 2016 Joseph Birr-Pixton <jpixton@gmail.com>
 
 Permission is hereby granted, free of charge, to any
