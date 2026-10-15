@@ -4,8 +4,8 @@ Imported from SDK commit `78724ae`, full revision
 `78724aedca8d0dc104aa3be6254b4a225b7e9b58` in
 [openbindings/sdk](https://github.com/openbindings/sdk).
 This repository receives one clean source import, with no filtered history.
-Historical adapter evidence and role-loop records are archived outside both product
-repositories. At import, all adapter `src/` and test `.rs` files and all fixture bytes were identical.
+Historical adapter evidence and development records are archived outside both
+product repositories. At import, all adapter `src/` and test `.rs` files and all fixture bytes were identical.
 The stopped measurement examples remain sources, compiled but never executed by CI.
 
 The root development manifest, CI workflow, shared qualification helper and

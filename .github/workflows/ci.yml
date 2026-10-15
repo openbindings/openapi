@@ -35,6 +35,7 @@ jobs:
       - run: cargo fetch --locked
       - run: npm ci --ignore-scripts
       - run: python tools/attribution.py --check
+      - run: python tools/verify-product-labels.py --self-test
       - run: cargo build --locked --offline
       - run: cargo test --locked --offline
       - run: cargo fmt --all --check
