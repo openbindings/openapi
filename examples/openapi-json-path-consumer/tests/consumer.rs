@@ -39,11 +39,11 @@ async fn package_consumer_exact_roundtrip_and_owners() {
             },
         );
         let facade = invoker(&saved, provider);
-        let parsed = openbindings::ParsedDocument::parse(&saved).unwrap();
-        let draft = openbindings::Document::from_json(parsed.value()).unwrap();
-        let name = draft.operations.keys().next().unwrap();
+        let document = openbindings::Document::parse(&saved).unwrap();
+        let draft = &document;
+        let name = draft.operations().unwrap().remove(0).key().to_owned();
         assert_eq!(
-            call(&facade, operation::Request::operation(name), INPUT)
+            call(&facade, operation::Request::operation(&name), INPUT)
                 .await
                 .unwrap()
                 .as_deref(),
@@ -89,9 +89,9 @@ async fn lifecycle_mix_owners_return_to_baseline() {
     }
     async fn once(kind: &str, description: &str) {
         let saved = author(kind, description).await;
-        let parsed = openbindings::ParsedDocument::parse(&saved).unwrap();
-        let draft = openbindings::Document::from_json(parsed.value()).unwrap();
-        let name = draft.operations.keys().next().unwrap();
+        let document = openbindings::Document::parse(&saved).unwrap();
+        let draft = &document;
+        let name = draft.operations().unwrap().remove(0).key().to_owned();
         for malformed in [false, true] {
             let text = if malformed { "{" } else { OUTPUT };
             let provider = OpenApi::default().with_transport(
@@ -108,7 +108,7 @@ async fn lifecycle_mix_owners_return_to_baseline() {
             assert_eq!(
                 call(
                     &invoker(&saved, provider),
-                    operation::Request::operation(name),
+                    operation::Request::operation(&name),
                     INPUT
                 )
                 .await
@@ -127,7 +127,7 @@ async fn lifecycle_mix_owners_return_to_baseline() {
         assert_eq!(
             call(
                 &invoker(&choice_saved, provider),
-                operation::Request::operation(name),
+                operation::Request::operation(&name),
                 INPUT
             )
             .await
@@ -149,7 +149,8 @@ async fn lifecycle_mix_owners_return_to_baseline() {
                 });
             let facade = invoker(&saved, provider);
             let control = openbindings_source_inspection::CancellationToken::new();
-            let mut job = facade.invoke_with_control(operation::Request::operation(name), &control);
+            let mut job =
+                facade.invoke_with_control(operation::Request::operation(&name), &control);
             job.write(openbindings::JsonValue::parse(INPUT).unwrap())
                 .await
                 .unwrap();

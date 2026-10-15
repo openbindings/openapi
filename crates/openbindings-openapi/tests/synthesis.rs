@@ -1,4 +1,4 @@
-use openbindings::{Document, JsonValue, Source};
+use openbindings::{JsonValue, Source};
 use openbindings_interface_synthesis::{
     CoverageStatus, SynthesisErrorKind, SynthesisRequest, SynthesisSource, Synthesizer,
 };
@@ -21,10 +21,10 @@ async fn skeleton_preservation_and_composition_boundaries() {
         })
         .await
         .unwrap();
-    let draft = Document::from_json(skeleton.parsed().value()).unwrap();
-    assert!(draft.operations.is_empty());
-    assert!(draft.sources.is_none());
-    assert_eq!(draft.name.as_deref(), Some("Empty"));
+    let draft = &skeleton;
+    assert!(draft.operations().is_empty());
+    assert!(draft.sources().is_none());
+    assert_eq!(draft.name().and_then(|name| name.as_str()), Some("Empty"));
     let input = source(include_str!("fixtures/r1/parcels.json"));
     let sources = [SynthesisSource {
         name: Some("user_source"),
@@ -37,11 +37,12 @@ async fn skeleton_preservation_and_composition_boundaries() {
     let result = facade.synthesize_with_coverage(&request).await.unwrap();
     assert!(result.coverage().strict_eligible());
     assert!(!result.coverage().fully_represented());
-    let draft = Document::from_json(result.document().parsed().value()).unwrap();
+    let draft = result.document();
     assert_eq!(
-        draft.sources.as_ref().unwrap()["user_source"]
-            .content
-            .as_ref()
+        draft
+            .source("user_source")
+            .unwrap()
+            .content()
             .unwrap()
             .text(),
         input.content.as_ref().unwrap().text()
@@ -173,13 +174,13 @@ async fn fresh_nested_resources_preserve_mounts_and_reference_bases() {
         .await
         .unwrap();
     assert!(result.coverage().strict_eligible());
-    let draft = Document::from_json(result.document().parsed().value()).unwrap();
+    let draft = result.document();
     let paths: std::collections::BTreeSet<_> = draft
-        .bindings
+        .bindings()
         .unwrap()
-        .into_values()
+        .into_iter()
         .map(|b| {
-            b.content
+            b.content()
                 .unwrap()
                 .get("path")
                 .unwrap()
@@ -348,9 +349,9 @@ async fn absent_and_repeated_operation_ids_are_not_binding_identity_or_effects()
         })
         .await
         .unwrap();
-    let draft = Document::from_json(result.parsed().value()).unwrap();
-    assert_eq!(draft.operations.len(), 3);
-    assert_eq!(draft.bindings.unwrap().len(), 3);
+    let draft = &result;
+    assert_eq!(draft.operations().len(), 3);
+    assert_eq!(draft.bindings().unwrap().len(), 3);
     assert_eq!(entries.get(), 0);
     // This is robustness evidence only. Duplicate operationId violates upstream
     // uniqueness; neither inspection nor synthesis asserts source conformance.
@@ -431,4 +432,46 @@ async fn synthesized_contracts_keep_verdicts_with_explicit_diagnostics() {
             }
         }
     }
+}
+// A synthesized document that exceeds the SDK's JSON limits fails as a document edit and
+// carries the SDK's editing code, whether a metadata value or the committed batch is too large.
+#[tokio::test]
+async fn document_limits_surface_editing_codes() {
+    let provider = OpenApi::default();
+    let facade = Synthesizer::new(&provider);
+    let description = "a".repeat(64 * 1024 * 1024);
+    let failure = facade
+        .synthesize(&SynthesisRequest {
+            description: Some(&description),
+            ..Default::default()
+        })
+        .await
+        .unwrap_err();
+    assert_eq!(failure.kind(), SynthesisErrorKind::ProviderFailure);
+    assert_eq!(failure.code(), "openbindings.synthesis.byte-limit");
+    // The source's extension members are copied into the document; enough of them
+    // exceed the SDK's node limit once the batch is committed.
+    let mut input = source(
+        &serde_json_compat::json!({"openapi":"3.1.2","info":{"title":"Nodes","version":"1"},
+            "servers":[{"url":"https://nodes.example.invalid"}],
+            "paths":{"/items":{"get":{"responses":{"204":{"description":"empty"}}}}}})
+        .to_string(),
+    );
+    input.additional_fields.insert(
+        "x-many".into(),
+        JsonValue::parse(format!("[{}0]", "0,".repeat(999_980))).unwrap(),
+    );
+    let sources = [SynthesisSource {
+        name: None,
+        source: &input,
+    }];
+    let failure = facade
+        .synthesize(&SynthesisRequest {
+            sources: &sources,
+            ..Default::default()
+        })
+        .await
+        .unwrap_err();
+    assert_eq!(failure.kind(), SynthesisErrorKind::ProviderFailure);
+    assert_eq!(failure.code(), "openbindings.synthesis.node-limit");
 }

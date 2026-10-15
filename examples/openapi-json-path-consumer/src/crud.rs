@@ -7,7 +7,7 @@ use dynamic_openapi_client::{
         TransportResult, UploadState,
     },
 };
-use openbindings::{Document, JsonValue, ParsedDocument};
+use openbindings::{Document, JsonValue};
 use openbindings_interface_synthesis::{
     CoverageStatus, SynthesisRequest, SynthesisSource, Synthesizer,
 };
@@ -54,36 +54,48 @@ pub async fn suite(v30: bool) {
             .iter()
             .any(|e| e.status == CoverageStatus::Lossy)
     );
-    let saved = synthesis.document().parsed().value().text().to_owned();
+    let saved = synthesis.document().as_document().value().text().to_owned();
     drop(synthesis);
     drop(provider);
     let exchanges: serde_json::Value =
         serde_json::from_str(include_str!("crud-fixtures/exchanges.json")).unwrap();
     for saved in [manual, &saved] {
-        let parsed = ParsedDocument::parse(saved).unwrap();
-        let draft = Document::from_json(parsed.value()).unwrap();
+        let document = Document::parse(saved).unwrap();
+        let draft = &document;
         assert_eq!(
-            draft.sources.as_ref().unwrap()["recordsApi"]
-                .content
-                .as_ref()
+            draft
+                .source("recordsApi")
+                .unwrap()
+                .unwrap()
+                .content()
                 .unwrap()
                 .get("document")
                 .and_then(|v| v.as_str()),
             Some(description)
         );
-        assert_eq!(draft.sources.as_ref().unwrap()["recordsApi"].kind, kind);
+        assert_eq!(
+            draft
+                .source("recordsApi")
+                .unwrap()
+                .unwrap()
+                .kind()
+                .unwrap()
+                .as_str()
+                .unwrap(),
+            kind
+        );
         // Both authoring routes start with a fresh provider and source cache.
         for exchange in exchanges.as_array().unwrap() {
             let text = |field| exchange[field].as_str().unwrap();
             let path = text("path");
             let method = text("method").to_ascii_lowercase();
             let binding = draft
-                .bindings
-                .as_ref()
+                .bindings()
                 .unwrap()
-                .values()
+                .unwrap()
+                .into_iter()
                 .find(|b| {
-                    let content = b.content.as_ref().unwrap();
+                    let content = b.content().unwrap();
                     content.get("path").and_then(|v| v.as_str()) == Some(path)
                         && content.get("method").and_then(|v| v.as_str()) == Some(&method)
                 })
@@ -165,14 +177,15 @@ pub async fn suite(v30: bool) {
                 let output = if operation_path {
                     call(
                         &invoker(saved, provider),
-                        operation::Request::operation(&binding.operation).with_context(&context),
+                        operation::Request::operation(binding.operation().unwrap())
+                            .with_context(&context),
                         text("input"),
                     )
                     .await
                     .unwrap()
                 } else {
                     let invoker = binding::Invoker::new(provider);
-                    let value = BindingValue::from(binding);
+                    let value = BindingValue::from_json_ref(binding.value()).unwrap();
                     let mut job = invoker.invoke(BindingRequest {
                         source: &src,
                         binding: &value,

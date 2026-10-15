@@ -13,7 +13,7 @@ dependency attribution files are new extraction plumbing. The consumer test bina
 serializes its own tests with a local lock because they count process-global owners.
 `NOTICE` describes this resolved graph. No SDK implementation is copied into this
 product repository. The current immutable Git pins are SDK
-`553098f0d76b1fbd985ce5eb9bac2be1a8693fc9` and client
+`2c242e1b2a98e443ac87ccc58a4ce7c45554eafa` and client
 `fbcb868ea31a34fd4fd566244b7e40857f7df771`.
 
 Earlier migrations adopted validation vocabulary, companion-owned cancellation,
@@ -21,12 +21,12 @@ caller-owned prepared operations, and the client's checked request builders,
 scoped credentials and advanced transport execution. The adapter retains its
 bounded source-analysis cache and the existing finite OpenAPI profile.
 
-The current SDK migration requires validated proof before operation invocation or
-normative value-contract preparation. Consumers validate reloaded parsed snapshots
-and pass the resulting `ValidatedDocument` directly; attaching an evaluator and
-creating its contract context are infallible. Parsed editor reads stay fallible.
-Validated typed reads use the SDK's infallible views. No local compatibility API
-restores the removed parsed-document contract route.
+The current SDK migration requires conformance proof before operation invocation or
+normative value-contract preparation. Consumers validate reloaded documents
+and pass the resulting `Conformant<Document>` directly; attaching an evaluator and
+creating its contract context are infallible. Reads on a plain `Document` stay
+fallible; reads on a conformant document use the SDK's infallible views. No local compatibility API
+restores the unproven-document contract route.
 
 Default contract failures now carry the fixed message `value does not satisfy the
 contract`, no problems, and `problems_complete = false`. Explicit
@@ -69,9 +69,9 @@ both attribution inventories from cached locked sources: `DEPENDENCIES.json`
 records the new SDK source identities, while notice bytes remain unchanged.
 
 These changes follow the pinned SDK's
-[change log](https://github.com/openbindings/sdk/blob/553098f0d76b1fbd985ce5eb9bac2be1a8693fc9/CHANGELOG.md),
-[migration notes](https://github.com/openbindings/sdk/blob/553098f0d76b1fbd985ce5eb9bac2be1a8693fc9/docs/migration.md)
-and [dependency maintenance contract](https://github.com/openbindings/sdk/blob/553098f0d76b1fbd985ce5eb9bac2be1a8693fc9/DEPENDENCY-MAINTENANCE.md).
+[change log](https://github.com/openbindings/sdk/blob/2c242e1b2a98e443ac87ccc58a4ce7c45554eafa/CHANGELOG.md),
+[migration notes](https://github.com/openbindings/sdk/blob/2c242e1b2a98e443ac87ccc58a4ce7c45554eafa/docs/migration.md)
+and [dependency maintenance contract](https://github.com/openbindings/sdk/blob/2c242e1b2a98e443ac87ccc58a4ce7c45554eafa/DEPENDENCY-MAINTENANCE.md).
 
 The table below records the original extraction dispositions, not a claim that
 migrated consumers remain byte-identical to that import.

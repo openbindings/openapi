@@ -1,5 +1,5 @@
 //! Public Rust consumer. Host instrumentation is qualification-only.
-use openbindings::{Binding, Document, JsonValue, Operation, Source};
+use openbindings::{Binding, Document, Edit, JsonValue, Operation, Source};
 use openbindings_openapi::{EXPERIMENTAL_KIND, OpenApi};
 use openbindings_source_inspection::{BindableTarget, Inspector};
 use std::collections::BTreeMap;
@@ -15,20 +15,29 @@ pub fn source(content: &str) -> Result<Source, openbindings::InputError> {
 /// Author-owned keys intentionally differ from operationId/sourceRef suggestions.
 pub fn author(source: Source, binding: Binding) -> Result<JsonValue, Box<dyn std::error::Error>> {
     let mut draft = Document::new();
-    draft
-        .operations
-        .insert("catalog.lookup".into(), Operation::default());
-    draft.sources = Some(BTreeMap::from([("catalog-source".into(), source)]));
-    draft.bindings = Some(BTreeMap::from([("catalog-binding".into(), binding)]));
-    let parsed = draft.build()?;
-    let validation = parsed.validate()?;
-    if validation.validated().is_none() {
+    draft.edit(&[
+        Edit::SetOperations {
+            value: &BTreeMap::from([("catalog.lookup".into(), Operation::default())]),
+        },
+        Edit::SetSources {
+            value: &BTreeMap::from([("catalog-source".into(), source)]),
+        },
+        Edit::SetBindings {
+            value: &BTreeMap::from([("catalog-binding".into(), binding)]),
+        },
+    ])?;
+    let validation = draft.validate()?;
+    if validation.conformant().is_none() {
         return Err("authored OBI does not conform".into());
     }
-    let encoded = draft.to_json()?;
-    let reloaded = Document::from_json(&encoded)?;
+    let encoded = draft.value().clone();
+    let reloaded = Document::from_json(encoded.clone());
     assert_eq!(
-        reloaded.bindings.as_ref().unwrap()["catalog-binding"].operation,
+        reloaded
+            .binding("catalog-binding")
+            .unwrap()
+            .unwrap()
+            .operation()?,
         "catalog.lookup"
     );
     Ok(encoded)

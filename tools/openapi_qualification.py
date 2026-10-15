@@ -11,7 +11,7 @@ import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
 SDK_URL = "https://github.com/openbindings/sdk"
-SDK_REV = "553098f0d76b1fbd985ce5eb9bac2be1a8693fc9"
+SDK_REV = "2c242e1b2a98e443ac87ccc58a4ce7c45554eafa"
 CLIENT_URL = "https://github.com/openbindings/openapi-client"
 CLIENT_REV = "fbcb868ea31a34fd4fd566244b7e40857f7df771"
 SDK_PATHS = [
@@ -86,11 +86,13 @@ def check_metadata(metadata, sources=None):
 
 def verified_sdk_source(source):
     if source is None:
-        raise SystemExit("Archive qualification requires --sdk-source pointing to a clean cached checkout at " + SDK_REV)
+        raise SystemExit("Archive qualification requires --sdk-source pointing to a clean cached checkout with the tree of " + SDK_REV)
     source = source.resolve()
     head = subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD"], text=True).strip()
-    if head != SDK_REV:
-        raise SystemExit(f"SDK source HEAD is {head}; expected {SDK_REV}")
+    tree = subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD^{tree}"], text=True).strip()
+    pinned_tree = subprocess.check_output(["git", "-C", str(source), "rev-parse", SDK_REV + "^{tree}"], text=True).strip()
+    if tree != pinned_tree:
+        raise SystemExit(f"SDK source tree is {tree}; expected {pinned_tree} at {SDK_REV}")
     subprocess.run(["git", "-C", str(source), "diff", "--exit-code", "HEAD", "--"], check=True, capture_output=True)
     # Cargo packages only tracked inputs. Reject tracked symlinks that could leave
     # the checked tree, and record its identity without modifying the cache.
@@ -98,8 +100,7 @@ def verified_sdk_source(source):
     for name in filter(None, files):
         if (source / name).is_symlink():
             raise SystemExit("SDK source contains a tracked symlink: " + name)
-    tree = subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD^{tree}"], text=True).strip()
-    return source, {"commit": head, "tree": tree}
+    return source, {"commit": SDK_REV, "checkoutCommit": head, "tree": tree}
 
 
 def extract_fresh(archive, destination):
@@ -196,7 +197,7 @@ def make_consumer(run, fixture, sources=None):
 def qualify(name):
     parser = argparse.ArgumentParser(description="Qualify the independent " + name + " consumer using pinned Git sources or extracted Cargo archives.")
     parser.add_argument("--archives", action="store_true")
-    parser.add_argument("--sdk-source", type=Path, help="Clean cached SDK checkout at " + SDK_REV + "; required only for archives")
+    parser.add_argument("--sdk-source", type=Path, help="Clean cached SDK checkout with the tree of " + SDK_REV + "; required only for archives")
     parser.add_argument("--wasm", action="store_true")
     parser.add_argument("--tsc", type=Path, default=ROOT / "node_modules/typescript/bin/tsc")
     args = parser.parse_args()

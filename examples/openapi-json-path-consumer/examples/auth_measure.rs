@@ -1,7 +1,7 @@
 //! Registered, interleaved CPU comparisons. Manufactured credentials only.
 use dynamic_openapi_client as client;
 use openapi_json_path_consumer::{reply, source};
-use openbindings::{Binding, Document, JsonValue, Operation, ParsedDocument};
+use openbindings::{Binding, Document, Edit, JsonValue, Operation};
 use openbindings_invocation::{BindingRequest, BindingValue, binding, operation};
 use openbindings_openapi::OpenApi;
 use std::{
@@ -391,9 +391,10 @@ fn main() {
                                 ));
                             } else {
                                 let mut draft = Document::new();
-                                draft.sources = Some(BTreeMap::from([("api".into(), src)]));
-                                draft.operations.insert("call".into(), Operation::default());
-                                draft.bindings = Some(BTreeMap::from([(
+                                let sources = BTreeMap::from([("api".into(), src)]);
+                                let operations =
+                                    BTreeMap::from([("call".into(), Operation::default())]);
+                                let bindings = BTreeMap::from([(
                                     "call".into(),
                                     Binding {
                                         operation: "call".into(),
@@ -407,12 +408,20 @@ fn main() {
                                         ),
                                         ..Default::default()
                                     },
-                                )]));
+                                )]);
+                                draft
+                                    .edit(&[
+                                        Edit::SetOperations { value: &operations },
+                                        Edit::SetSources { value: &sources },
+                                        Edit::SetBindings { value: &bindings },
+                                    ])
+                                    .unwrap();
                                 let facade = operation::Invoker::new(
-                                    ParsedDocument::from_json(draft.to_json().unwrap())
+                                    draft
+                                        .clone()
                                         .validate()
                                         .unwrap()
-                                        .validated()
+                                        .conformant()
                                         .expect("conformant invocation document"),
                                     p,
                                 );

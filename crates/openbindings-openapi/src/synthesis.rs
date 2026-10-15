@@ -1,5 +1,5 @@
 use crate::{Error, ErrorKind, Kind, OpenApi, check};
-use openbindings::{Binding, Document, Operation, ParsedDocument, WorkControl};
+use openbindings::{Binding, Document, Edit, EditError, JsonValue, Operation, WorkControl};
 use openbindings_interface_synthesis::{
     CancellationToken, CoverageDraft, CoverageEntry, CoverageLimitation, CoverageScope,
     CoverageStatus, InterfaceSynthesizer, SupportedKind, SynthesisCandidate, SynthesisError,
@@ -69,13 +69,10 @@ impl<T> OpenApi<T> {
                 "This experiment accepts at most one supplied source",
             ));
         }
-        let mut draft = Document::new();
-        if let Some(version) = request.openbindings_version {
-            draft.openbindings = version.into();
-        }
-        draft.name = request.name.map(str::to_owned);
-        draft.version = request.version.map(str::to_owned);
-        draft.description = request.description.map(str::to_owned);
+        let mut document = Document::new();
+        let mut operations = BTreeMap::new();
+        let mut sources = None;
+        let mut bindings = BTreeMap::new();
         let mut coverage = CoverageDraft {
             exhaustive: true,
             ..Default::default()
@@ -85,8 +82,7 @@ impl<T> OpenApi<T> {
                 .prepare(input.source, control)
                 .map_err(|e| e.synthesis())?;
             let source_key = input.name.unwrap_or("api").to_owned();
-            draft.sources = Some(BTreeMap::from([(source_key.clone(), input.source.clone())]));
-            let mut bindings = BTreeMap::new();
+            sources = Some(BTreeMap::from([(source_key.clone(), input.source.clone())]));
             for (index, unit) in prepared.units.iter().enumerate() {
                 check(control).map_err(|e| e.synthesis())?;
                 let mut entry = CoverageEntry::new(
@@ -112,7 +108,7 @@ impl<T> OpenApi<T> {
                             index + 1,
                             hint
                         );
-                        draft.operations.insert(
+                        operations.insert(
                             key.clone(),
                             Operation {
                                 input: Some(profile.input_schema.clone()),
@@ -164,9 +160,6 @@ impl<T> OpenApi<T> {
                     }
                 }
             }
-            if !bindings.is_empty() {
-                draft.bindings = Some(bindings);
-            }
             coverage.exhaustive = prepared.exhaustive && !prepared.extra_interactions;
             if !coverage.exhaustive {
                 let resources: Vec<_> = prepared
@@ -185,7 +178,34 @@ impl<T> OpenApi<T> {
             }
         }
         check(control).map_err(|e| e.synthesis())?;
-        let document = ParsedDocument::from_json(draft.to_json()?);
+        // Build typed parts first; commit metadata and all namespaces in one batch.
+        let metadata: Vec<_> = [
+            ("/openbindings", request.openbindings_version),
+            ("/name", request.name),
+            ("/version", request.version),
+            ("/description", request.description),
+        ]
+        .into_iter()
+        .filter_map(|(pointer, value)| value.map(|value| (pointer, value)))
+        .map(|(pointer, value)| {
+            // A value too large to admit is an editing failure, like the batch below.
+            JsonValue::string(value)
+                .map(|value| (pointer, value))
+                .map_err(|error| SynthesisError::from(EditError::from(error)))
+        })
+        .collect::<Result<_, _>>()?;
+        let mut edits: Vec<_> = metadata
+            .iter()
+            .map(|(pointer, value)| Edit::Set { pointer, value })
+            .collect();
+        edits.push(Edit::SetOperations { value: &operations });
+        if let Some(sources) = &sources {
+            edits.push(Edit::SetSources { value: sources });
+        }
+        if !bindings.is_empty() {
+            edits.push(Edit::SetBindings { value: &bindings });
+        }
+        document.edit(&edits)?;
         if document.value().bytes().len()
             > self
                 .options
