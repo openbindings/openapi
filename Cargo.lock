@@ -228,7 +228,7 @@ checksum = "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813"
 [[package]]
 name = "dynamic-openapi-client"
 version = "0.0.0"
-source = "git+https://github.com/openbindings/openapi-client?rev=7de316b1ec5d970284cf244ec38eb56b565019d8#7de316b1ec5d970284cf244ec38eb56b565019d8"
+source = "git+https://github.com/openbindings/openapi-client?rev=fbcb868ea31a34fd4fd566244b7e40857f7df771#fbcb868ea31a34fd4fd566244b7e40857f7df771"
 dependencies = [
  "base64",
  "fluent-uri",
@@ -240,7 +240,7 @@ dependencies = [
 [[package]]
 name = "dynamic-openapi-client-reqwest"
 version = "0.0.0"
-source = "git+https://github.com/openbindings/openapi-client?rev=7de316b1ec5d970284cf244ec38eb56b565019d8#7de316b1ec5d970284cf244ec38eb56b565019d8"
+source = "git+https://github.com/openbindings/openapi-client?rev=fbcb868ea31a34fd4fd566244b7e40857f7df771#fbcb868ea31a34fd4fd566244b7e40857f7df771"
 dependencies = [
  "bytes",
  "dynamic-openapi-client",
@@ -628,16 +628,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "indexmap"
-version = "2.14.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc4e190f5d26ca7051642629da2c52fc03bde85a03197c99408dcd291734c855"
-dependencies = [
- "equivalent",
- "hashbrown",
-]
-
-[[package]]
 name = "ipnet"
 version = "2.12.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -720,41 +710,28 @@ dependencies = [
 ]
 
 [[package]]
-name = "jsonschema-macros"
-version = "0.58.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5553b59276ad81f2f49c80cd381a6d6d873e74139cdeb2bef0f9eb28a2ded2b6"
-dependencies = [
- "jsonschema-macros-core",
- "proc-macro2",
-]
-
-[[package]]
-name = "jsonschema-macros-core"
-version = "0.58.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bf3ebe067f2c25a981a7d1b2f696fc213e10dbf80ba5fe997f7dc2e4fe261f26"
-dependencies = [
- "fancy-regex",
- "indexmap",
- "jsonschema-regex",
- "percent-encoding",
- "proc-macro-crate",
- "proc-macro2",
- "quote",
- "referencing",
- "regex",
- "serde_json",
- "syn 2.0.119",
-]
-
-[[package]]
 name = "jsonschema-regex"
 version = "0.58.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a968fffd387b2ab005bf00c1851f5d26e90df05b6f7ad609ed0d620033cca5e7"
 dependencies = [
  "regex-syntax",
+]
+
+[[package]]
+name = "jsonschema-value"
+version = "0.58.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "39b7670345e5ce87371339d13705dbb9276b7e3e934bbe1efa2c6734a1f65a96"
+dependencies = [
+ "ahash",
+ "bytecount",
+ "fraction",
+ "getrandom 0.3.4",
+ "num-cmp",
+ "num-traits",
+ "serde_json",
+ "zmij",
 ]
 
 [[package]]
@@ -943,20 +920,20 @@ dependencies = [
 [[package]]
 name = "openbindings"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=f82a5135aabb146b398553f0344d107bea7f52ec#f82a5135aabb146b398553f0344d107bea7f52ec"
+source = "git+https://github.com/openbindings/sdk?rev=f79cc70964ced113030dcb7051b4da0d838fb0c7#f79cc70964ced113030dcb7051b4da0d838fb0c7"
 dependencies = [
  "fluent-uri",
  "openbindings-internal-json",
  "openbindings-internal-jsonschema",
- "openbindings-internal-jsonschema-value",
- "openbindings-internal-serde-json",
+ "openbindings-internal-schema",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
 name = "openbindings-interface-synthesis"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=f82a5135aabb146b398553f0344d107bea7f52ec#f82a5135aabb146b398553f0344d107bea7f52ec"
+source = "git+https://github.com/openbindings/sdk?rev=f79cc70964ced113030dcb7051b4da0d838fb0c7#f79cc70964ced113030dcb7051b4da0d838fb0c7"
 dependencies = [
  "openbindings",
  "openbindings-internal-cancellation",
@@ -967,7 +944,7 @@ dependencies = [
 [[package]]
 name = "openbindings-internal-cancellation"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=f82a5135aabb146b398553f0344d107bea7f52ec#f82a5135aabb146b398553f0344d107bea7f52ec"
+source = "git+https://github.com/openbindings/sdk?rev=f79cc70964ced113030dcb7051b4da0d838fb0c7#f79cc70964ced113030dcb7051b4da0d838fb0c7"
 dependencies = [
  "openbindings",
 ]
@@ -975,12 +952,13 @@ dependencies = [
 [[package]]
 name = "openbindings-internal-json"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=f82a5135aabb146b398553f0344d107bea7f52ec#f82a5135aabb146b398553f0344d107bea7f52ec"
+source = "git+https://github.com/openbindings/sdk?rev=f79cc70964ced113030dcb7051b4da0d838fb0c7#f79cc70964ced113030dcb7051b4da0d838fb0c7"
 dependencies = [
  "itoa",
+ "jsonschema-value",
+ "num-bigint",
+ "num-traits",
  "openbindings-internal-jsonschema",
- "openbindings-internal-jsonschema-value",
- "openbindings-internal-serde-json",
  "serde",
  "serde_json",
 ]
@@ -988,7 +966,7 @@ dependencies = [
 [[package]]
 name = "openbindings-internal-jsonschema"
 version = "0.58.6-ob.1"
-source = "git+https://github.com/openbindings/sdk?rev=f82a5135aabb146b398553f0344d107bea7f52ec#f82a5135aabb146b398553f0344d107bea7f52ec"
+source = "git+https://github.com/openbindings/sdk?rev=f79cc70964ced113030dcb7051b4da0d838fb0c7#f79cc70964ced113030dcb7051b4da0d838fb0c7"
 dependencies = [
  "ahash",
  "bytecount",
@@ -998,79 +976,45 @@ dependencies = [
  "fraction",
  "getrandom 0.3.4",
  "itoa",
- "jsonschema-macros",
  "jsonschema-regex",
- "num-bigint",
+ "jsonschema-value",
  "num-cmp",
  "num-traits",
- "openbindings-internal-jsonschema-value",
- "openbindings-internal-referencing",
  "openbindings-internal-regress",
- "openbindings-internal-serde-json",
  "percent-encoding",
+ "referencing",
  "regex",
  "serde",
+ "serde_json",
  "strum",
  "unicode-general-category",
  "uuid-simd",
 ]
 
 [[package]]
-name = "openbindings-internal-jsonschema-value"
-version = "0.58.6-ob.1"
-source = "git+https://github.com/openbindings/sdk?rev=f82a5135aabb146b398553f0344d107bea7f52ec#f82a5135aabb146b398553f0344d107bea7f52ec"
-dependencies = [
- "ahash",
- "bytecount",
- "fraction",
- "getrandom 0.3.4",
- "num-bigint",
- "num-cmp",
- "num-traits",
- "openbindings-internal-serde-json",
- "zmij",
-]
-
-[[package]]
-name = "openbindings-internal-referencing"
-version = "0.58.6-ob.1"
-source = "git+https://github.com/openbindings/sdk?rev=f82a5135aabb146b398553f0344d107bea7f52ec#f82a5135aabb146b398553f0344d107bea7f52ec"
-dependencies = [
- "ahash",
- "fluent-uri",
- "getrandom 0.3.4",
- "hashbrown",
- "itoa",
- "micromap",
- "openbindings-internal-serde-json",
- "parking_lot",
- "percent-encoding",
-]
-
-[[package]]
 name = "openbindings-internal-regress"
 version = "0.12.0-ob.1"
-source = "git+https://github.com/openbindings/sdk?rev=f82a5135aabb146b398553f0344d107bea7f52ec#f82a5135aabb146b398553f0344d107bea7f52ec"
+source = "git+https://github.com/openbindings/sdk?rev=f79cc70964ced113030dcb7051b4da0d838fb0c7#f79cc70964ced113030dcb7051b4da0d838fb0c7"
 dependencies = [
  "memchr",
 ]
 
 [[package]]
-name = "openbindings-internal-serde-json"
-version = "1.0.151-ob.1"
-source = "git+https://github.com/openbindings/sdk?rev=f82a5135aabb146b398553f0344d107bea7f52ec#f82a5135aabb146b398553f0344d107bea7f52ec"
+name = "openbindings-internal-schema"
+version = "0.2.0-alpha.1"
+source = "git+https://github.com/openbindings/sdk?rev=f79cc70964ced113030dcb7051b4da0d838fb0c7#f79cc70964ced113030dcb7051b4da0d838fb0c7"
 dependencies = [
- "itoa",
- "memchr",
+ "fluent-uri",
+ "openbindings-internal-json",
+ "openbindings-internal-jsonschema",
  "serde",
- "serde_core",
- "zmij",
+ "serde_json",
 ]
 
 [[package]]
 name = "openbindings-invocation"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=f82a5135aabb146b398553f0344d107bea7f52ec#f82a5135aabb146b398553f0344d107bea7f52ec"
+source = "git+https://github.com/openbindings/sdk?rev=f79cc70964ced113030dcb7051b4da0d838fb0c7#f79cc70964ced113030dcb7051b4da0d838fb0c7"
 dependencies = [
  "futures-core",
  "openbindings",
@@ -1082,14 +1026,15 @@ dependencies = [
 [[package]]
 name = "openbindings-json-schema-evaluator"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=f82a5135aabb146b398553f0344d107bea7f52ec#f82a5135aabb146b398553f0344d107bea7f52ec"
+source = "git+https://github.com/openbindings/sdk?rev=f79cc70964ced113030dcb7051b4da0d838fb0c7#f79cc70964ced113030dcb7051b4da0d838fb0c7"
 dependencies = [
+ "jsonschema-value",
  "openbindings",
  "openbindings-internal-json",
  "openbindings-internal-jsonschema",
- "openbindings-internal-jsonschema-value",
- "openbindings-internal-serde-json",
+ "openbindings-internal-schema",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -1111,7 +1056,7 @@ dependencies = [
 [[package]]
 name = "openbindings-source-inspection"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=f82a5135aabb146b398553f0344d107bea7f52ec#f82a5135aabb146b398553f0344d107bea7f52ec"
+source = "git+https://github.com/openbindings/sdk?rev=f79cc70964ced113030dcb7051b4da0d838fb0c7#f79cc70964ced113030dcb7051b4da0d838fb0c7"
 dependencies = [
  "openbindings",
  "openbindings-internal-cancellation",
@@ -1179,15 +1124,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d83eb9bc6d8e5cf568e7a1101d60ee05e81ed50ea106026f3d18deeb046d7661"
 dependencies = [
  "zerovec",
-]
-
-[[package]]
-name = "proc-macro-crate"
-version = "3.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e67ba7e9b2b56446f1d419b1d807906278ffa1a658a8a5d8a39dcb1f5a78614f"
-dependencies = [
- "toml_edit",
 ]
 
 [[package]]
@@ -1811,36 +1747,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "toml_datetime"
-version = "1.1.2+spec-1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2b86d767906c6c42421dcba507eb9d203e779497710a47782a224bb871653053"
-dependencies = [
- "serde_core",
-]
-
-[[package]]
-name = "toml_edit"
-version = "0.25.16+spec-1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "88f38f3af8bf71841c67a990f4e2b52143b2d0a1a994c72513ff4c14977fc722"
-dependencies = [
- "indexmap",
- "toml_datetime",
- "toml_parser",
- "winnow",
-]
-
-[[package]]
-name = "toml_parser"
-version = "1.1.4+spec-1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bed810ee007d8e7f9cf20b4774e7198142fa27186e0f805871da7f3c39eaf333"
-dependencies = [
- "winnow",
-]
-
-[[package]]
 name = "tower"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2183,15 +2089,6 @@ name = "windows_x86_64_msvc"
 version = "0.52.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
-
-[[package]]
-name = "winnow"
-version = "1.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23b97319f7b8343df12cc98938e5c3eb436064524c8d2b4e30a1d3a36eecdf81"
-dependencies = [
- "memchr",
-]
 
 [[package]]
 name = "wit-bindgen"

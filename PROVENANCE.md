@@ -12,37 +12,57 @@ The root development manifest, CI workflow, shared qualification helper and
 dependency attribution files are new extraction plumbing. The consumer test binary
 serializes its own tests with a local lock because they count process-global owners.
 `NOTICE` describes this resolved graph. No SDK implementation is copied into this
-product repository. Dependencies are immutable Git pins: the SDK at
-`f82a5135aabb146b398553f0344d107bea7f52ec` (vocabulary, S6a and S6b working-draft contracts)
-and the client at
-`7de316b1ec5d970284cf244ec38eb56b565019d8`.
+product repository. The current immutable Git pins are SDK
+`f79cc70964ced113030dcb7051b4da0d838fb0c7` and client
+`fbcb868ea31a34fd4fd566244b7e40857f7df771`.
 
-The subsequent SDK migration to `f82a5135aabb146b398553f0344d107bea7f52ec`
-adapts SDK vocabulary and cancellation signatures while preserving the adapter
-profile and client pin. Synchronous helpers observe `&dyn WorkControl`; role
-providers own their companion's `CancellationToken`. The warm validated-invocation
-measurement retains a caller-owned `PreparedOperation` and uses `Attempt` to
-preserve compiled-contract reuse after removal of the core preparation cache.
-The adapter's separate bounded source-analysis cache is retained. The table below
-records the original extraction dispositions.
+Earlier migrations adopted validation vocabulary, companion-owned cancellation,
+caller-owned prepared operations, and the client's checked request builders,
+scoped credentials and advanced transport execution. The adapter retains its
+bounded source-analysis cache and the existing finite OpenAPI profile.
 
-The later migration to the client's call-surface redesign pins both `dynamic-openapi-client` and
-`dynamic-openapi-client-reqwest` to `7de316b1ec5d970284cf244ec38eb56b565019d8`,
-keeping the SDK at `f82a5135aabb146b398553f0344d107bea7f52ec`. Request translation
-uses checked builders with exact setters, scoped credential constructors, and
-`advanced::prepare`. Inspection imports use the graph/schema/inspect modules;
-hosts use `transport::PreparedRequest`, flattened `ResponseInput`, and immutable
-`Outcome` reads. Native hosts use the companion's advanced execution route, without
-adding client credential defaults. Examples and qualification use the same tuple.
-Existing fixtures and test expectations are preserved; additional regressions
-distinguish client read policy from the adapter's cancellation/header policy.
-See the package guide for those adapter-visible boundaries and request ownership.
+The current SDK migration requires validated proof before operation invocation or
+normative value-contract preparation. Consumers validate reloaded parsed snapshots
+and pass the resulting `ValidatedDocument` directly; attaching an evaluator and
+creating its contract context are infallible. Parsed editor reads stay fallible.
+Validated typed reads use the SDK's infallible views. No local compatibility API
+restores the removed parsed-document contract route.
 
-Lockfile changes: only the two client Git source identities changed, from
-`62d0a05ee9ff3f01512a2e0855a449157dbd9d45` to the revision above. Both remain
-version `0.0.0`; there are no package version changes, additions or removals.
-The offline attribution generator updates their source identities in
-`DEPENDENCIES.json`; regenerated `THIRD-PARTY-NOTICES.txt` is byte-identical.
+Default contract failures now carry the fixed message `value does not satisfy the
+contract`, no problems, and `problems_complete = false`. Explicit
+`Diagnostics::Upstream` requests the library's first error and still does not claim
+complete diagnostics; its allocation and stack use follow the library's bounds.
+Document structural/schema findings use the fixed message
+`value violates the fixed normative schema` at the narrowest established failing
+source position; consumers must use evidence and codes rather than old wording
+or counts. These are SDK diagnostic changes, not changes to the adapter's source
+coverage or wire profile.
+
+Reference inspection now uses the SDK's separate `ReferenceRefusal` and
+`ReferenceRefusalReason`; bounds planning is private and ordinary schema reference
+resolution follows the library. The adapter implements none of those internals.
+Its source references still use the independent OpenAPI client's graph. Synthesized
+input contracts contain envelope constraints and scalar types, without `$ref` or
+source schema projection. Consequently static-reference hole evaluation does not
+change their verdicts or refusals: malformed envelopes fail and accepted envelopes
+satisfy. Author-added positive reference contracts may now decide independently of
+a known static defect, or return `NoVerdict` with `Undefined` when proven completions
+disagree. Missing resources and implementation limits remain distinct refusals.
+
+The client update changes documentation only. The locked graph removes the private
+serde_json, referencing and jsonschema-value forks in favor of their upstream
+registry packages, and carries one serde_json identity. Only the renamed jsonschema
+and regress forks remain. Archive qualification packages the internal schema crate
+and those retained forks. Both attribution inventories are regenerated from cached
+locked sources with `tools/attribution.py`; their content changes with this graph.
+
+These changes follow the pinned SDK's
+[change log](https://github.com/openbindings/sdk/blob/f79cc70964ced113030dcb7051b4da0d838fb0c7/CHANGELOG.md),
+[migration notes](https://github.com/openbindings/sdk/blob/f79cc70964ced113030dcb7051b4da0d838fb0c7/docs/migration.md)
+and [dependency maintenance contract](https://github.com/openbindings/sdk/blob/f79cc70964ced113030dcb7051b4da0d838fb0c7/DEPENDENCY-MAINTENANCE.md).
+
+The table below records the original extraction dispositions, not a claim that
+migrated consumers remain byte-identical to that import.
 
 | Imported file | SDK source at the pinned commit | Disposition |
 | --- | --- | --- |

@@ -355,3 +355,80 @@ async fn absent_and_repeated_operation_ids_are_not_binding_identity_or_effects()
     // This is robustness evidence only. Duplicate operationId violates upstream
     // uniqueness; neither inspection nor synthesis asserts source conformance.
 }
+
+#[tokio::test]
+async fn synthesized_contracts_keep_verdicts_with_explicit_diagnostics() {
+    use openbindings::{Direction, ResourceSet, ValueContractPreparation, ValueOutcome};
+    use openbindings_json_schema_evaluator::{DefaultEvaluator, Diagnostics};
+    use std::sync::Arc;
+
+    // Source schema references are disclosed as projection loss, never copied
+    // into the normative envelope contract, even when statically defective.
+    for version in ["3.0.4", "3.1.2"] {
+        let api = serde_json_compat::json!({
+            "openapi": version,
+            "servers": [{"url": "https://example.invalid"}],
+            "paths": {"/items": {"post": {
+                "requestBody": {"required": true, "content": {"application/json": {
+                    "schema": {"$ref": "#/missing"}
+                }}},
+                "responses": {"204": {"description": "empty"}}
+            }}}
+        });
+        let mut input = source(&api.to_string());
+        if version == "3.0.4" {
+            input.kind = openbindings_openapi::EXPERIMENTAL_KIND_30.into();
+        }
+        let inputs = [SynthesisSource {
+            name: None,
+            source: &input,
+        }];
+        let result = Synthesizer::new(OpenApi::default())
+            .synthesize_with_coverage(&SynthesisRequest {
+                sources: &inputs,
+                ..Default::default()
+            })
+            .await
+            .unwrap();
+        assert!(
+            result
+                .coverage()
+                .entries()
+                .iter()
+                .any(|e| e.status == CoverageStatus::Lossy)
+        );
+        let proof = result.document();
+        let operations = proof.operations();
+        let operation = &operations[0];
+        assert!(operation.input().is_some());
+        for mode in [Diagnostics::Coarse, Diagnostics::Upstream] {
+            let context = proof.value_contracts(
+                Arc::new(DefaultEvaluator::new().with_diagnostics(mode)),
+                ResourceSet::default(),
+            );
+            let ValueContractPreparation::Ready(contract) =
+                context.prepare(operation.key(), Direction::Input)
+            else {
+                panic!("synthesized envelope must prepare");
+            };
+            assert!(matches!(
+                contract.validate(&JsonValue::parse(r#"{"body":null}"#).unwrap()),
+                ValueOutcome::Satisfies
+            ));
+            let ValueOutcome::Fails {
+                message,
+                problems,
+                problems_complete,
+            } = contract.validate(&JsonValue::parse("{}").unwrap())
+            else {
+                panic!("missing body must fail");
+            };
+            assert_eq!(message, "value does not satisfy the contract");
+            assert!(!problems_complete);
+            match mode {
+                Diagnostics::Coarse => assert!(problems.is_empty()),
+                Diagnostics::Upstream => assert_eq!(problems.len(), 1),
+            }
+        }
+    }
+}

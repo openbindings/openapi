@@ -409,7 +409,11 @@ fn main() {
                                     },
                                 )]));
                                 let facade = operation::Invoker::new(
-                                    ParsedDocument::from_json(draft.to_json().unwrap()),
+                                    ParsedDocument::from_json(draft.to_json().unwrap())
+                                        .validate()
+                                        .unwrap()
+                                        .validated()
+                                        .expect("conformant invocation document"),
                                     p,
                                 );
                                 functions.push((

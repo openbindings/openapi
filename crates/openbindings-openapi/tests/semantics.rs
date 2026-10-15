@@ -93,7 +93,14 @@ async fn caller_close_and_cardinality_precede_effects() {
     let count = Rc::new(Cell::new(0));
     let provider =
         OpenApi::default().with_transport(host(count.clone(), 204, "", BodyState::Complete));
-    let invoker = operation::Invoker::new(document(), &provider);
+    let invoker = operation::Invoker::new(
+        document()
+            .validate()
+            .unwrap()
+            .validated()
+            .expect("conformant invocation document"),
+        &provider,
+    );
     let mut job = invoker.invoke(operation::Request::operation("health"));
     job.write(json("{}")).await.unwrap();
     assert!(
@@ -176,7 +183,13 @@ async fn destination_context_is_membership_and_new_attempt() {
                     .await
             }
         });
-    let invoker = operation::Invoker::new(doc, provider);
+    let invoker = operation::Invoker::new(
+        doc.validate()
+            .unwrap()
+            .validated()
+            .expect("conformant invocation document"),
+        provider,
+    );
     for (context, code) in [
         (json("{}"), "CONTEXT_REQUIRED"),
         (
@@ -236,7 +249,14 @@ async fn pending_local_host_cancellation_and_drop_release_owners() {
                 }
             },
         );
-        let invoker = operation::Invoker::new(document(), provider);
+        let invoker = operation::Invoker::new(
+            document()
+                .validate()
+                .unwrap()
+                .validated()
+                .expect("conformant invocation document"),
+            provider,
+        );
         let control = CancellationToken::new();
         let mut job =
             invoker.invoke_with_control(operation::Request::operation("health"), &control);
@@ -286,12 +306,19 @@ async fn exact_integer_parameters_agree_with_the_operation_schema() {
     let (name, binding) = draft.bindings.as_ref().unwrap().iter().next().unwrap();
     let value = BindingValue::from(binding);
     let direct = binding::Invoker::new(&provider);
-    let operations = operation::Invoker::new(parsed.clone(), &provider)
-        .with_evaluator(
-            Arc::new(DefaultEvaluator::default()),
-            ResourceSet::default(),
-        )
-        .unwrap();
+    let operations = operation::Invoker::new(
+        parsed
+            .clone()
+            .validate()
+            .unwrap()
+            .validated()
+            .expect("conformant invocation document"),
+        &provider,
+    )
+    .with_evaluator(
+        Arc::new(DefaultEvaluator::default()),
+        ResourceSet::default(),
+    );
     for (token, accepted) in [
         ("10e-1", true),
         ("10.0e-1", true),
@@ -370,7 +397,14 @@ async fn incomplete_headers_and_pre_cancel_are_not_success() {
     let calls = Rc::new(Cell::new(0));
     let provider =
         OpenApi::default().with_transport(host(calls.clone(), 204, "", BodyState::Complete));
-    let facade = operation::Invoker::new(document(), provider);
+    let facade = operation::Invoker::new(
+        document()
+            .validate()
+            .unwrap()
+            .validated()
+            .expect("conformant invocation document"),
+        provider,
+    );
     let control = CancellationToken::new();
     control.cancel();
     let mut job = facade.invoke_with_control(operation::Request::operation("health"), &control);
@@ -398,7 +432,11 @@ async fn generic_selection_and_author_contracts_remain_in_the_operation_layer() 
         .unwrap()
         .insert("other_health".into(), b);
     let facade = operation::Invoker::new(
-        ParsedDocument::from_json(draft.to_json().unwrap()),
+        ParsedDocument::from_json(draft.to_json().unwrap())
+            .validate()
+            .unwrap()
+            .validated()
+            .expect("conformant invocation document"),
         &provider,
     );
     let mut job = facade.invoke(operation::Request::operation("health"));
@@ -422,14 +460,17 @@ async fn generic_selection_and_author_contracts_remain_in_the_operation_layer() 
             draft.operations.get_mut("health").unwrap().output = Some(json("false"));
         }
         let facade = operation::Invoker::new(
-            ParsedDocument::from_json(draft.to_json().unwrap()),
+            ParsedDocument::from_json(draft.to_json().unwrap())
+                .validate()
+                .unwrap()
+                .validated()
+                .expect("conformant invocation document"),
             &provider,
         )
         .with_evaluator(
             Arc::new(DefaultEvaluator::new()),
             openbindings::ResourceSet::default(),
-        )
-        .unwrap();
+        );
         let mut job = facade.invoke(operation::Request::operation("health"));
         let _ = job.write(json("{}")).await;
         job.close();

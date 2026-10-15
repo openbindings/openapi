@@ -134,12 +134,19 @@ pub async fn operation_call<P: binding::BindingInvoker>(
     context: &JsonValue,
     input: &str,
 ) -> Result<Vec<String>, InvocationError> {
-    let invoker = operation::Invoker::new(ParsedDocument::parse(saved).unwrap(), p)
-        .with_evaluator(
-            Arc::new(openbindings_json_schema_evaluator::DefaultEvaluator::new()),
-            openbindings::ResourceSet::default(),
-        )
-        .unwrap();
+    let invoker = operation::Invoker::new(
+        ParsedDocument::parse(saved)
+            .unwrap()
+            .validate()
+            .unwrap()
+            .validated()
+            .expect("conformant invocation document"),
+        p,
+    )
+    .with_evaluator(
+        Arc::new(openbindings_json_schema_evaluator::DefaultEvaluator::new()),
+        openbindings::ResourceSet::default(),
+    );
     let mut call = invoker.invoke(operation::Request::operation(key).with_context(context));
     let _ = call.write(JsonValue::parse(input).unwrap()).await;
     call.close();

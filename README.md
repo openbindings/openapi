@@ -1,8 +1,8 @@
 The OpenBindings implementation of the source-inspection, interface-synthesis and binding-invocation roles for OpenAPI, built on [`openapi-client`](https://github.com/openbindings/openapi-client).
 
 The packages are unpublished. This repository depends on the SDK at
-`f82a5135aabb146b398553f0344d107bea7f52ec` and the independent client at
-`7de316b1ec5d970284cf244ec38eb56b565019d8`. The SDK defines the roles and supplies
+`f79cc70964ced113030dcb7051b4da0d838fb0c7` and the independent client at
+`fbcb868ea31a34fd4fd566244b7e40857f7df771`. The SDK defines the roles and supplies
 no kind-specific instances. This project supplies the OpenAPI provider.
 
 Use `OpenApi::default()` with the SDK's checked `Inspector` or `Synthesizer`.
@@ -15,9 +15,12 @@ guards dependency isolation.
 
 The private `local.openapi-json-probe.r1` and `local.openapi30-json-probe.r1` kinds
 retain their meanings. Sources carry exact JSON text in `document` and optional
-`retrievalUri`; bindings carry `path` and lowercase `method`. This extraction changes
-no adapter behavior. The current SDK pin uses `Document`, validation vocabulary
-and companion-owned `CancellationToken` role signatures. It implements no
+`retrievalUri`; bindings carry `path` and lowercase `method`. Reloaded documents
+must pass SDK validation before operation invocation or
+value-contract preparation. The current SDK pin uses `Document`, validated typed
+views and companion-owned `CancellationToken` role signatures. Default value
+failures use coarse diagnostics; [migration details](PROVENANCE.md) describe the
+diagnostic and reference boundaries. It implements no
 published OpenAPI binding standard.
 
 The existing finite JSON profile admits GET, POST, PUT, PATCH and DELETE for OpenAPI
@@ -29,7 +32,7 @@ streaming/binary delivery and literal Unicode path templates remain outside the
 invocation profile. See the [complete package guide](crates/openbindings-openapi/README.md)
 for kind contracts, budgets, security policy, synthesis loss and refusal behavior.
 
-AJ20, the incremental-auth performance check, remains unresolved and deferred with
+The incremental-auth performance check remains unresolved and deferred with
 its original budgets unchanged. The stopped measurement examples are compiled and
 linted but never run by CI. This repository carries no historical loop evidence.
 Native HTTP and local Node/Wasm probes do not establish browser/Worker network

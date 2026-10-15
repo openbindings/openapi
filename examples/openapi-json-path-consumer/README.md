@@ -36,4 +36,4 @@ native loopback HTTP in the adapter's maintained tests.
 using equal source/result content for synthesis. Stage rows are descriptive diagnostics;
 registered end-to-end budgets are evaluated on paired observations. No measurements
 here establish whole-network HTTP parity or production browser/Worker performance.
-Benchmark work is stopped; AJ20 remains unresolved under its original budgets.
+Benchmark work is stopped; the incremental-auth check remains unresolved under its original budgets.
