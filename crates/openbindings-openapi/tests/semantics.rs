@@ -419,6 +419,62 @@ async fn incomplete_headers_and_pre_cancel_are_not_success() {
 }
 
 #[tokio::test]
+async fn undefined_author_contracts_withhold_values_and_preserve_unresolved_errors() {
+    use openbindings::{Direction, ResourceSet, ValueOutcome};
+    use openbindings_json_schema_evaluator::DefaultEvaluator;
+
+    for direction in [Direction::Input, Direction::Output] {
+        let calls = Rc::new(Cell::new(0));
+        let provider = OpenApi::default().with_transport(host(
+            calls.clone(),
+            201,
+            "null",
+            BodyState::Complete,
+        ));
+        let mut draft = Document::from_json(document().value()).unwrap();
+        let operation = draft.operations.get_mut("create").unwrap();
+        let schema = json(r##"{"$id":"https://contracts.invalid/root","$ref":"#missing"}"##);
+        match direction {
+            Direction::Input => operation.input = Some(schema),
+            Direction::Output => operation.output = Some(schema),
+        }
+        let facade = operation::Invoker::new(
+            ParsedDocument::from_json(draft.to_json().unwrap())
+                .validate()
+                .unwrap()
+                .validated()
+                .expect("conformant invocation document"),
+            provider,
+        )
+        .with_evaluator(Arc::new(DefaultEvaluator::new()), ResourceSet::default());
+        let mut job = facade.invoke(operation::Request::operation("create"));
+        let _ = job.write(json("{}")).await;
+        job.close();
+        assert_eq!(
+            job.next().await.unwrap().unwrap_err().code(),
+            "ERR_SCHEMA_UNRESOLVED"
+        );
+        assert!(job.next().await.is_none());
+        assert_eq!(
+            job.outcome().unwrap().as_ref().unwrap_err().code(),
+            "ERR_SCHEMA_UNRESOLVED"
+        );
+        let failure = job.validation_failure().unwrap();
+        assert_eq!(failure.direction(), direction);
+        assert_eq!(failure.stage(), operation::ValidationStage::Evaluation);
+        let ValueOutcome::Undefined { detail } = failure.outcome() else {
+            panic!("undefined contract evidence lost");
+        };
+        assert_eq!(detail.code, "static-reference-defect");
+        assert_eq!(
+            detail.location.as_ref().unwrap().pointer,
+            format!("/operations/create/{}/$ref", direction.as_str())
+        );
+        assert_eq!(calls.get(), usize::from(direction == Direction::Output));
+    }
+}
+
+#[tokio::test]
 async fn generic_selection_and_author_contracts_remain_in_the_operation_layer() {
     use openbindings_json_schema_evaluator::DefaultEvaluator;
     let calls = Rc::new(Cell::new(0));
