@@ -4,6 +4,7 @@ use dynamic_openapi_client::{
     exact::Value,
     transport::{BodyState, HeaderDelivery, PreparedRequest},
 };
+use futures_core::Stream;
 use openbindings::{JsonKind, JsonRef, JsonValue, WorkControl};
 use openbindings_invocation::{
     BindingRequest, CancellationToken, ContextChallenge, InvocationError, ProviderInput,
@@ -64,14 +65,7 @@ where
     }
 }
 
-type NextInput = Pin<Box<dyn Future<Output = (ProviderInput, Option<JsonValue>)> + Send>>;
 type Emit = Pin<Box<dyn Future<Output = Result<(), InvocationError>> + Send>>;
-fn receive(mut input: ProviderInput) -> NextInput {
-    Box::pin(async move {
-        let value = input.next().await;
-        (input, value)
-    })
-}
 fn emit(mut output: ProviderOutput, value: JsonValue) -> Emit {
     Box::pin(async move { output.emit(value).await })
 }
@@ -82,7 +76,7 @@ fn emit(mut output: ProviderOutput, value: JsonValue) -> Emit {
 pub struct InvocationFuture<'a, T: Transport> {
     provider: &'a OpenApi<T>,
     request: BindingRequest<'a>,
-    input: Option<NextInput>,
+    input: Option<ProviderInput>,
     value: Option<JsonValue>,
     output: Option<ProviderOutput>,
     execution: Option<Pin<Box<T::Execution<'a>>>>,
@@ -110,20 +104,19 @@ impl<T: Transport> Future for InvocationFuture<'_, T> {
                 break Poll::Ready(Err(InvocationError::cancelled()));
             }
             if let Some(input) = &mut this.input {
-                let (input, value) = match input.as_mut().poll(cx) {
+                let value = match Pin::new(input).poll_next(cx) {
                     Poll::Pending => return Poll::Pending,
                     Poll::Ready(value) => value,
                 };
-                this.input = None;
                 if let Some(value) = value {
                     if this.value.is_some() {
+                        this.input = None;
                         break Poll::Ready(Err(InvocationError::refused()));
                     }
                     this.value = Some(value);
-                    this.input = Some(receive(input));
                     continue;
                 }
-                drop(input);
+                this.input = None;
                 let Some(value) = this.value.take() else {
                     break Poll::Ready(Err(InvocationError::refused()));
                 };
@@ -206,7 +199,7 @@ impl<T: Transport> BindingInvoker for OpenApi<T> {
         InvocationFuture {
             provider: self,
             request,
-            input: Some(receive(input)),
+            input: Some(input),
             value: None,
             output: Some(output),
             execution: None,

@@ -357,12 +357,12 @@ pub async fn suite(v30: bool) {
         assert_eq!(seen.calls.get(), 0);
     }
 
-    // AJ11/12: API-key roles and every conflicting compatibility carrier.
+    // AJ11/12: nonempty API-key security requirements and every conflicting compatibility carrier.
     let mut d: Value = crate::wire_json::from_str(text).unwrap();
     d["paths"]["/items/new"]["post"]["security"] = json!([{"PartnerKey":["writer"]}]);
-    let (_, role_coverage) = authored(&source(kind, &d.to_string())).await;
+    let (_, requirement_coverage) = authored(&source(kind, &d.to_string())).await;
     assert!(
-        role_coverage
+        requirement_coverage
             .entries()
             .iter()
             .any(|e| e.source_ref == "/paths/~1items~1new/post"

@@ -1,7 +1,7 @@
 # Experimental OpenAPI adapter
 
 This optional crate implements the existing source inspector, interface synthesizer,
-and binding invoker roles for two private experiments in one `OpenApi<T>` provider:
+and binding invoker interfaces for two private experiments in one `OpenApi<T>` provider:
 
 | Source kind | OpenAPI family | Exported kind constant | Main fixture version |
 | --- | --- | --- | --- |
@@ -17,10 +17,10 @@ validation. `proof.value_contracts(evaluator, resources)` and invoker
 with a fixed message, no problems and incomplete detail; select
 `Diagnostics::Upstream` explicitly for the library's first error. See
 [the migration record](../../PROVENANCE.md) for diagnostic and reference behavior.
-Core and the published roles do not depend on OpenAPI.
+Core and the published interfaces do not depend on OpenAPI.
 This package does not implement a published OpenAPI binding specification.
 
-Both use the same finite JSON request profile and public role APIs. The source kind
+Both use the same finite JSON request profile and public interface APIs. The source kind
 must match the description's edition, including when reusing a prepared source.
 Patch-family admission is not a claim of testing every patch or every capability.
 Shared-subset 3.0.0/3.0.3 smoke cases complement the main 3.0.4 fixtures.
@@ -160,7 +160,7 @@ published first-class TypeScript adapter API.
 ## Authenticated JSON calls
 
 The two private kinds support HTTP bearer tokens and API keys declared in headers.
-The application supplies already obtained credentials through the existing role
+The application supplies already obtained credentials through the existing interface
 context; it owns acquisition, storage, trust, TLS and transport policy. The adapter
 never logs in, refreshes, retries, verifies token claims, or caches credentials.
 
@@ -215,7 +215,7 @@ portable error becomes `ERR_EXECUTION_FAILED`, with zero host entries in this pa
 under its existing behavior. No truncated challenge is offered as a usable subset.
 These are implementation policies, not requirements imposed on generic interfaces.
 
-Basic, OAuth/OIDC schemes, mTLS, query/cookie keys, nonempty bearer/key role arrays,
+Basic, OAuth/OIDC schemes, mTLS, query/cookie keys, nonempty bearer/key security requirement arrays,
 and statically unusable credential-header combinations remain unsupported. Any
 unsupported effective alternative excludes that operation as a whole in this profile.
 This includes case-insensitive collisions, invalid HTTP field names, and keys using

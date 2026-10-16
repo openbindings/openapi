@@ -1,4 +1,4 @@
-//! Finite success correspondence, independently specified at the public role seam.
+//! Finite success correspondence, independently specified at the public interface seam.
 use dynamic_openapi_client::{
     Cancellation, Header,
     transport::{

@@ -1,7 +1,7 @@
 use crate::{Error, ErrorKind, Kind, OpenApi, check};
 use openbindings::{Binding, Document, Edit, EditError, JsonValue, Operation, WorkControl};
 use openbindings_interface_synthesis::{
-    CancellationToken, CoverageDraft, CoverageEntry, CoverageLimitation, CoverageScope,
+    CancellationToken, CoverageClaim, CoverageEntry, CoverageLimitation, CoverageScope,
     CoverageStatus, InterfaceSynthesizer, SupportedKind, SynthesisCandidate, SynthesisError,
     SynthesisErrorKind, SynthesisRequest,
 };
@@ -73,10 +73,7 @@ impl<T> OpenApi<T> {
         let mut operations = BTreeMap::new();
         let mut sources = None;
         let mut bindings = BTreeMap::new();
-        let mut coverage = CoverageDraft {
-            exhaustive: true,
-            ..Default::default()
-        };
+        let mut coverage = CoverageClaim::complete(Vec::new());
         if let Some(input) = request.sources.first() {
             let prepared = self
                 .prepare(input.source, control)

@@ -1,0 +1,7 @@
+# Checked in CI with `cargo deny check advisories`.
+# Vulnerabilities always fail; yanked versions also fail under this policy.
+# Every ignore entry must include an advisory ID and a written reason.
+[advisories]
+version = 2
+yanked = "deny"
+ignore = []

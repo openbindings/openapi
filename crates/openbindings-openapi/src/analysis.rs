@@ -294,6 +294,8 @@ fn profile(operation: &Operation, kind: Kind) -> Result<Profile, &'static str> {
                 .map(|r| {
                     use crate::security::Family;
                     use dynamic_openapi_client::inspect::SecurityScheme;
+                    // OpenAPI lists scope names (OAuth) or role names (other schemes)
+                    // here; either kind of requirement is not implemented.
                     if !r.scopes.is_empty() {
                         return Err("security-roles-unimplemented");
                     }

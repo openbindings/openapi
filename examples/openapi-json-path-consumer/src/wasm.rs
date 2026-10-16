@@ -133,7 +133,7 @@ pub async fn authenticated_consumers() -> Result<(), JsValue> {
     Ok(())
 }
 
-/// Exact JS text context enters the same role path; report actual effects on errors.
+/// Exact JS text context enters the same interface path; report actual effects on errors.
 #[wasm_bindgen]
 pub async fn authenticated_call(
     v30: bool,
