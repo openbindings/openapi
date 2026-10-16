@@ -14832,7 +14832,7 @@ Public package behavior is bounded by the declared core or companion scope.
       incurred by, or claims asserted against, such Contributor by reason
       of your accepting any such warranty or additional liability.
 
-===== openbindings-interface-synthesis 0.2.0-alpha.1: repository/LICENSE =====
+===== openbindings-interface-synthesis 0.2.0-alpha.1: LICENSE =====
 
                                  Apache License
                            Version 2.0, January 2004
@@ -15033,6 +15033,11 @@ Public package behavior is bounded by the declared core or companion scope.
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+===== openbindings-interface-synthesis 0.2.0-alpha.1: NOTICE =====
+OpenBindings Rust SDK
+Applies OpenBindings draft revision 2f7d754dc2da374058cd517064c17e50f7d95d99.
+Public package behavior is bounded by the declared core or companion scope.
 
 ===== openbindings-internal-cancellation 0.2.0-alpha.1: LICENSE =====
 
@@ -15904,7 +15909,7 @@ OpenBindings Rust SDK
 Applies OpenBindings draft revision 2f7d754dc2da374058cd517064c17e50f7d95d99.
 Public package behavior is bounded by the declared core or companion scope.
 
-===== openbindings-invocation 0.2.0-alpha.1: repository/LICENSE =====
+===== openbindings-invocation 0.2.0-alpha.1: LICENSE =====
 
                                  Apache License
                            Version 2.0, January 2004
@@ -16105,6 +16110,11 @@ Public package behavior is bounded by the declared core or companion scope.
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+===== openbindings-invocation 0.2.0-alpha.1: NOTICE =====
+OpenBindings Rust SDK
+Applies OpenBindings draft revision 2f7d754dc2da374058cd517064c17e50f7d95d99.
+Public package behavior is bounded by the declared core or companion scope.
 
 ===== openbindings-json-schema-evaluator 0.2.0-alpha.1: LICENSE =====
 
@@ -16313,7 +16323,7 @@ OpenBindings Rust SDK
 Applies OpenBindings draft revision 2f7d754dc2da374058cd517064c17e50f7d95d99.
 Public package behavior is bounded by the declared core or companion scope.
 
-===== openbindings-source-inspection 0.2.0-alpha.1: repository/LICENSE =====
+===== openbindings-source-inspection 0.2.0-alpha.1: LICENSE =====
 
                                  Apache License
                            Version 2.0, January 2004
@@ -16514,6 +16524,11 @@ Public package behavior is bounded by the declared core or companion scope.
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+===== openbindings-source-inspection 0.2.0-alpha.1: NOTICE =====
+OpenBindings Rust SDK
+Applies OpenBindings draft revision 2f7d754dc2da374058cd517064c17e50f7d95d99.
+Public package behavior is bounded by the declared core or companion scope.
 
 ===== openssl-probe 0.2.1: LICENSE-APACHE =====
                               Apache License
