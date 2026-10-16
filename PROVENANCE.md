@@ -125,7 +125,6 @@ migrated consumers remain byte-identical to that import.
 | `crates/openbindings-openapi/tests/fixtures/r1/destinations.json` | `crates/openbindings-openapi/tests/fixtures/r1/destinations.json` | identical |
 | `crates/openbindings-openapi/tests/fixtures/r1/destinations.obi.json` | `crates/openbindings-openapi/tests/fixtures/r1/destinations.obi.json` | identical |
 | `crates/openbindings-openapi/tests/fixtures/r1/expected-caller.json` | `crates/openbindings-openapi/tests/fixtures/r1/expected-caller.json` | identical |
-| `crates/openbindings-openapi/tests/fixtures/r1/experiment-contract.json` | `crates/openbindings-openapi/tests/fixtures/r1/experiment-contract.json` | identical |
 | `crates/openbindings-openapi/tests/fixtures/r1/mounted.json` | `crates/openbindings-openapi/tests/fixtures/r1/mounted.json` | identical |
 | `crates/openbindings-openapi/tests/fixtures/r1/mounted.obi.json` | `crates/openbindings-openapi/tests/fixtures/r1/mounted.obi.json` | identical |
 | `crates/openbindings-openapi/tests/fixtures/r1/nested-entry.json` | `crates/openbindings-openapi/tests/fixtures/r1/nested-entry.json` | identical |

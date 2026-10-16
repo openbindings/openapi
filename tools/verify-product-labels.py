@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 SLICE = r'S(?:10|[1-9])(?:[a-f]{1,2}(?:/[a-f])?)?'
+FINDING_PREFIX = r'(?:CR|EV|API|HD|RO|N|PKG|OAC|HYG|LABEL|MSRV|RG|PERF|DOC|SIZE|PR1|PR2)'
 PATTERNS = [
     # Bare numbered tokens also name upstream products. Require record syntax
     # for those; suffixed units and identifier/path prefixes are distinctive.
@@ -15,8 +16,8 @@ PATTERNS = [
     re.compile(r'^\s*(?:(?:#{1,6}|//|/\*|\*|[-+])\s*)?' + SLICE + r'\s*(?::|—|–|\s-)(?:\s|$)', re.I),
     re.compile(r'(?<![A-Za-z0-9])S(?:10|[1-9])[a-fA-F]{1,2}(?:/[a-fA-F])?(?![A-Za-z0-9])'),
     re.compile(r'(?<![A-Za-z0-9])s(?:10|[1-9])[a-f]{0,2}[_/-](?=[A-Za-z])'),
-    re.compile(r'(?<![A-Za-z0-9])(?:CR|EV|API|HD|RO|N|PKG|OAC|HYG|LABEL|MSRV)-\d+[a-z]?\b'),
-    re.compile(r'(?<![A-Za-z0-9])(?:ro|cr|ev|hd|api|oac|pkg|n)\d+_'),
+    re.compile(r'(?<![A-Za-z0-9])' + FINDING_PREFIX + r'-\d+[a-z]?(?:\.\d+[a-z]?)*(?![A-Za-z0-9])'),
+    re.compile(r'(?<![A-Za-z0-9])' + FINDING_PREFIX.lower() + r'_?\d+[a-z]?(?:_\d+[a-z]?)*_'),
     re.compile(r'\breview_(?:[sf]\d+_)+', re.I),
     re.compile(r'\bD-[A-Z][A-Z0-9-]*\b'),
     re.compile(r'\bV[-_]map\b', re.I),
@@ -72,7 +73,9 @@ def self_test():
     labels = [*('slice S' + str(i) for i in range(1, 11)),
               'S' + '6e', 's' + '6f_resolver', 's' + '6de_review', 'S' + '6DE', 's' + '6c/fixture',
               'S' + '10c', 's' + '10c_test', 'S' + '8a', 'S' + '6f', 'S' + '6d/e',
-              *(prefix + '-3' for prefix in ['CR', 'EV', 'API', 'HD', 'RO', 'N', 'PKG', 'OAC', 'HYG', 'LABEL', 'MSRV']),
+              *(prefix + '-3' for prefix in ['CR', 'EV', 'API', 'HD', 'RO', 'N', 'PKG', 'OAC', 'HYG', 'LABEL', 'MSRV',
+                                             'RG', 'PERF', 'DOC', 'SIZE']),
+              'DOC' + '-1.3', 'hd' + '_1_' + 'hd' + '_5_origins', 'rg' + '_2_check',
               'review_' + 's09_anonymous_scope', 'review_' + 's11_same_uri',
               'review_' + 'f01_f06_preparation', 'review_' + 'f04_diagnostics',
               'ro' + '18_test', 'cr' + '2_test', 'D' + '-METASCHEMA', 'D' + '-DISCOVERY-HOSTS',
@@ -88,7 +91,8 @@ def self_test():
                     'round 1 of the fixed-point algorithm', 'HTTP/2 RFC 9113 Appendix D-1',
                     'ISO/IEC 9899 Annex D-UNIVERSAL', 'RFC 8446 section D.4',
                     'ES2022', 'oneOf(U,V)', 'impl<V> Value<V>', 'X-Request-ID',
-                    'infinite-loop-detection.json', 'round-trip', 'let s1 = "x";']:
+                    'infinite-loop-detection.json', 'round-trip', 'let s1 = "x";',
+                    'UTF-8', 'HTTP 404', 'ES-2015 modules', 'RFC 9110']:
         assert not violations('docs/subject.md', allowed), allowed
     label = 'S' + '6e'
     assert violations('tools/qualification/inputs/spec/upstream.md', label)
