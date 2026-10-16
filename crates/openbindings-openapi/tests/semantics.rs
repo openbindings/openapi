@@ -131,6 +131,100 @@ async fn caller_close_and_cardinality_precede_effects() {
     }
 }
 #[tokio::test]
+async fn pending_input_wakes_on_write_close_refusal_and_cancellation() {
+    use futures_core::Stream;
+    use std::{
+        pin::Pin,
+        sync::atomic::{AtomicUsize, Ordering},
+        task::{Context, Poll, Wake, Waker},
+    };
+
+    #[derive(Default)]
+    struct Wakes(AtomicUsize);
+    impl Wake for Wakes {
+        fn wake(self: Arc<Self>) {
+            self.0.fetch_add(1, Ordering::SeqCst);
+        }
+    }
+
+    for first_value in [false, true] {
+        for finish in ["close", "cancel", "drop", "second-value"] {
+            if finish == "second-value" && !first_value {
+                continue;
+            }
+            let count = Rc::new(Cell::new(0));
+            let provider = OpenApi::default().with_transport(host(
+                count.clone(),
+                204,
+                "",
+                BodyState::Complete,
+            ));
+            let invoker = operation::Invoker::new(
+                document().validate().unwrap().conformant().unwrap(),
+                provider,
+            );
+            let job = invoker.invoke(operation::Request::operation("health"));
+            let control = job.control();
+            let (mut input, mut output) = job.split();
+            let wakes = Arc::new(Wakes::default());
+            let waker = Waker::from(wakes.clone());
+            let mut cx = Context::from_waker(&waker);
+            assert!(Pin::new(&mut output).poll_next(&mut cx).is_pending());
+            if first_value {
+                wakes.0.store(0, Ordering::SeqCst);
+                input.write(json("{}")).await.unwrap();
+                assert!(wakes.0.load(Ordering::SeqCst) > 0);
+                assert!(Pin::new(&mut output).poll_next(&mut cx).is_pending());
+            }
+            assert_eq!(count.get(), 0);
+            assert!(!input.is_closed());
+            wakes.0.store(0, Ordering::SeqCst);
+            match finish {
+                "close" => input.close(),
+                "cancel" => control.cancel(),
+                "second-value" => input.write(json("{}")).await.unwrap(),
+                "drop" => {
+                    drop(output);
+                    assert!(input.is_closed());
+                    assert_eq!(
+                        control.outcome().unwrap().unwrap_err().code(),
+                        "ERR_CANCELLED"
+                    );
+                    assert_eq!(count.get(), 0);
+                    continue;
+                }
+                _ => unreachable!(),
+            }
+            assert!(wakes.0.load(Ordering::SeqCst) > 0);
+            let result = Pin::new(&mut output).poll_next(&mut cx);
+            if finish == "close" && first_value {
+                assert!(matches!(result, Poll::Ready(None)));
+                assert!(control.outcome().unwrap().is_ok());
+                assert_eq!(count.get(), 1);
+            } else {
+                let Poll::Ready(Some(Err(error))) = result else {
+                    panic!("expected terminal error, got {result:?}");
+                };
+                assert_eq!(
+                    error.code(),
+                    if finish == "cancel" {
+                        "ERR_CANCELLED"
+                    } else {
+                        "ERR_REFUSED"
+                    }
+                );
+                assert_eq!(count.get(), 0);
+                assert!(matches!(
+                    Pin::new(&mut output).poll_next(&mut cx),
+                    Poll::Ready(None)
+                ));
+            }
+            assert!(input.is_closed());
+        }
+    }
+}
+
+#[tokio::test]
 async fn failed_or_incomplete_responses_never_emit_success() {
     for (status, body, state, code) in [
         (200, "", BodyState::Complete, "ERR_EXECUTION_FAILED"),

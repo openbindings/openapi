@@ -20,6 +20,7 @@ PATTERNS = [
     re.compile(r'\breview_(?:[sf]\d+_)+', re.I),
     re.compile(r'\bD-[A-Z][A-Z0-9-]*\b'),
     re.compile(r'\bV[-_]map\b', re.I),
+    # Quoted historical labels remain forbidden in maintained product text.
     re.compile(r'\b[\w-]+-loop-\d{4}-\d{2}-\d{2}\b|\b(?:role|role-contract)-loop\b'),
     re.compile(r'\bround[-_]0?\d+\b|\bloop[-_][A-Z]\d*\b', re.I),
     re.compile(r'\brounds/\d+/(?:oracle|design|authors)/', re.I),

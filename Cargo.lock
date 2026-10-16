@@ -920,7 +920,7 @@ dependencies = [
 [[package]]
 name = "openbindings"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=2c242e1b2a98e443ac87ccc58a4ce7c45554eafa#2c242e1b2a98e443ac87ccc58a4ce7c45554eafa"
+source = "git+https://github.com/openbindings/sdk?rev=6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26#6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26"
 dependencies = [
  "fluent-uri",
  "openbindings-internal-json",
@@ -933,7 +933,7 @@ dependencies = [
 [[package]]
 name = "openbindings-interface-synthesis"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=2c242e1b2a98e443ac87ccc58a4ce7c45554eafa#2c242e1b2a98e443ac87ccc58a4ce7c45554eafa"
+source = "git+https://github.com/openbindings/sdk?rev=6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26#6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26"
 dependencies = [
  "openbindings",
  "openbindings-internal-cancellation",
@@ -944,7 +944,7 @@ dependencies = [
 [[package]]
 name = "openbindings-internal-cancellation"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=2c242e1b2a98e443ac87ccc58a4ce7c45554eafa#2c242e1b2a98e443ac87ccc58a4ce7c45554eafa"
+source = "git+https://github.com/openbindings/sdk?rev=6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26#6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26"
 dependencies = [
  "openbindings",
 ]
@@ -952,7 +952,7 @@ dependencies = [
 [[package]]
 name = "openbindings-internal-json"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=2c242e1b2a98e443ac87ccc58a4ce7c45554eafa#2c242e1b2a98e443ac87ccc58a4ce7c45554eafa"
+source = "git+https://github.com/openbindings/sdk?rev=6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26#6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26"
 dependencies = [
  "itoa",
  "jsonschema-value",
@@ -966,7 +966,7 @@ dependencies = [
 [[package]]
 name = "openbindings-internal-jsonschema"
 version = "0.58.6-ob.1"
-source = "git+https://github.com/openbindings/sdk?rev=2c242e1b2a98e443ac87ccc58a4ce7c45554eafa#2c242e1b2a98e443ac87ccc58a4ce7c45554eafa"
+source = "git+https://github.com/openbindings/sdk?rev=6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26#6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26"
 dependencies = [
  "ahash",
  "bytecount",
@@ -994,7 +994,7 @@ dependencies = [
 [[package]]
 name = "openbindings-internal-regress"
 version = "0.12.0-ob.1"
-source = "git+https://github.com/openbindings/sdk?rev=2c242e1b2a98e443ac87ccc58a4ce7c45554eafa#2c242e1b2a98e443ac87ccc58a4ce7c45554eafa"
+source = "git+https://github.com/openbindings/sdk?rev=6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26#6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26"
 dependencies = [
  "memchr",
 ]
@@ -1002,7 +1002,7 @@ dependencies = [
 [[package]]
 name = "openbindings-internal-schema"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=2c242e1b2a98e443ac87ccc58a4ce7c45554eafa#2c242e1b2a98e443ac87ccc58a4ce7c45554eafa"
+source = "git+https://github.com/openbindings/sdk?rev=6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26#6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26"
 dependencies = [
  "fluent-uri",
  "openbindings-internal-json",
@@ -1014,7 +1014,7 @@ dependencies = [
 [[package]]
 name = "openbindings-invocation"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=2c242e1b2a98e443ac87ccc58a4ce7c45554eafa#2c242e1b2a98e443ac87ccc58a4ce7c45554eafa"
+source = "git+https://github.com/openbindings/sdk?rev=6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26#6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26"
 dependencies = [
  "futures-core",
  "openbindings",
@@ -1026,7 +1026,7 @@ dependencies = [
 [[package]]
 name = "openbindings-json-schema-evaluator"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=2c242e1b2a98e443ac87ccc58a4ce7c45554eafa#2c242e1b2a98e443ac87ccc58a4ce7c45554eafa"
+source = "git+https://github.com/openbindings/sdk?rev=6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26#6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26"
 dependencies = [
  "jsonschema-value",
  "openbindings",
@@ -1044,6 +1044,7 @@ dependencies = [
  "dynamic-openapi-client",
  "dynamic-openapi-client-reqwest",
  "fluent-uri",
+ "futures-core",
  "openbindings",
  "openbindings-interface-synthesis",
  "openbindings-invocation",
@@ -1056,7 +1057,7 @@ dependencies = [
 [[package]]
 name = "openbindings-source-inspection"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=2c242e1b2a98e443ac87ccc58a4ce7c45554eafa#2c242e1b2a98e443ac87ccc58a4ce7c45554eafa"
+source = "git+https://github.com/openbindings/sdk?rev=6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26#6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26"
 dependencies = [
  "openbindings",
  "openbindings-internal-cancellation",

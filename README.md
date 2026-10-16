@@ -1,8 +1,8 @@
-The OpenBindings implementation of the source-inspection, interface-synthesis and binding-invocation roles for OpenAPI, built on [`openapi-client`](https://github.com/openbindings/openapi-client).
+The OpenBindings implementation of the source-inspection, interface-synthesis and binding-invocation interfaces for OpenAPI, built on [`openapi-client`](https://github.com/openbindings/openapi-client).
 
 The packages are unpublished. This repository depends on the SDK at
-`2c242e1b2a98e443ac87ccc58a4ce7c45554eafa` and the independent client at
-`fbcb868ea31a34fd4fd566244b7e40857f7df771`. The SDK defines the roles and supplies
+`6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26` and the independent client at
+`fbcb868ea31a34fd4fd566244b7e40857f7df771`. The SDK defines the interfaces and supplies
 no kind-specific instances. This project supplies the OpenAPI provider.
 
 Use `OpenApi::default()` with the SDK's checked `Inspector` or `Synthesizer`.
@@ -18,7 +18,7 @@ retain their meanings. Sources carry exact JSON text in `document` and optional
 `retrievalUri`; bindings carry `path` and lowercase `method`. Reloaded documents
 must pass SDK validation before operation invocation or
 value-contract preparation. The current SDK pin uses one exact `Document`, `Conformant<Document>` proof with infallible typed
-views and companion-owned `CancellationToken` role signatures. Default value
+views and companion-owned `CancellationToken` interface signatures. Default value
 failures use coarse diagnostics; [migration details](PROVENANCE.md) describe the
 diagnostic and reference boundaries. It implements no
 published OpenAPI binding standard.
@@ -36,7 +36,7 @@ The incremental-auth performance check remains unresolved and deferred with
 its original budgets unchanged. The stopped measurement examples are compiled and
 linted but never run by CI. This repository carries no historical loop evidence.
 Native HTTP and local Node/Wasm probes do not establish browser/Worker network
-support or a released TypeScript role API.
+support or a released TypeScript interface API.
 
 Use Rust 1.99.0 with the wasm32-unknown-unknown target, wasm-bindgen-cli 0.2.129,
 Node 22.19.0, npm and Python 3.13+. With dependency caches populated:
@@ -70,7 +70,9 @@ consumer graph. The minimal archive consumer checks the preceding JSON-path
 receipt's input and extracted-package hashes before using that snapshot.
 
 CI requires full adapter tests on Linux, macOS and Windows, the independent
-consumers, extracted Cargo archives, and both Node/Wasm probes. The fixture-specific
+consumers, extracted Cargo archives, and both Node/Wasm probes. CI also runs
+`cargo deny check advisories`; vulnerabilities and yanked versions fail, and every
+advisory ignore requires an ID and a written reason in `deny.toml`. The fixture-specific
 `-text` attribute preserves literal CRUD exchanges on every host.
 Regenerate `DEPENDENCIES.json` and `THIRD-PARTY-NOTICES.txt` after dependency changes
 with `python3 tools/attribution.py`; CI checks both against the offline locked

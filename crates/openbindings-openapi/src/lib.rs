@@ -136,7 +136,7 @@ pub enum ErrorKind {
     /// Cooperative cancellation.
     Cancelled,
 }
-/// Safe adapter admission error; role facades map it into their own error vocabulary.
+/// Safe adapter admission error; interface facades map it into their own error vocabulary.
 #[derive(Clone, Debug)]
 pub struct Error {
     kind: ErrorKind,
@@ -180,7 +180,7 @@ impl std::fmt::Display for Error {
 impl std::error::Error for Error {}
 
 /// Reusable adapter. Inspection and synthesis need no transport; bind one once
-/// with [`Self::with_transport`] to enable the existing BindingInvoker role.
+/// with [`Self::with_transport`] to enable the existing BindingInvoker interface.
 ///
 /// One immutable prepared source is cached. No mutex is held during source
 /// analysis or host I/O. Concurrent misses may compute duplicate results;
