@@ -13,7 +13,7 @@ dependency attribution files are new extraction plumbing. The consumer test bina
 serializes its own tests with a local lock because they count process-global owners.
 `NOTICE` describes this resolved graph. No SDK implementation is copied into this
 product repository. The current immutable Git pins are SDK
-`6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26` and client
+`5b2724d69243140c82aca77c1947a410e9a1f19e` and client
 `fbcb868ea31a34fd4fd566244b7e40857f7df771`.
 
 Earlier migrations adopted validation vocabulary, companion-owned cancellation,
@@ -72,9 +72,9 @@ both attribution inventories from cached locked sources: `DEPENDENCIES.json`
 records the new SDK source identities, while notice bytes remain unchanged.
 
 These changes follow the pinned SDK's
-[change log](https://github.com/openbindings/sdk/blob/6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26/CHANGELOG.md),
-[migration notes](https://github.com/openbindings/sdk/blob/6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26/docs/migration.md)
-and [dependency maintenance contract](https://github.com/openbindings/sdk/blob/6bb70b4ac919e7fd5a6e3dc2e236ffa95c5f3c26/DEPENDENCY-MAINTENANCE.md).
+[change log](https://github.com/openbindings/sdk/blob/5b2724d69243140c82aca77c1947a410e9a1f19e/CHANGELOG.md),
+[migration notes](https://github.com/openbindings/sdk/blob/5b2724d69243140c82aca77c1947a410e9a1f19e/docs/migration.md)
+and [dependency maintenance contract](https://github.com/openbindings/sdk/blob/5b2724d69243140c82aca77c1947a410e9a1f19e/DEPENDENCY-MAINTENANCE.md).
 
 The table below records the original extraction dispositions, not a claim that
 migrated consumers remain byte-identical to that import.
