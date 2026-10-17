@@ -13,7 +13,7 @@ dependency attribution files are new extraction plumbing. The consumer test bina
 serializes its own tests with a local lock because they count process-global owners.
 `NOTICE` describes this resolved graph. No SDK implementation is copied into this
 product repository. The current immutable Git pins are SDK
-`8033cb9034aec05bad222b96e9754e6951377d57` and client
+`88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a` and client
 `fbcb868ea31a34fd4fd566244b7e40857f7df771`.
 
 Earlier migrations adopted validation vocabulary, companion-owned cancellation,
@@ -73,6 +73,11 @@ which exceeds the SDK's Rust 1.88 minimum.
 
 The companion API uses `CoverageClaim::complete` for initial complete coverage and
 `ProviderInput` as a stream without boxing a future for each input read. Input cardinality, closure, cancellation and conditional `Send` are preserved.
+Provider records may gain fields in later SDK versions, so the adapter builds them with
+their constructors: `SupportedKind::new` with `with_description`, `BindableTarget::new`,
+`InspectionLimitation::new`, `CoverageLimitation::new` with `with_details`, and
+`SynthesisCandidate::new`. An optional operation framing is assigned to its public
+field. Kind descriptions, limitation evidence and candidates are unchanged.
 
 The client pin is unchanged. The locked graph retains upstream registry serde_json,
 referencing and jsonschema-value packages, with one serde_json identity. Only the
@@ -83,9 +88,9 @@ records the SDK source identities and notice hashes, and `THIRD-PARTY-NOTICES.tx
 reproduces the SDK packages' own license and notice texts at the pinned commit.
 
 These changes follow the pinned SDK's
-[change log](https://github.com/openbindings/sdk/blob/8033cb9034aec05bad222b96e9754e6951377d57/CHANGELOG.md),
-[migration notes](https://github.com/openbindings/sdk/blob/8033cb9034aec05bad222b96e9754e6951377d57/docs/migration.md)
-and [dependency maintenance contract](https://github.com/openbindings/sdk/blob/8033cb9034aec05bad222b96e9754e6951377d57/DEPENDENCY-MAINTENANCE.md).
+[change log](https://github.com/openbindings/sdk/blob/88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a/CHANGELOG.md),
+[migration notes](https://github.com/openbindings/sdk/blob/88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a/docs/migration.md)
+and [dependency maintenance contract](https://github.com/openbindings/sdk/blob/88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a/DEPENDENCY-MAINTENANCE.md).
 
 The table below records the original extraction dispositions, not a claim that
 migrated consumers remain byte-identical to that import.

@@ -37,13 +37,9 @@ impl<T> InterfaceSynthesizer for OpenApi<T> {
         Kind::ALL
             .into_iter()
             .map(|kind| {
-                SupportedKind {
-            kind: kind.label().into(),
-            description: Some(
-                "Private JSON experiment, with disclosed schema projection and capability limits"
-                    .into(),
-            ),
-        }
+                SupportedKind::new(kind.label()).with_description(
+                    "Private JSON experiment, with disclosed schema projection and capability limits",
+                )
             })
             .collect()
     }
@@ -171,7 +167,13 @@ impl<T> OpenApi<T> {
                 let details =
                     crate::json(&serde_json_compat::json!({"requiredResources":resources}))
                         .map_err(|e| e.synthesis())?;
-                coverage.limitation=Some(CoverageLimitation{code:"openbindings.openapi.inventory-incomplete".into(),message:"The supplied resources and implemented interaction profile do not establish every source unit; no empty/full inventory claim is made".into(),details:Some(BTreeMap::from([("inventory".into(),details)])),additional_fields:BTreeMap::new()});
+                coverage.limitation = Some(
+                    CoverageLimitation::new(
+                        "openbindings.openapi.inventory-incomplete",
+                        "The supplied resources and implemented interaction profile do not establish every source unit; no empty/full inventory claim is made",
+                    )
+                    .with_details(BTreeMap::from([("inventory".into(), details)])),
+                );
             }
         }
         check(control).map_err(|e| e.synthesis())?;
@@ -211,6 +213,6 @@ impl<T> OpenApi<T> {
         {
             return Err(Error::new(ErrorKind::Limit, "synthesis-result-limit").synthesis());
         }
-        Ok(SynthesisCandidate { document, coverage })
+        Ok(SynthesisCandidate::new(document, coverage))
     }
 }

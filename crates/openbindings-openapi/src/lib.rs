@@ -297,12 +297,10 @@ impl<T> SourceInspector for OpenApi<T> {
     fn supported_kinds(&self) -> Vec<SupportedKind> {
         Kind::ALL
             .into_iter()
-            .map(|kind| SupportedKind {
-                kind: kind.label().into(),
-                description: Some(
-                    "Private finite JSON experiment; consult its qualified capability profile"
-                        .into(),
-                ),
+            .map(|kind| {
+                SupportedKind::new(kind.label()).with_description(
+                    "Private finite JSON experiment; consult its qualified capability profile",
+                )
             })
             .collect()
     }
