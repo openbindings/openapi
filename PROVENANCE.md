@@ -13,7 +13,7 @@ dependency attribution files are new extraction plumbing. The consumer test bina
 serializes its own tests with a local lock because they count process-global owners.
 `NOTICE` describes this resolved graph. No SDK implementation is copied into this
 product repository. The current immutable Git pins are SDK
-`688dbc5c363ee632c6ca1c7f7b814942b5c367db` and client
+`8033cb9034aec05bad222b96e9754e6951377d57` and client
 `fbcb868ea31a34fd4fd566244b7e40857f7df771`.
 
 Earlier migrations adopted validation vocabulary, companion-owned cancellation,
@@ -23,15 +23,25 @@ bounded source-analysis cache and the existing finite OpenAPI profile.
 
 The current SDK migration requires conformance proof before operation invocation or
 normative value-contract preparation. Consumers validate reloaded documents
-and pass the resulting `Conformant<Document>` directly; attaching an evaluator and
-creating its contract context are infallible. Reads on a plain `Document` stay
-fallible; reads on a conformant document use the SDK's infallible views. No local compatibility API
+and pass the resulting `Conformant<Document>` directly; attaching an evaluator is
+infallible, and a conformant operation's `input()` and `output()` hand out its value
+contracts for preparation. Reads on a plain `Document` stay
+fallible; reads on a conformant document use the SDK's infallible views, whose text
+is `&str` because the applied specification excludes unpaired-surrogate escapes from
+conformant documents. No local compatibility API
 restores the unproven-document contract route.
 
-Default contract failures now carry the fixed message `value does not satisfy the
-contract`, no problems, and `problems_complete = false`. Explicit
-`Diagnostics::Upstream` requests the library's first error and still does not claim
-complete diagnostics; its allocation and stack use follow the library's bounds.
+`PreparedContract::validate` is the cheap check: a failure carries the fixed message
+`value does not satisfy the contract`, no problems, and `problems_complete = false`.
+`explain` returns the same verdict with the library's first error and still does not
+claim complete diagnostics; its allocation and stack use follow the library's bounds.
+Each problem names the failing instance and schema keyword by exact pointer; the
+holder of the value, document or supplied resource computes positions on demand.
+The operation invoker withholds a rejected value on its verdict alone. The adapter
+supplies a binding provider and builds no operation invoker; its consumers keep that
+default because they act on the invocation error code and read no problems. An
+application that reports why a value was rejected opts in with
+`with_validation_detail(Detail::Explain)`.
 Document structural/schema findings use the fixed message
 `value violates the fixed normative schema` at the narrowest established failing
 source position; consumers must use evidence and codes rather than old wording
@@ -69,12 +79,13 @@ referencing and jsonschema-value packages, with one serde_json identity. Only th
 renamed jsonschema and regress forks remain. Archive qualification packages the
 internal schema crate and those retained forks. `tools/attribution.py` regenerates
 both attribution inventories from cached locked sources: `DEPENDENCIES.json`
-records the new SDK source identities, while notice bytes remain unchanged.
+records the SDK source identities and notice hashes, and `THIRD-PARTY-NOTICES.txt`
+reproduces the SDK packages' own license and notice texts at the pinned commit.
 
 These changes follow the pinned SDK's
-[change log](https://github.com/openbindings/sdk/blob/688dbc5c363ee632c6ca1c7f7b814942b5c367db/CHANGELOG.md),
-[migration notes](https://github.com/openbindings/sdk/blob/688dbc5c363ee632c6ca1c7f7b814942b5c367db/docs/migration.md)
-and [dependency maintenance contract](https://github.com/openbindings/sdk/blob/688dbc5c363ee632c6ca1c7f7b814942b5c367db/DEPENDENCY-MAINTENANCE.md).
+[change log](https://github.com/openbindings/sdk/blob/8033cb9034aec05bad222b96e9754e6951377d57/CHANGELOG.md),
+[migration notes](https://github.com/openbindings/sdk/blob/8033cb9034aec05bad222b96e9754e6951377d57/docs/migration.md)
+and [dependency maintenance contract](https://github.com/openbindings/sdk/blob/8033cb9034aec05bad222b96e9754e6951377d57/DEPENDENCY-MAINTENANCE.md).
 
 The table below records the original extraction dispositions, not a claim that
 migrated consumers remain byte-identical to that import.

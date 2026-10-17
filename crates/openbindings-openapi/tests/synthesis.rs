@@ -24,7 +24,7 @@ async fn skeleton_preservation_and_composition_boundaries() {
     let draft = &skeleton;
     assert!(draft.operations().is_empty());
     assert!(draft.sources().is_none());
-    assert_eq!(draft.name().and_then(|name| name.as_str()), Some("Empty"));
+    assert_eq!(draft.name(), Some("Empty"));
     let input = source(include_str!("fixtures/r1/parcels.json"));
     let sources = [SynthesisSource {
         name: Some("user_source"),
@@ -359,9 +359,8 @@ async fn absent_and_repeated_operation_ids_are_not_binding_identity_or_effects()
 
 #[tokio::test]
 async fn synthesized_contracts_keep_verdicts_with_explicit_diagnostics() {
-    use openbindings::{Direction, ResourceSet, ValueContractPreparation, ValueOutcome};
-    use openbindings_json_schema_evaluator::{DefaultEvaluator, Diagnostics};
-    use std::sync::Arc;
+    use openbindings::{Detail, ValueOutcome};
+    use openbindings_json_schema_evaluator::DefaultEvaluator;
 
     // Source schema references are disclosed as projection loss, never copied
     // into the normative envelope contract, even when statically defective.
@@ -401,34 +400,36 @@ async fn synthesized_contracts_keep_verdicts_with_explicit_diagnostics() {
         let proof = result.document();
         let operations = proof.operations();
         let operation = &operations[0];
-        assert!(operation.input().is_some());
-        for mode in [Diagnostics::Coarse, Diagnostics::Upstream] {
-            let context = proof.value_contracts(
-                Arc::new(DefaultEvaluator::new().with_diagnostics(mode)),
-                ResourceSet::default(),
-            );
-            let ValueContractPreparation::Ready(contract) =
-                context.prepare(operation.key(), Direction::Input)
-            else {
-                panic!("synthesized envelope must prepare");
+        let contract = operation
+            .input()
+            .expect("synthesized operations declare an input contract")
+            .prepare(&DefaultEvaluator::new())
+            .expect("synthesized envelope must prepare");
+        // One prepared contract answers both the cheap check and an explanation.
+        for detail in [Detail::Outcome, Detail::Explain] {
+            let check = |value: &str| {
+                let value = JsonValue::parse(value).unwrap();
+                if detail == Detail::Explain {
+                    contract.explain(&value)
+                } else {
+                    contract.validate(&value)
+                }
             };
-            assert!(matches!(
-                contract.validate(&JsonValue::parse(r#"{"body":null}"#).unwrap()),
-                ValueOutcome::Satisfies
-            ));
+            assert!(matches!(check(r#"{"body":null}"#), ValueOutcome::Satisfies));
             let ValueOutcome::Fails {
                 message,
                 problems,
                 problems_complete,
-            } = contract.validate(&JsonValue::parse("{}").unwrap())
+            } = check("{}")
             else {
                 panic!("missing body must fail");
             };
             assert_eq!(message, "value does not satisfy the contract");
             assert!(!problems_complete);
-            match mode {
-                Diagnostics::Coarse => assert!(problems.is_empty()),
-                Diagnostics::Upstream => assert_eq!(problems.len(), 1),
+            if detail == Detail::Explain {
+                assert_eq!(problems.len(), 1);
+            } else {
+                assert!(problems.is_empty());
             }
         }
     }

@@ -8,6 +8,6 @@ repository.workspace = true
 publish.workspace = true
 
 [dependencies]
-openbindings = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "688dbc5c363ee632c6ca1c7f7b814942b5c367db" }
+openbindings = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "8033cb9034aec05bad222b96e9754e6951377d57" }
 openbindings-openapi = { version = "=0.2.0-alpha.1", path = "../../crates/openbindings-openapi" }
-openbindings-invocation = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "688dbc5c363ee632c6ca1c7f7b814942b5c367db" }
+openbindings-invocation = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "8033cb9034aec05bad222b96e9754e6951377d57" }

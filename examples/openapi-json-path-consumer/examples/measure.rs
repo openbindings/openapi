@@ -2,8 +2,7 @@
 use dynamic_openapi_client as client;
 use openapi_json_path_consumer::{reply, source};
 use openbindings::{
-    Binding, Conformant, Direction, Document, Edit, JsonValue, Operation, ResourceSet,
-    ValueContractPreparation, ValueOutcome,
+    Binding, Conformant, Document, Edit, JsonValue, Operation, ResourceSet, ValueOutcome,
 };
 use openbindings_interface_synthesis::{SynthesisRequest, SynthesisSource, Synthesizer};
 use openbindings_invocation::{BindingRequest, BindingValue, binding, operation};
@@ -407,12 +406,12 @@ fn main() {
                 .conformant()
                 .expect("conformant contract document");
             let evaluator = Arc::new(openbindings_json_schema_evaluator::DefaultEvaluator::new());
-            let contracts = doc.value_contracts(evaluator.clone(), ResourceSet::default());
-            let ValueContractPreparation::Ready(contract) =
-                contracts.prepare("call", Direction::Input)
-            else {
-                panic!()
-            };
+            let call = doc.resolve_operation("call").expect("declared operation");
+            let contract = call
+                .input()
+                .expect("declared input")
+                .prepare(evaluator.as_ref())
+                .unwrap();
             let checked = operation::Invoker::new(doc, &provider)
                 .with_evaluator(evaluator, ResourceSet::default());
             // Retain compiled contracts for the warm workload now that core has no cache.

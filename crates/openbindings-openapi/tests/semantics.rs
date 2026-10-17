@@ -519,8 +519,9 @@ async fn incomplete_headers_and_pre_cancel_are_not_success() {
 
 #[tokio::test]
 async fn undefined_author_contracts_withhold_values_and_preserve_unresolved_errors() {
-    use openbindings::{Direction, ResourceSet, ValueOutcome};
+    use openbindings::{ResourceSet, ValueOutcome};
     use openbindings_json_schema_evaluator::DefaultEvaluator;
+    use operation::Direction;
 
     for direction in [Direction::Input, Direction::Output] {
         let calls = Rc::new(Cell::new(0));
