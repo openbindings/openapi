@@ -1,7 +1,7 @@
 The OpenBindings implementation of the source-inspection, interface-synthesis and binding-invocation interfaces for OpenAPI, built on [`openapi-client`](https://github.com/openbindings/openapi-client).
 
 The packages are unpublished. This repository depends on the SDK at
-`688dbc5c363ee632c6ca1c7f7b814942b5c367db` and the independent client at
+`88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a` and the independent client at
 `fbcb868ea31a34fd4fd566244b7e40857f7df771`. The SDK defines the interfaces and supplies
 no kind-specific instances. This project supplies the OpenAPI provider.
 
@@ -18,8 +18,9 @@ retain their meanings. Sources carry exact JSON text in `document` and optional
 `retrievalUri`; bindings carry `path` and lowercase `method`. Reloaded documents
 must pass SDK validation before operation invocation or
 value-contract preparation. The current SDK pin uses one exact `Document`, `Conformant<Document>` proof with infallible typed
-views and companion-owned `CancellationToken` interface signatures. Default value
-failures use coarse diagnostics; [migration details](PROVENANCE.md) describe the
+views, value contracts handed out by conformant operations and companion-owned
+`CancellationToken` interface signatures. Value checks report the verdict alone unless
+the caller asks for an explanation; [migration details](PROVENANCE.md) describe the
 diagnostic and reference boundaries. It implements no
 published OpenAPI binding standard.
 

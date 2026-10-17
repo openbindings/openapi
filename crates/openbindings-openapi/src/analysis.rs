@@ -96,23 +96,31 @@ impl Prepared {
         let targets = self
             .units
             .iter()
-            .map(|u| BindableTarget {
-                source_ref: u.source_ref.clone(),
-                binding: BindingFragment {
-                    content: Some(u.binding.clone()),
-                    ..Default::default()
-                },
-                operation_key: None,
-                operation: u.profile.as_ref().ok().map(|p| openbindings::Operation {
+            .map(|u| {
+                let mut target = BindableTarget::new(
+                    u.source_ref.clone(),
+                    BindingFragment {
+                        content: Some(u.binding.clone()),
+                        ..Default::default()
+                    },
+                );
+                target.operation = u.profile.as_ref().ok().map(|p| openbindings::Operation {
                     input: Some(p.input_schema.clone()),
                     ..Default::default()
-                }),
+                });
+                target
             })
             .collect();
         if self.exhaustive && !self.extra_interactions {
             SourceInspection::complete(targets)
         } else {
-            SourceInspection::partial(targets, InspectionLimitation { code: "openbindings.openapi.inventory-incomplete".into(), message: "Supplied resources or this implementation do not establish every interaction; omitted interactions are not declared invalid".into(), details: None, additional_fields: Default::default() })
+            SourceInspection::partial(
+                targets,
+                InspectionLimitation::new(
+                    "openbindings.openapi.inventory-incomplete",
+                    "Supplied resources or this implementation do not establish every interaction; omitted interactions are not declared invalid",
+                ),
+            )
         }
     }
 }

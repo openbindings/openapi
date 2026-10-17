@@ -180,12 +180,10 @@ impl<T: Transport> BindingInvoker for OpenApi<T> {
     fn supported_kinds(&self) -> Vec<SupportedKind> {
         Kind::ALL
             .into_iter()
-            .map(|kind| SupportedKind {
-                kind: kind.label().into(),
-                description: Some(
-                    "Private finite JSON experiment; no implicit retry or resource acquisition"
-                        .into(),
-                ),
+            .map(|kind| {
+                SupportedKind::new(kind.label()).with_description(
+                    "Private finite JSON experiment; no implicit retry or resource acquisition",
+                )
             })
             .collect()
     }

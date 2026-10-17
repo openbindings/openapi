@@ -14652,7 +14652,7 @@ DEALINGS IN THE SOFTWARE.
 
 ===== openbindings 0.2.0-alpha.1: NOTICE =====
 OpenBindings Rust SDK
-Applies OpenBindings draft revision 2f7d754dc2da374058cd517064c17e50f7d95d99.
+Applies OpenBindings draft revision 30416ef1ca626e58eb8c383a0c71422a68f9243f.
 Public package behavior is bounded by the declared core or companion scope.
 
 ===== openbindings 0.2.0-alpha.1: schemas/LICENSE-jsonschema-go =====
@@ -15036,7 +15036,7 @@ Public package behavior is bounded by the declared core or companion scope.
 
 ===== openbindings-interface-synthesis 0.2.0-alpha.1: NOTICE =====
 OpenBindings Rust SDK
-Applies OpenBindings draft revision 2f7d754dc2da374058cd517064c17e50f7d95d99.
+Applies OpenBindings draft revision 30416ef1ca626e58eb8c383a0c71422a68f9243f.
 Public package behavior is bounded by the declared core or companion scope.
 
 ===== openbindings-internal-cancellation 0.2.0-alpha.1: LICENSE =====
@@ -15243,7 +15243,7 @@ Public package behavior is bounded by the declared core or companion scope.
 
 ===== openbindings-internal-cancellation 0.2.0-alpha.1: NOTICE =====
 OpenBindings Rust SDK
-Applies OpenBindings draft revision 2f7d754dc2da374058cd517064c17e50f7d95d99.
+Applies OpenBindings draft revision 30416ef1ca626e58eb8c383a0c71422a68f9243f.
 Public package behavior is bounded by the declared core or companion scope.
 
 ===== openbindings-internal-json 0.2.0-alpha.1: LICENSE =====
@@ -15450,7 +15450,7 @@ Public package behavior is bounded by the declared core or companion scope.
 
 ===== openbindings-internal-json 0.2.0-alpha.1: NOTICE =====
 OpenBindings Rust SDK
-Applies OpenBindings draft revision 2f7d754dc2da374058cd517064c17e50f7d95d99.
+Applies OpenBindings draft revision 30416ef1ca626e58eb8c383a0c71422a68f9243f.
 Public package behavior is bounded by the declared core or companion scope.
 
 ===== openbindings-internal-jsonschema 0.58.6-ob.1: LICENSE =====
@@ -15906,7 +15906,7 @@ SOFTWARE.
 
 ===== openbindings-internal-schema 0.2.0-alpha.1: NOTICE =====
 OpenBindings Rust SDK
-Applies OpenBindings draft revision 2f7d754dc2da374058cd517064c17e50f7d95d99.
+Applies OpenBindings draft revision 30416ef1ca626e58eb8c383a0c71422a68f9243f.
 Public package behavior is bounded by the declared core or companion scope.
 
 ===== openbindings-invocation 0.2.0-alpha.1: LICENSE =====
@@ -16113,7 +16113,7 @@ Public package behavior is bounded by the declared core or companion scope.
 
 ===== openbindings-invocation 0.2.0-alpha.1: NOTICE =====
 OpenBindings Rust SDK
-Applies OpenBindings draft revision 2f7d754dc2da374058cd517064c17e50f7d95d99.
+Applies OpenBindings draft revision 30416ef1ca626e58eb8c383a0c71422a68f9243f.
 Public package behavior is bounded by the declared core or companion scope.
 
 ===== openbindings-json-schema-evaluator 0.2.0-alpha.1: LICENSE =====
@@ -16320,7 +16320,7 @@ Public package behavior is bounded by the declared core or companion scope.
 
 ===== openbindings-json-schema-evaluator 0.2.0-alpha.1: NOTICE =====
 OpenBindings Rust SDK
-Applies OpenBindings draft revision 2f7d754dc2da374058cd517064c17e50f7d95d99.
+Applies OpenBindings draft revision 30416ef1ca626e58eb8c383a0c71422a68f9243f.
 Public package behavior is bounded by the declared core or companion scope.
 
 ===== openbindings-source-inspection 0.2.0-alpha.1: LICENSE =====
@@ -16527,7 +16527,7 @@ Public package behavior is bounded by the declared core or companion scope.
 
 ===== openbindings-source-inspection 0.2.0-alpha.1: NOTICE =====
 OpenBindings Rust SDK
-Applies OpenBindings draft revision 2f7d754dc2da374058cd517064c17e50f7d95d99.
+Applies OpenBindings draft revision 30416ef1ca626e58eb8c383a0c71422a68f9243f.
 Public package behavior is bounded by the declared core or companion scope.
 
 ===== openssl-probe 0.2.1: LICENSE-APACHE =====

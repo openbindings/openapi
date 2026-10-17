@@ -1413,7 +1413,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=688dbc5c363ee632c6ca1c7f7b814942b5c367db#688dbc5c363ee632c6ca1c7f7b814942b5c367db",
+      "source": "git+https://github.com/openbindings/sdk?rev=88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a#88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a",
       "notices": [
         {
           "path": "LICENSE",
@@ -1421,7 +1421,7 @@
         },
         {
           "path": "NOTICE",
-          "sha256": "3697bb60c8d0a9ce761fe7b5625223752be29db45474a70a37a8f9858776d17c"
+          "sha256": "d73f0e156430a53fd3632c11925a71f1614935e7a4685ecb5056a6c041e13cb6"
         },
         {
           "path": "schemas/LICENSE-jsonschema-go",
@@ -1434,7 +1434,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=688dbc5c363ee632c6ca1c7f7b814942b5c367db#688dbc5c363ee632c6ca1c7f7b814942b5c367db",
+      "source": "git+https://github.com/openbindings/sdk?rev=88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a#88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a",
       "notices": [
         {
           "path": "LICENSE",
@@ -1442,7 +1442,7 @@
         },
         {
           "path": "NOTICE",
-          "sha256": "3697bb60c8d0a9ce761fe7b5625223752be29db45474a70a37a8f9858776d17c"
+          "sha256": "d73f0e156430a53fd3632c11925a71f1614935e7a4685ecb5056a6c041e13cb6"
         }
       ]
     },
@@ -1451,7 +1451,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=688dbc5c363ee632c6ca1c7f7b814942b5c367db#688dbc5c363ee632c6ca1c7f7b814942b5c367db",
+      "source": "git+https://github.com/openbindings/sdk?rev=88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a#88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a",
       "notices": [
         {
           "path": "LICENSE",
@@ -1459,7 +1459,7 @@
         },
         {
           "path": "NOTICE",
-          "sha256": "3697bb60c8d0a9ce761fe7b5625223752be29db45474a70a37a8f9858776d17c"
+          "sha256": "d73f0e156430a53fd3632c11925a71f1614935e7a4685ecb5056a6c041e13cb6"
         }
       ]
     },
@@ -1468,7 +1468,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=688dbc5c363ee632c6ca1c7f7b814942b5c367db#688dbc5c363ee632c6ca1c7f7b814942b5c367db",
+      "source": "git+https://github.com/openbindings/sdk?rev=88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a#88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a",
       "notices": [
         {
           "path": "LICENSE",
@@ -1476,7 +1476,7 @@
         },
         {
           "path": "NOTICE",
-          "sha256": "3697bb60c8d0a9ce761fe7b5625223752be29db45474a70a37a8f9858776d17c"
+          "sha256": "d73f0e156430a53fd3632c11925a71f1614935e7a4685ecb5056a6c041e13cb6"
         }
       ]
     },
@@ -1485,7 +1485,7 @@
       "version": "0.58.6-ob.1",
       "declared_license": "MIT",
       "repository": "https://github.com/Stranger6667/jsonschema",
-      "source": "git+https://github.com/openbindings/sdk?rev=688dbc5c363ee632c6ca1c7f7b814942b5c367db#688dbc5c363ee632c6ca1c7f7b814942b5c367db",
+      "source": "git+https://github.com/openbindings/sdk?rev=88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a#88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a",
       "notices": [
         {
           "path": "LICENSE",
@@ -1498,7 +1498,7 @@
       "version": "0.12.0-ob.1",
       "declared_license": "MIT OR Apache-2.0",
       "repository": "https://github.com/ridiculousfish/regress",
-      "source": "git+https://github.com/openbindings/sdk?rev=688dbc5c363ee632c6ca1c7f7b814942b5c367db#688dbc5c363ee632c6ca1c7f7b814942b5c367db",
+      "source": "git+https://github.com/openbindings/sdk?rev=88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a#88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a",
       "notices": [
         {
           "path": "LICENSE-APACHE",
@@ -1515,7 +1515,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=688dbc5c363ee632c6ca1c7f7b814942b5c367db#688dbc5c363ee632c6ca1c7f7b814942b5c367db",
+      "source": "git+https://github.com/openbindings/sdk?rev=88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a#88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a",
       "notices": [
         {
           "path": "LICENSE",
@@ -1523,7 +1523,7 @@
         },
         {
           "path": "NOTICE",
-          "sha256": "3697bb60c8d0a9ce761fe7b5625223752be29db45474a70a37a8f9858776d17c"
+          "sha256": "d73f0e156430a53fd3632c11925a71f1614935e7a4685ecb5056a6c041e13cb6"
         }
       ]
     },
@@ -1532,7 +1532,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=688dbc5c363ee632c6ca1c7f7b814942b5c367db#688dbc5c363ee632c6ca1c7f7b814942b5c367db",
+      "source": "git+https://github.com/openbindings/sdk?rev=88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a#88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a",
       "notices": [
         {
           "path": "LICENSE",
@@ -1540,7 +1540,7 @@
         },
         {
           "path": "NOTICE",
-          "sha256": "3697bb60c8d0a9ce761fe7b5625223752be29db45474a70a37a8f9858776d17c"
+          "sha256": "d73f0e156430a53fd3632c11925a71f1614935e7a4685ecb5056a6c041e13cb6"
         }
       ]
     },
@@ -1549,7 +1549,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=688dbc5c363ee632c6ca1c7f7b814942b5c367db#688dbc5c363ee632c6ca1c7f7b814942b5c367db",
+      "source": "git+https://github.com/openbindings/sdk?rev=88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a#88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a",
       "notices": [
         {
           "path": "LICENSE",
@@ -1557,7 +1557,7 @@
         },
         {
           "path": "NOTICE",
-          "sha256": "3697bb60c8d0a9ce761fe7b5625223752be29db45474a70a37a8f9858776d17c"
+          "sha256": "d73f0e156430a53fd3632c11925a71f1614935e7a4685ecb5056a6c041e13cb6"
         }
       ]
     },
@@ -1566,7 +1566,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=688dbc5c363ee632c6ca1c7f7b814942b5c367db#688dbc5c363ee632c6ca1c7f7b814942b5c367db",
+      "source": "git+https://github.com/openbindings/sdk?rev=88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a#88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a",
       "notices": [
         {
           "path": "LICENSE",
@@ -1574,7 +1574,7 @@
         },
         {
           "path": "NOTICE",
-          "sha256": "3697bb60c8d0a9ce761fe7b5625223752be29db45474a70a37a8f9858776d17c"
+          "sha256": "d73f0e156430a53fd3632c11925a71f1614935e7a4685ecb5056a6c041e13cb6"
         }
       ]
     },

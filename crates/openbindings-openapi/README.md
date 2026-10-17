@@ -12,10 +12,13 @@ Use `openbindings-invocation::operation::Invoker` for document-based operation s
 and declared value contracts. Construct it with the `Conformant<Document>` returned
 by `document.validate()?.conformant()` after checking that proof exists. The checked
 synthesizer already returns conformance proof; saving and reloading requires fresh
-validation. `proof.value_contracts(evaluator, resources)` and invoker
-`with_evaluator` are infallible. Default evaluator failures use coarse diagnostics
-with a fixed message, no problems and incomplete detail; select
-`Diagnostics::Upstream` explicitly for the library's first error. See
+validation. A conformant operation's `input()` and `output()` hand out its value
+contracts, prepared with `prepare(&evaluator)` or `prepare_with(&evaluator, &resources)`;
+invoker `with_evaluator` is infallible. `PreparedContract::validate` is the cheap check:
+a failure carries a fixed message, no problems and incomplete detail. `explain` returns
+the same verdict with the library's first error. The invoker withholds a rejected value
+on its verdict; `with_validation_detail(Detail::Explain)` makes its validation failure
+carry that explanation. See
 [the migration record](../../PROVENANCE.md) for diagnostic and reference behavior.
 Core and the published interfaces do not depend on OpenAPI.
 This package does not implement a published OpenAPI binding specification.
