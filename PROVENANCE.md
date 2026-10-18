@@ -13,7 +13,7 @@ dependency attribution files are new extraction plumbing. The consumer test bina
 serializes its own tests with a local lock because they count process-global owners.
 `NOTICE` describes this resolved graph. No SDK implementation is copied into this
 product repository. The current immutable Git pins are SDK
-`88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a` and client
+`ba5ca95d8681f1138da6551e0df1dee5a2ee0c07` and client
 `fbcb868ea31a34fd4fd566244b7e40857f7df771`.
 
 Earlier migrations adopted validation vocabulary, companion-owned cancellation,
@@ -31,7 +31,7 @@ is `&str` because the applied specification excludes unpaired-surrogate escapes 
 conformant documents. No local compatibility API
 restores the unproven-document contract route.
 
-`PreparedContract::validate` is the cheap check: a failure carries the fixed message
+`PreparedValueContract::validate` is the cheap check: a failure carries the fixed message
 `value does not satisfy the contract`, no problems, and `problems_complete = false`.
 `explain` returns the same verdict with the library's first error and still does not
 claim complete diagnostics; its allocation and stack use follow the library's bounds.
@@ -79,6 +79,23 @@ their constructors: `SupportedKind::new` with `with_description`, `BindableTarge
 `SynthesisCandidate::new`. An optional operation framing is assigned to its public
 field. Kind descriptions, limitation evidence and candidates are unchanged.
 
+The SDK review's API changes ask little of the adapter. Edit pointers are now a
+`PointerRef`, borrowed from escaped text or an exact `Pointer`, so synthesis and the
+JSON-path consumer's authentication fixture convert their `Edit::Set` text pointers
+with `into()`; edited bytes are unchanged. A prepared operation now keeps a share of its
+invoker rather than borrowing it, so the measurement example holds its operation
+invoker in an `Arc` before `prepare`. Advisory preflight is a provided
+`BindingInvoker::preflight` hook that declares no job by default, replacing the
+separate `BindingPreflight` trait and the `preflight_with_provider` facade methods.
+The adapter keeps that default: it had no preflight of its own, and its server and
+security challenges stay where invocation raises them, after input admission, so a
+facade preflight still admits the request and predicts nothing. `PreparedValueContract`
+is the prepared form's new name. Equality on SDK records and outcomes, `#[must_use]`
+on builder methods, the value-scaled default evaluation budget, the 32-group default
+pattern nesting and the separate `evaluation-depth-limit` code change no adapter
+result: synthesized envelope contracts contain no patterns, and every existing
+assertion keeps its expected value.
+
 The client pin is unchanged. The locked graph retains upstream registry serde_json,
 referencing and jsonschema-value packages, with one serde_json identity. Only the
 renamed jsonschema and regress forks remain. Archive qualification packages the
@@ -88,9 +105,9 @@ records the SDK source identities and notice hashes, and `THIRD-PARTY-NOTICES.tx
 reproduces the SDK packages' own license and notice texts at the pinned commit.
 
 These changes follow the pinned SDK's
-[change log](https://github.com/openbindings/sdk/blob/88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a/CHANGELOG.md),
-[migration notes](https://github.com/openbindings/sdk/blob/88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a/docs/migration.md)
-and [dependency maintenance contract](https://github.com/openbindings/sdk/blob/88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a/DEPENDENCY-MAINTENANCE.md).
+[change log](https://github.com/openbindings/sdk/blob/ba5ca95d8681f1138da6551e0df1dee5a2ee0c07/CHANGELOG.md),
+[migration notes](https://github.com/openbindings/sdk/blob/ba5ca95d8681f1138da6551e0df1dee5a2ee0c07/docs/migration.md)
+and [dependency maintenance contract](https://github.com/openbindings/sdk/blob/ba5ca95d8681f1138da6551e0df1dee5a2ee0c07/DEPENDENCY-MAINTENANCE.md).
 
 The table below records the original extraction dispositions, not a claim that
 migrated consumers remain byte-identical to that import.

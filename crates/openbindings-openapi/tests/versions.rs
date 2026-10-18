@@ -162,8 +162,9 @@ async fn invoke<P: binding::BindingInvoker>(
 }
 #[tokio::test]
 async fn preflight_makes_no_prediction_without_dispatch() {
-    // The adapter implements no provider preflight; the facade admits the
-    // request and predicts nothing, without dispatching.
+    // The adapter keeps the provider's default preflight hook, which declares
+    // none; the facade admits the request, finds no hook and predicts nothing,
+    // without dispatching.
     let count = Rc::new(Cell::new(0));
     let provider = OpenApi::default().with_transport(transport(
         count.clone(),

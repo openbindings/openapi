@@ -6,7 +6,7 @@ openbindings/sdk at bd3938e47e7cdc5f0c209949cff8c16618c813a6.
 Imported path identities and extraction changes are recorded in PROVENANCE.md.
 
 This project depends on the OpenBindings SDK interface contracts and exact JSON/schema
-implementation at 88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a and on the independent
+implementation at ba5ca95d8681f1138da6551e0df1dee5a2ee0c07 and on the independent
 Apache-2.0 openapi-client at fbcb868ea31a34fd4fd566244b7e40857f7df771. It supplies no copy of the SDK itself.
 The SDK's private dependency packages preserve their upstream licenses; their
 package-specific notices, including embedded schema attribution, are reproduced

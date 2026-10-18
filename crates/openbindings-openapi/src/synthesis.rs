@@ -195,7 +195,10 @@ impl<T> OpenApi<T> {
         .collect::<Result<_, _>>()?;
         let mut edits: Vec<_> = metadata
             .iter()
-            .map(|(pointer, value)| Edit::Set { pointer, value })
+            .map(|(pointer, value)| Edit::Set {
+                pointer: (*pointer).into(),
+                value,
+            })
             .collect();
         edits.push(Edit::SetOperations { value: &operations });
         if let Some(sources) = &sources {
