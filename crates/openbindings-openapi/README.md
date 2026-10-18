@@ -14,7 +14,7 @@ by `document.validate()?.conformant()` after checking that proof exists. The che
 synthesizer already returns conformance proof; saving and reloading requires fresh
 validation. A conformant operation's `input()` and `output()` hand out its value
 contracts, prepared with `prepare(&evaluator)` or `prepare_with(&evaluator, &resources)`;
-invoker `with_evaluator` is infallible. `PreparedContract::validate` is the cheap check:
+invoker `with_evaluator` is infallible. `PreparedValueContract::validate` is the cheap check:
 a failure carries a fixed message, no problems and incomplete detail. `explain` returns
 the same verdict with the library's first error. The invoker withholds a rejected value
 on its verdict; `with_validation_detail(Detail::Explain)` makes its validation failure
@@ -206,8 +206,9 @@ than prompting to widen access. Custom hosts remain trusted application code.
 Missing destination is challenged first, then missing security selection, then
 credentials/grants. Supply corrected context in a deliberate new invocation. No
 host is entered before a challenge/refusal; an HTTP 401/403 is a status error after
-dispatch and never a request to retry automatically. The default advisory preflight
-does not prove authentication readiness.
+dispatch and never a request to retry automatically. The adapter declares no
+preflight hook, so an advisory preflight makes no prediction and does not prove
+authentication readiness.
 
 Authenticated profiles admit the **whole encoded context** under `Options.context_bytes`
 (default 64 KiB), including unrelated fields; duplicate names in that context refuse.

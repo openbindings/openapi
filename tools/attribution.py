@@ -8,7 +8,7 @@ including development/platform packages, sorted by (name, version), followed by
 the pinned npm TypeScript development tool. No platform filter is applied.
 
 Select top-level LICENSE/COPYING/COPYRIGHT/NOTICE files case-insensitively, plus
-the core SDK's embedded schemas/LICENSE files. Git packages without local texts
+the SDK schema crate's embedded schemas/LICENSE files. Git packages without local texts
 use their checkout's root LICENSE under repository/LICENSE. Packages with no
 source texts retain an empty notices list, as in the original inventory; this
 does not assert that their declared license expression replaces those texts.
@@ -59,7 +59,7 @@ def is_notice(path):
 def source_notices(package):
     source = Path(package["manifest_path"]).resolve().parent
     paths = [(p.name, p) for p in source.iterdir() if is_notice(p)]
-    if package["name"] == "openbindings":
+    if package["name"] == "openbindings-internal-schema":
         paths.extend(
             (p.relative_to(source).as_posix(), p)
             for p in (source / "schemas").rglob("*")

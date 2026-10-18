@@ -249,7 +249,10 @@ pub async fn suite(v30: bool) {
     ));
     let edits: Vec<_> = replacements
         .iter()
-        .map(|(pointer, value)| openbindings::Edit::Set { pointer, value })
+        .map(|(pointer, value)| openbindings::Edit::Set {
+            pointer: pointer.into(),
+            value,
+        })
         .collect();
     generated.edit(&edits).unwrap();
     let saved = generated.value().text().to_owned();

@@ -412,8 +412,11 @@ fn main() {
                 .expect("declared input")
                 .prepare(evaluator.as_ref())
                 .unwrap();
-            let checked = operation::Invoker::new(doc, &provider)
-                .with_evaluator(evaluator, ResourceSet::default());
+            // A prepared operation keeps a share of its invoker, held in an Arc.
+            let checked = Arc::new(
+                operation::Invoker::new(doc, &provider)
+                    .with_evaluator(evaluator, ResourceSet::default()),
+            );
             // Retain compiled contracts for the warm workload now that core has no cache.
             let prepared_operation = checked.prepare("call").unwrap();
             let samples = sample(|| {

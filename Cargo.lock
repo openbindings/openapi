@@ -920,7 +920,7 @@ dependencies = [
 [[package]]
 name = "openbindings"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a#88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a"
+source = "git+https://github.com/openbindings/sdk?rev=ba5ca95d8681f1138da6551e0df1dee5a2ee0c07#ba5ca95d8681f1138da6551e0df1dee5a2ee0c07"
 dependencies = [
  "fluent-uri",
  "openbindings-internal-json",
@@ -933,7 +933,7 @@ dependencies = [
 [[package]]
 name = "openbindings-interface-synthesis"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a#88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a"
+source = "git+https://github.com/openbindings/sdk?rev=ba5ca95d8681f1138da6551e0df1dee5a2ee0c07#ba5ca95d8681f1138da6551e0df1dee5a2ee0c07"
 dependencies = [
  "openbindings",
  "openbindings-internal-cancellation",
@@ -944,7 +944,7 @@ dependencies = [
 [[package]]
 name = "openbindings-internal-cancellation"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a#88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a"
+source = "git+https://github.com/openbindings/sdk?rev=ba5ca95d8681f1138da6551e0df1dee5a2ee0c07#ba5ca95d8681f1138da6551e0df1dee5a2ee0c07"
 dependencies = [
  "openbindings",
 ]
@@ -952,7 +952,7 @@ dependencies = [
 [[package]]
 name = "openbindings-internal-json"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a#88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a"
+source = "git+https://github.com/openbindings/sdk?rev=ba5ca95d8681f1138da6551e0df1dee5a2ee0c07#ba5ca95d8681f1138da6551e0df1dee5a2ee0c07"
 dependencies = [
  "itoa",
  "jsonschema-value",
@@ -966,7 +966,7 @@ dependencies = [
 [[package]]
 name = "openbindings-internal-jsonschema"
 version = "0.58.6-ob.1"
-source = "git+https://github.com/openbindings/sdk?rev=88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a#88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a"
+source = "git+https://github.com/openbindings/sdk?rev=ba5ca95d8681f1138da6551e0df1dee5a2ee0c07#ba5ca95d8681f1138da6551e0df1dee5a2ee0c07"
 dependencies = [
  "ahash",
  "bytecount",
@@ -994,7 +994,7 @@ dependencies = [
 [[package]]
 name = "openbindings-internal-regress"
 version = "0.12.0-ob.1"
-source = "git+https://github.com/openbindings/sdk?rev=88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a#88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a"
+source = "git+https://github.com/openbindings/sdk?rev=ba5ca95d8681f1138da6551e0df1dee5a2ee0c07#ba5ca95d8681f1138da6551e0df1dee5a2ee0c07"
 dependencies = [
  "memchr",
 ]
@@ -1002,7 +1002,7 @@ dependencies = [
 [[package]]
 name = "openbindings-internal-schema"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a#88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a"
+source = "git+https://github.com/openbindings/sdk?rev=ba5ca95d8681f1138da6551e0df1dee5a2ee0c07#ba5ca95d8681f1138da6551e0df1dee5a2ee0c07"
 dependencies = [
  "fluent-uri",
  "openbindings-internal-json",
@@ -1014,7 +1014,7 @@ dependencies = [
 [[package]]
 name = "openbindings-invocation"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a#88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a"
+source = "git+https://github.com/openbindings/sdk?rev=ba5ca95d8681f1138da6551e0df1dee5a2ee0c07#ba5ca95d8681f1138da6551e0df1dee5a2ee0c07"
 dependencies = [
  "futures-core",
  "openbindings",
@@ -1026,7 +1026,7 @@ dependencies = [
 [[package]]
 name = "openbindings-json-schema-evaluator"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a#88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a"
+source = "git+https://github.com/openbindings/sdk?rev=ba5ca95d8681f1138da6551e0df1dee5a2ee0c07#ba5ca95d8681f1138da6551e0df1dee5a2ee0c07"
 dependencies = [
  "jsonschema-value",
  "openbindings",
@@ -1057,7 +1057,7 @@ dependencies = [
 [[package]]
 name = "openbindings-source-inspection"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a#88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a"
+source = "git+https://github.com/openbindings/sdk?rev=ba5ca95d8681f1138da6551e0df1dee5a2ee0c07#ba5ca95d8681f1138da6551e0df1dee5a2ee0c07"
 dependencies = [
  "openbindings",
  "openbindings-internal-cancellation",

@@ -11,7 +11,7 @@ import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
 SDK_URL = "https://github.com/openbindings/sdk"
-SDK_REV = "88ad4bcfc3b9da8e0a28b216593d332dc1cd7b5a"
+SDK_REV = "ba5ca95d8681f1138da6551e0df1dee5a2ee0c07"
 CLIENT_URL = "https://github.com/openbindings/openapi-client"
 CLIENT_REV = "fbcb868ea31a34fd4fd566244b7e40857f7df771"
 SDK_PATHS = [
