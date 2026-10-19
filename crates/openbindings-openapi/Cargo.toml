@@ -13,10 +13,10 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
-openbindings = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "ba5ca95d8681f1138da6551e0df1dee5a2ee0c07" }
-openbindings-source-inspection = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "ba5ca95d8681f1138da6551e0df1dee5a2ee0c07" }
-openbindings-interface-synthesis = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "ba5ca95d8681f1138da6551e0df1dee5a2ee0c07" }
-openbindings-invocation = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "ba5ca95d8681f1138da6551e0df1dee5a2ee0c07" }
+openbindings = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "af27cac5d8a2a630530234ccf657f536c7ac41b3" }
+openbindings-source-inspection = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "af27cac5d8a2a630530234ccf657f536c7ac41b3" }
+openbindings-interface-synthesis = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "af27cac5d8a2a630530234ccf657f536c7ac41b3" }
+openbindings-invocation = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "af27cac5d8a2a630530234ccf657f536c7ac41b3" }
 dynamic-openapi-client = { git = "https://github.com/openbindings/openapi-client", rev = "fbcb868ea31a34fd4fd566244b7e40857f7df771", version = "=0.0.0" }
 serde_json_compat = { package = "serde_json", version = "1.0.151", features = ["raw_value"] }
 fluent-uri = "0.4.1"
@@ -25,4 +25,4 @@ futures-core = "0.3.32"
 [dev-dependencies]
 tokio = { version = "1.53.2", features = ["rt", "macros", "time", "net", "io-util"] }
 dynamic-openapi-client-reqwest = { git = "https://github.com/openbindings/openapi-client", rev = "fbcb868ea31a34fd4fd566244b7e40857f7df771", version = "=0.0.0" }
-openbindings-json-schema-evaluator = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "ba5ca95d8681f1138da6551e0df1dee5a2ee0c07" }
+openbindings-json-schema-evaluator = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "af27cac5d8a2a630530234ccf657f536c7ac41b3" }

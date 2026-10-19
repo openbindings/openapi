@@ -1413,7 +1413,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=ba5ca95d8681f1138da6551e0df1dee5a2ee0c07#ba5ca95d8681f1138da6551e0df1dee5a2ee0c07",
+      "source": "git+https://github.com/openbindings/sdk?rev=af27cac5d8a2a630530234ccf657f536c7ac41b3#af27cac5d8a2a630530234ccf657f536c7ac41b3",
       "notices": [
         {
           "path": "LICENSE",
@@ -1430,7 +1430,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=ba5ca95d8681f1138da6551e0df1dee5a2ee0c07#ba5ca95d8681f1138da6551e0df1dee5a2ee0c07",
+      "source": "git+https://github.com/openbindings/sdk?rev=af27cac5d8a2a630530234ccf657f536c7ac41b3#af27cac5d8a2a630530234ccf657f536c7ac41b3",
       "notices": [
         {
           "path": "LICENSE",
@@ -1447,7 +1447,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=ba5ca95d8681f1138da6551e0df1dee5a2ee0c07#ba5ca95d8681f1138da6551e0df1dee5a2ee0c07",
+      "source": "git+https://github.com/openbindings/sdk?rev=af27cac5d8a2a630530234ccf657f536c7ac41b3#af27cac5d8a2a630530234ccf657f536c7ac41b3",
       "notices": [
         {
           "path": "LICENSE",
@@ -1464,7 +1464,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=ba5ca95d8681f1138da6551e0df1dee5a2ee0c07#ba5ca95d8681f1138da6551e0df1dee5a2ee0c07",
+      "source": "git+https://github.com/openbindings/sdk?rev=af27cac5d8a2a630530234ccf657f536c7ac41b3#af27cac5d8a2a630530234ccf657f536c7ac41b3",
       "notices": [
         {
           "path": "LICENSE",
@@ -1481,7 +1481,20 @@
       "version": "0.58.6-ob.1",
       "declared_license": "MIT",
       "repository": "https://github.com/Stranger6667/jsonschema",
-      "source": "git+https://github.com/openbindings/sdk?rev=ba5ca95d8681f1138da6551e0df1dee5a2ee0c07#ba5ca95d8681f1138da6551e0df1dee5a2ee0c07",
+      "source": "git+https://github.com/openbindings/sdk?rev=af27cac5d8a2a630530234ccf657f536c7ac41b3#af27cac5d8a2a630530234ccf657f536c7ac41b3",
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "117829c3ca21efb132d81a44b55363d395ab8eea18526873bc828da4c0e5f038"
+        }
+      ]
+    },
+    {
+      "name": "openbindings-internal-referencing",
+      "version": "0.58.6-ob.1",
+      "declared_license": "MIT",
+      "repository": "https://github.com/Stranger6667/jsonschema",
+      "source": "git+https://github.com/openbindings/sdk?rev=af27cac5d8a2a630530234ccf657f536c7ac41b3#af27cac5d8a2a630530234ccf657f536c7ac41b3",
       "notices": [
         {
           "path": "LICENSE",
@@ -1494,7 +1507,7 @@
       "version": "0.12.0-ob.1",
       "declared_license": "MIT OR Apache-2.0",
       "repository": "https://github.com/ridiculousfish/regress",
-      "source": "git+https://github.com/openbindings/sdk?rev=ba5ca95d8681f1138da6551e0df1dee5a2ee0c07#ba5ca95d8681f1138da6551e0df1dee5a2ee0c07",
+      "source": "git+https://github.com/openbindings/sdk?rev=af27cac5d8a2a630530234ccf657f536c7ac41b3#af27cac5d8a2a630530234ccf657f536c7ac41b3",
       "notices": [
         {
           "path": "LICENSE-APACHE",
@@ -1511,7 +1524,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=ba5ca95d8681f1138da6551e0df1dee5a2ee0c07#ba5ca95d8681f1138da6551e0df1dee5a2ee0c07",
+      "source": "git+https://github.com/openbindings/sdk?rev=af27cac5d8a2a630530234ccf657f536c7ac41b3#af27cac5d8a2a630530234ccf657f536c7ac41b3",
       "notices": [
         {
           "path": "LICENSE",
@@ -1532,7 +1545,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=ba5ca95d8681f1138da6551e0df1dee5a2ee0c07#ba5ca95d8681f1138da6551e0df1dee5a2ee0c07",
+      "source": "git+https://github.com/openbindings/sdk?rev=af27cac5d8a2a630530234ccf657f536c7ac41b3#af27cac5d8a2a630530234ccf657f536c7ac41b3",
       "notices": [
         {
           "path": "LICENSE",
@@ -1549,7 +1562,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=ba5ca95d8681f1138da6551e0df1dee5a2ee0c07#ba5ca95d8681f1138da6551e0df1dee5a2ee0c07",
+      "source": "git+https://github.com/openbindings/sdk?rev=af27cac5d8a2a630530234ccf657f536c7ac41b3#af27cac5d8a2a630530234ccf657f536c7ac41b3",
       "notices": [
         {
           "path": "LICENSE",
@@ -1566,7 +1579,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=ba5ca95d8681f1138da6551e0df1dee5a2ee0c07#ba5ca95d8681f1138da6551e0df1dee5a2ee0c07",
+      "source": "git+https://github.com/openbindings/sdk?rev=af27cac5d8a2a630530234ccf657f536c7ac41b3#af27cac5d8a2a630530234ccf657f536c7ac41b3",
       "notices": [
         {
           "path": "LICENSE",
@@ -1914,19 +1927,6 @@
         {
           "path": "LICENSE-MIT",
           "sha256": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3"
-        }
-      ]
-    },
-    {
-      "name": "referencing",
-      "version": "0.58.6",
-      "declared_license": "MIT",
-      "repository": "https://github.com/Stranger6667/jsonschema",
-      "source": "registry+https://github.com/rust-lang/crates.io-index",
-      "notices": [
-        {
-          "path": "LICENSE",
-          "sha256": "117829c3ca21efb132d81a44b55363d395ab8eea18526873bc828da4c0e5f038"
         }
       ]
     },
