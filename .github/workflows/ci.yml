@@ -52,7 +52,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           repository: openbindings/sdk
-          ref: ba5ca95d8681f1138da6551e0df1dee5a2ee0c07
+          ref: af27cac5d8a2a630530234ccf657f536c7ac41b3
           path: target/sdk-source
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:

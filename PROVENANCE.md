@@ -13,7 +13,7 @@ dependency attribution files are new extraction plumbing. The consumer test bina
 serializes its own tests with a local lock because they count process-global owners.
 `NOTICE` describes this resolved graph. No SDK implementation is copied into this
 product repository. The current immutable Git pins are SDK
-`ba5ca95d8681f1138da6551e0df1dee5a2ee0c07` and client
+`af27cac5d8a2a630530234ccf657f536c7ac41b3` and client
 `fbcb868ea31a34fd4fd566244b7e40857f7df771`.
 
 Earlier migrations adopted validation vocabulary, companion-owned cancellation,
@@ -96,18 +96,34 @@ pattern nesting and the separate `evaluation-depth-limit` code change no adapter
 result: synthesized envelope contracts contain no patterns, and every existing
 assertion keeps its expected value.
 
-The client pin is unchanged. The locked graph retains upstream registry serde_json,
-referencing and jsonschema-value packages, with one serde_json identity. Only the
-renamed jsonschema and regress forks remain. Archive qualification packages the
-internal schema crate and those retained forks. `tools/attribution.py` regenerates
-both attribution inventories from cached locked sources: `DEPENDENCIES.json`
-records the SDK source identities and notice hashes, and `THIRD-PARTY-NOTICES.txt`
-reproduces the SDK packages' own license and notice texts at the pinned commit.
+This SDK revision's evaluator fixes change no adapter code. Its `unevaluatedProperties`
+walk now builds only the `patternProperties` patterns, fixing a validation panic;
+no adapter contract or fixture uses either keyword. Preparation now charges schema
+compilation by the work it does and refuses beyond its allowance with
+`LimitExceeded` and the new `preparation-work-limit` code. The adapter prepares no
+value contract itself; the SDK operation invoker its consumers use reports that
+refusal, like any preparation refusal, as `ERR_SCHEMA_UNRESOLVED`, and synthesized
+envelope contracts compile far inside the allowance. Resource registration is now
+linear. The SDK's documented `$dynamicRef` limitation needs a dynamic anchor, which
+no adapter contract declares. Every existing assertion keeps its expected value, and
+the test suite's run time is unchanged.
+
+The client pin is unchanged. The locked graph retains upstream registry serde_json
+and jsonschema-value packages, with one serde_json identity. The SDK carries three
+renamed forks, `openbindings-internal-jsonschema`, `openbindings-internal-referencing`
+and `openbindings-internal-regress`, and each replaces its upstream library: the
+registry `referencing` package has left the graph, and qualification refuses a
+graph that contains an upstream `jsonschema`, `referencing` or `regress` package.
+Archive qualification packages the internal schema crate and the three forks.
+`tools/attribution.py` regenerates both attribution inventories from cached locked
+sources: `DEPENDENCIES.json` records the SDK source identities and notice hashes,
+and `THIRD-PARTY-NOTICES.txt` reproduces the SDK packages' own license and notice
+texts at the pinned commit.
 
 These changes follow the pinned SDK's
-[change log](https://github.com/openbindings/sdk/blob/ba5ca95d8681f1138da6551e0df1dee5a2ee0c07/CHANGELOG.md),
-[migration notes](https://github.com/openbindings/sdk/blob/ba5ca95d8681f1138da6551e0df1dee5a2ee0c07/docs/migration.md)
-and [dependency maintenance contract](https://github.com/openbindings/sdk/blob/ba5ca95d8681f1138da6551e0df1dee5a2ee0c07/DEPENDENCY-MAINTENANCE.md).
+[change log](https://github.com/openbindings/sdk/blob/af27cac5d8a2a630530234ccf657f536c7ac41b3/CHANGELOG.md),
+[migration notes](https://github.com/openbindings/sdk/blob/af27cac5d8a2a630530234ccf657f536c7ac41b3/docs/migration.md)
+and [dependency maintenance contract](https://github.com/openbindings/sdk/blob/af27cac5d8a2a630530234ccf657f536c7ac41b3/DEPENDENCY-MAINTENANCE.md).
 
 The table below records the original extraction dispositions, not a claim that
 migrated consumers remain byte-identical to that import.

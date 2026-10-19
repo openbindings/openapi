@@ -11,7 +11,7 @@ import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
 SDK_URL = "https://github.com/openbindings/sdk"
-SDK_REV = "ba5ca95d8681f1138da6551e0df1dee5a2ee0c07"
+SDK_REV = "af27cac5d8a2a630530234ccf657f536c7ac41b3"
 CLIENT_URL = "https://github.com/openbindings/openapi-client"
 CLIENT_REV = "fbcb868ea31a34fd4fd566244b7e40857f7df771"
 SDK_PATHS = [
@@ -20,6 +20,7 @@ SDK_PATHS = [
     "crates/openbindings-source-inspection", "crates/openbindings-interface-synthesis",
     "crates/openbindings-invocation", "crates/openbindings-json-schema-evaluator",
     "vendor/openbindings-internal-jsonschema",
+    "vendor/openbindings-internal-referencing",
     "vendor/openbindings-internal-regress",
 ]
 SDK_NAMES = {Path(p).name for p in SDK_PATHS}
@@ -56,9 +57,13 @@ def check_metadata(metadata, sources=None):
     json_packages = [p for p in metadata["packages"] if p["name"] == "serde_json"]
     if len(json_packages) != 1 or not json_packages[0].get("source", "").startswith("registry+"):
         raise SystemExit("Expected one registry serde_json identity")
-    removed = {"openbindings-internal-serde-json", "openbindings-internal-referencing", "openbindings-internal-jsonschema-value"}
+    removed = {"openbindings-internal-serde-json", "openbindings-internal-jsonschema-value"}
     if any(p["name"] in removed for p in metadata["packages"]):
         raise SystemExit("Removed SDK fork in resolved graph")
+    # Each SDK fork replaces its upstream library: no registry copy may enter the graph.
+    upstream = {"jsonschema", "referencing", "regress"}
+    if any(p["name"] in upstream for p in metadata["packages"]):
+        raise SystemExit("Upstream copy of an SDK fork in resolved graph")
     identities = {}
     for package in metadata["packages"]:
         name = package["name"]
