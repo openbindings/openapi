@@ -517,9 +517,13 @@ async fn incomplete_headers_and_pre_cancel_are_not_success() {
     assert_eq!(calls.get(), 0);
 }
 
+// An author contract whose reference identifies no schema refuses preparation,
+// naming the schema that holds the reference. Plain invocation prepares on the
+// first value, so an input refusal precedes the provider call and an output
+// refusal follows it; either way the value is withheld as unresolved.
 #[tokio::test]
-async fn undefined_author_contracts_withhold_values_and_preserve_unresolved_errors() {
-    use openbindings::{ResourceSet, ValueOutcome};
+async fn defective_author_references_withhold_values_and_preserve_unresolved_errors() {
+    use openbindings::{NoVerdictReason, ResourceSet, SchemaLocation, ValueOutcome};
     use openbindings_json_schema_evaluator::DefaultEvaluator;
     use operation::Direction;
 
@@ -560,14 +564,20 @@ async fn undefined_author_contracts_withhold_values_and_preserve_unresolved_erro
         );
         let failure = job.validation_failure().unwrap();
         assert_eq!(failure.direction(), direction);
-        assert_eq!(failure.stage(), operation::ValidationStage::Evaluation);
-        let ValueOutcome::Undefined { detail } = failure.outcome() else {
-            panic!("undefined contract evidence lost");
+        assert_eq!(failure.stage(), operation::ValidationStage::Preparation);
+        let ValueOutcome::NoVerdict { detail } = failure.outcome() else {
+            panic!("preparation refusal evidence lost");
         };
-        assert_eq!(detail.code, "static-reference-defect");
+        assert_eq!(detail.reason, NoVerdictReason::ConservativePreparation);
+        assert_eq!(detail.code, "anchor-missing");
         assert_eq!(
-            detail.location.as_ref().unwrap().pointer,
-            format!("/operations/create/{}/$ref", direction.as_str())
+            detail.location,
+            Some(SchemaLocation::new(
+                None,
+                format!("/operations/create/{}", direction.as_str())
+                    .parse()
+                    .unwrap()
+            ))
         );
         assert_eq!(calls.get(), usize::from(direction == Direction::Output));
     }
