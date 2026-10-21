@@ -11,7 +11,7 @@ import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
 SDK_URL = "https://github.com/openbindings/sdk"
-SDK_REV = "af27cac5d8a2a630530234ccf657f536c7ac41b3"
+SDK_REV = "2b45ce5c578284773ce09af0f794302a4a7695c9"
 CLIENT_URL = "https://github.com/openbindings/openapi-client"
 CLIENT_REV = "fbcb868ea31a34fd4fd566244b7e40857f7df771"
 SDK_PATHS = [
@@ -19,11 +19,16 @@ SDK_PATHS = [
     "crates/openbindings-internal-cancellation", "crates/openbindings-internal-schema",
     "crates/openbindings-source-inspection", "crates/openbindings-interface-synthesis",
     "crates/openbindings-invocation", "crates/openbindings-json-schema-evaluator",
-    "vendor/openbindings-internal-jsonschema",
-    "vendor/openbindings-internal-referencing",
-    "vendor/openbindings-internal-regress",
 ]
 SDK_NAMES = {Path(p).name for p in SDK_PATHS}
+# Renamed forks earlier SDK revisions carried; the pinned SDK carries none.
+SDK_FORKS = {
+    "openbindings-internal-serde-json", "openbindings-internal-jsonschema-value",
+    "openbindings-internal-jsonschema", "openbindings-internal-referencing",
+    "openbindings-internal-regress",
+}
+# Libraries the SDK uses unmodified, each as one registry package.
+REGISTRY_LIBRARIES = ["serde_json", "jsonschema", "jsonschema-value", "referencing"]
 
 
 def sha(path):
@@ -54,16 +59,12 @@ def check_pins():
 
 def check_metadata(metadata, sources=None):
     sources = sources or {}
-    json_packages = [p for p in metadata["packages"] if p["name"] == "serde_json"]
-    if len(json_packages) != 1 or not json_packages[0].get("source", "").startswith("registry+"):
-        raise SystemExit("Expected one registry serde_json identity")
-    removed = {"openbindings-internal-serde-json", "openbindings-internal-jsonschema-value"}
-    if any(p["name"] in removed for p in metadata["packages"]):
+    for library in REGISTRY_LIBRARIES:
+        packages = [p for p in metadata["packages"] if p["name"] == library]
+        if len(packages) != 1 or not packages[0].get("source", "").startswith("registry+"):
+            raise SystemExit(f"Expected one registry {library} identity")
+    if any(p["name"] in SDK_FORKS for p in metadata["packages"]):
         raise SystemExit("Removed SDK fork in resolved graph")
-    # Each SDK fork replaces its upstream library: no registry copy may enter the graph.
-    upstream = {"jsonschema", "referencing", "regress"}
-    if any(p["name"] in upstream for p in metadata["packages"]):
-        raise SystemExit("Upstream copy of an SDK fork in resolved graph")
     identities = {}
     for package in metadata["packages"]:
         name = package["name"]
@@ -301,4 +302,4 @@ if __name__ == "__main__":
         cwd=ROOT, text=True,
     )
     check_metadata(json.loads(graph))
-    print("Pinned sources and single serde_json identity verified offline.")
+    print("Pinned sources and one registry identity per unmodified library verified offline.")

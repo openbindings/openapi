@@ -1116,6 +1116,19 @@
       ]
     },
     {
+      "name": "jsonschema",
+      "version": "0.58.6",
+      "declared_license": "MIT",
+      "repository": "https://github.com/Stranger6667/jsonschema",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "117829c3ca21efb132d81a44b55363d395ab8eea18526873bc828da4c0e5f038"
+        }
+      ]
+    },
+    {
       "name": "jsonschema-regex",
       "version": "0.58.6",
       "declared_license": "MIT",
@@ -1413,7 +1426,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=af27cac5d8a2a630530234ccf657f536c7ac41b3#af27cac5d8a2a630530234ccf657f536c7ac41b3",
+      "source": "git+https://github.com/openbindings/sdk?rev=2b45ce5c578284773ce09af0f794302a4a7695c9#2b45ce5c578284773ce09af0f794302a4a7695c9",
       "notices": [
         {
           "path": "LICENSE",
@@ -1430,7 +1443,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=af27cac5d8a2a630530234ccf657f536c7ac41b3#af27cac5d8a2a630530234ccf657f536c7ac41b3",
+      "source": "git+https://github.com/openbindings/sdk?rev=2b45ce5c578284773ce09af0f794302a4a7695c9#2b45ce5c578284773ce09af0f794302a4a7695c9",
       "notices": [
         {
           "path": "LICENSE",
@@ -1447,7 +1460,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=af27cac5d8a2a630530234ccf657f536c7ac41b3#af27cac5d8a2a630530234ccf657f536c7ac41b3",
+      "source": "git+https://github.com/openbindings/sdk?rev=2b45ce5c578284773ce09af0f794302a4a7695c9#2b45ce5c578284773ce09af0f794302a4a7695c9",
       "notices": [
         {
           "path": "LICENSE",
@@ -1464,7 +1477,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=af27cac5d8a2a630530234ccf657f536c7ac41b3#af27cac5d8a2a630530234ccf657f536c7ac41b3",
+      "source": "git+https://github.com/openbindings/sdk?rev=2b45ce5c578284773ce09af0f794302a4a7695c9#2b45ce5c578284773ce09af0f794302a4a7695c9",
       "notices": [
         {
           "path": "LICENSE",
@@ -1477,54 +1490,11 @@
       ]
     },
     {
-      "name": "openbindings-internal-jsonschema",
-      "version": "0.58.6-ob.1",
-      "declared_license": "MIT",
-      "repository": "https://github.com/Stranger6667/jsonschema",
-      "source": "git+https://github.com/openbindings/sdk?rev=af27cac5d8a2a630530234ccf657f536c7ac41b3#af27cac5d8a2a630530234ccf657f536c7ac41b3",
-      "notices": [
-        {
-          "path": "LICENSE",
-          "sha256": "117829c3ca21efb132d81a44b55363d395ab8eea18526873bc828da4c0e5f038"
-        }
-      ]
-    },
-    {
-      "name": "openbindings-internal-referencing",
-      "version": "0.58.6-ob.1",
-      "declared_license": "MIT",
-      "repository": "https://github.com/Stranger6667/jsonschema",
-      "source": "git+https://github.com/openbindings/sdk?rev=af27cac5d8a2a630530234ccf657f536c7ac41b3#af27cac5d8a2a630530234ccf657f536c7ac41b3",
-      "notices": [
-        {
-          "path": "LICENSE",
-          "sha256": "117829c3ca21efb132d81a44b55363d395ab8eea18526873bc828da4c0e5f038"
-        }
-      ]
-    },
-    {
-      "name": "openbindings-internal-regress",
-      "version": "0.12.0-ob.1",
-      "declared_license": "MIT OR Apache-2.0",
-      "repository": "https://github.com/ridiculousfish/regress",
-      "source": "git+https://github.com/openbindings/sdk?rev=af27cac5d8a2a630530234ccf657f536c7ac41b3#af27cac5d8a2a630530234ccf657f536c7ac41b3",
-      "notices": [
-        {
-          "path": "LICENSE-APACHE",
-          "sha256": "e36d55837170195cdf934aa6a48c0ad6efba1bde3f5b4a1b9259c171d5aeb647"
-        },
-        {
-          "path": "LICENSE-MIT",
-          "sha256": "3f8a05fc8617c5ce569fa5a4f2301cd847fe00fa011bdaa8f353fd55a2691a54"
-        }
-      ]
-    },
-    {
       "name": "openbindings-internal-schema",
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=af27cac5d8a2a630530234ccf657f536c7ac41b3#af27cac5d8a2a630530234ccf657f536c7ac41b3",
+      "source": "git+https://github.com/openbindings/sdk?rev=2b45ce5c578284773ce09af0f794302a4a7695c9#2b45ce5c578284773ce09af0f794302a4a7695c9",
       "notices": [
         {
           "path": "LICENSE",
@@ -1545,7 +1515,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=af27cac5d8a2a630530234ccf657f536c7ac41b3#af27cac5d8a2a630530234ccf657f536c7ac41b3",
+      "source": "git+https://github.com/openbindings/sdk?rev=2b45ce5c578284773ce09af0f794302a4a7695c9#2b45ce5c578284773ce09af0f794302a4a7695c9",
       "notices": [
         {
           "path": "LICENSE",
@@ -1562,7 +1532,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=af27cac5d8a2a630530234ccf657f536c7ac41b3#af27cac5d8a2a630530234ccf657f536c7ac41b3",
+      "source": "git+https://github.com/openbindings/sdk?rev=2b45ce5c578284773ce09af0f794302a4a7695c9#2b45ce5c578284773ce09af0f794302a4a7695c9",
       "notices": [
         {
           "path": "LICENSE",
@@ -1579,7 +1549,7 @@
       "version": "0.2.0-alpha.1",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/sdk",
-      "source": "git+https://github.com/openbindings/sdk?rev=af27cac5d8a2a630530234ccf657f536c7ac41b3#af27cac5d8a2a630530234ccf657f536c7ac41b3",
+      "source": "git+https://github.com/openbindings/sdk?rev=2b45ce5c578284773ce09af0f794302a4a7695c9#2b45ce5c578284773ce09af0f794302a4a7695c9",
       "notices": [
         {
           "path": "LICENSE",
@@ -1931,6 +1901,19 @@
       ]
     },
     {
+      "name": "referencing",
+      "version": "0.58.6",
+      "declared_license": "MIT",
+      "repository": "https://github.com/Stranger6667/jsonschema",
+      "source": "registry+https://github.com/rust-lang/crates.io-index",
+      "notices": [
+        {
+          "path": "LICENSE",
+          "sha256": "117829c3ca21efb132d81a44b55363d395ab8eea18526873bc828da4c0e5f038"
+        }
+      ]
+    },
+    {
       "name": "regex",
       "version": "1.13.1",
       "declared_license": "MIT OR Apache-2.0",
@@ -2143,7 +2126,7 @@
     },
     {
       "name": "rustls-webpki",
-      "version": "0.103.15",
+      "version": "0.103.16",
       "declared_license": "ISC",
       "repository": "https://github.com/rustls/webpki",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
@@ -3064,7 +3047,7 @@
     },
     {
       "name": "webpki-root-certs",
-      "version": "1.0.9",
+      "version": "1.0.10",
       "declared_license": "CDLA-Permissive-2.0",
       "repository": "https://github.com/rustls/webpki-roots",
       "source": "registry+https://github.com/rust-lang/crates.io-index",
