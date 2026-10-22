@@ -948,7 +948,7 @@ dependencies = [
 [[package]]
 name = "openbindings"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=2b45ce5c578284773ce09af0f794302a4a7695c9#2b45ce5c578284773ce09af0f794302a4a7695c9"
+source = "git+https://github.com/openbindings/sdk?rev=ac50faf499b389c8ea2ef10178ae8dea9177f3ab#ac50faf499b389c8ea2ef10178ae8dea9177f3ab"
 dependencies = [
  "openbindings-internal-json",
  "openbindings-internal-schema",
@@ -959,10 +959,11 @@ dependencies = [
 [[package]]
 name = "openbindings-interface-synthesis"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=2b45ce5c578284773ce09af0f794302a4a7695c9#2b45ce5c578284773ce09af0f794302a4a7695c9"
+source = "git+https://github.com/openbindings/sdk?rev=ac50faf499b389c8ea2ef10178ae8dea9177f3ab#ac50faf499b389c8ea2ef10178ae8dea9177f3ab"
 dependencies = [
  "openbindings",
  "openbindings-internal-cancellation",
+ "openbindings-internal-interfaces",
  "serde",
  "serde_json",
 ]
@@ -970,15 +971,25 @@ dependencies = [
 [[package]]
 name = "openbindings-internal-cancellation"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=2b45ce5c578284773ce09af0f794302a4a7695c9#2b45ce5c578284773ce09af0f794302a4a7695c9"
+source = "git+https://github.com/openbindings/sdk?rev=ac50faf499b389c8ea2ef10178ae8dea9177f3ab#ac50faf499b389c8ea2ef10178ae8dea9177f3ab"
 dependencies = [
  "openbindings",
 ]
 
 [[package]]
+name = "openbindings-internal-interfaces"
+version = "0.2.0-alpha.1"
+source = "git+https://github.com/openbindings/sdk?rev=ac50faf499b389c8ea2ef10178ae8dea9177f3ab#ac50faf499b389c8ea2ef10178ae8dea9177f3ab"
+dependencies = [
+ "openbindings",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "openbindings-internal-json"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=2b45ce5c578284773ce09af0f794302a4a7695c9#2b45ce5c578284773ce09af0f794302a4a7695c9"
+source = "git+https://github.com/openbindings/sdk?rev=ac50faf499b389c8ea2ef10178ae8dea9177f3ab#ac50faf499b389c8ea2ef10178ae8dea9177f3ab"
 dependencies = [
  "itoa",
  "jsonschema-value",
@@ -991,7 +1002,7 @@ dependencies = [
 [[package]]
 name = "openbindings-internal-schema"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=2b45ce5c578284773ce09af0f794302a4a7695c9#2b45ce5c578284773ce09af0f794302a4a7695c9"
+source = "git+https://github.com/openbindings/sdk?rev=ac50faf499b389c8ea2ef10178ae8dea9177f3ab#ac50faf499b389c8ea2ef10178ae8dea9177f3ab"
 dependencies = [
  "fluent-uri",
  "jsonschema",
@@ -1003,11 +1014,12 @@ dependencies = [
 [[package]]
 name = "openbindings-invocation"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=2b45ce5c578284773ce09af0f794302a4a7695c9#2b45ce5c578284773ce09af0f794302a4a7695c9"
+source = "git+https://github.com/openbindings/sdk?rev=ac50faf499b389c8ea2ef10178ae8dea9177f3ab#ac50faf499b389c8ea2ef10178ae8dea9177f3ab"
 dependencies = [
  "futures-core",
  "openbindings",
  "openbindings-internal-cancellation",
+ "openbindings-internal-interfaces",
  "serde",
  "serde_json",
 ]
@@ -1015,7 +1027,7 @@ dependencies = [
 [[package]]
 name = "openbindings-json-schema-evaluator"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=2b45ce5c578284773ce09af0f794302a4a7695c9#2b45ce5c578284773ce09af0f794302a4a7695c9"
+source = "git+https://github.com/openbindings/sdk?rev=ac50faf499b389c8ea2ef10178ae8dea9177f3ab#ac50faf499b389c8ea2ef10178ae8dea9177f3ab"
 dependencies = [
  "jsonschema",
  "openbindings",
@@ -1046,10 +1058,11 @@ dependencies = [
 [[package]]
 name = "openbindings-source-inspection"
 version = "0.2.0-alpha.1"
-source = "git+https://github.com/openbindings/sdk?rev=2b45ce5c578284773ce09af0f794302a4a7695c9#2b45ce5c578284773ce09af0f794302a4a7695c9"
+source = "git+https://github.com/openbindings/sdk?rev=ac50faf499b389c8ea2ef10178ae8dea9177f3ab#ac50faf499b389c8ea2ef10178ae8dea9177f3ab"
 dependencies = [
  "openbindings",
  "openbindings-internal-cancellation",
+ "openbindings-internal-interfaces",
  "serde",
  "serde_json",
 ]
