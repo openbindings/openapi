@@ -12,12 +12,12 @@ crate-type = ["rlib", "cdylib"]
 [features]
 wasm-probe = ["dep:wasm-bindgen", "dep:wasm-bindgen-futures"]
 [dependencies]
-openbindings = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "2b45ce5c578284773ce09af0f794302a4a7695c9" }
-openbindings-source-inspection = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "2b45ce5c578284773ce09af0f794302a4a7695c9" }
+openbindings = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "ac50faf499b389c8ea2ef10178ae8dea9177f3ab" }
+openbindings-source-inspection = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "ac50faf499b389c8ea2ef10178ae8dea9177f3ab" }
 openbindings-openapi = { version = "=0.2.0-alpha.1", path = "../../crates/openbindings-openapi" }
 dynamic-openapi-client = { git = "https://github.com/openbindings/openapi-client", rev = "fbcb868ea31a34fd4fd566244b7e40857f7df771", version = "=0.0.0", features = ["qualification"] }
 # Qualification counters only; consumer behavior uses public SDK APIs exclusively.
-openbindings-internal-json = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "2b45ce5c578284773ce09af0f794302a4a7695c9" }
+openbindings-internal-json = { version = "=0.2.0-alpha.1", git = "https://github.com/openbindings/sdk", rev = "ac50faf499b389c8ea2ef10178ae8dea9177f3ab" }
 serde_json = "1.0.151"
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = { version = "=0.2.129", optional = true }

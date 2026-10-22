@@ -9,7 +9,7 @@ use dynamic_openapi_client::{
 };
 use openbindings::{JsonRef, JsonValue, WorkControl};
 use openbindings_source_inspection::{
-    BindableTarget, BindingFragment, InspectionLimitation, SourceInspection,
+    BindableTarget, BindingValue, InspectionLimitation, SourceInspection,
 };
 use std::collections::{BTreeMap, HashSet};
 
@@ -99,7 +99,7 @@ impl Prepared {
             .map(|u| {
                 let mut target = BindableTarget::new(
                     u.source_ref.clone(),
-                    BindingFragment {
+                    BindingValue {
                         content: Some(u.binding.clone()),
                         ..Default::default()
                     },

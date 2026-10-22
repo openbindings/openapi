@@ -13,7 +13,7 @@ dependency attribution files are new extraction plumbing. The consumer test bina
 serializes its own tests with a local lock because they count process-global owners.
 `NOTICE` describes this resolved graph. No SDK implementation is copied into this
 product repository. The current immutable Git pins are SDK
-`2b45ce5c578284773ce09af0f794302a4a7695c9` and client
+`ac50faf499b389c8ea2ef10178ae8dea9177f3ab` and client
 `fbcb868ea31a34fd4fd566244b7e40857f7df771`.
 
 Earlier migrations adopted validation vocabulary, companion-owned cancellation,
@@ -96,7 +96,7 @@ pattern nesting and the separate `evaluation-depth-limit` code change no adapter
 result: synthesized envelope contracts contain no patterns, and every existing
 assertion keeps its expected value.
 
-The previous pin's evaluator fixes changed no adapter code. Its `unevaluatedProperties`
+An earlier pin's evaluator fixes changed no adapter code. Its `unevaluatedProperties`
 walk built only the `patternProperties` patterns, fixing a validation panic; no
 adapter contract or fixture uses either keyword. Its preparation charged schema
 compilation by the work it did and refused beyond its allowance with `LimitExceeded`
@@ -104,12 +104,12 @@ and `preparation-work-limit`, which synthesized envelope contracts stayed far in
 Its resource registration was linear, and its documented `$dynamicRef` limitation
 needed a dynamic anchor, which no adapter contract declares.
 
-This SDK revision composes the default evaluator over the unmodified registry
-`jsonschema` 0.58.6 library. One adapter test changes its expected evidence, not its
+The previous pin composed the default evaluator over the unmodified registry
+`jsonschema` 0.58.6 library. One adapter test changed its expected evidence, not its
 result. An author contract whose `$ref` names a plain-name anchor its resource does
 not declare (`#missing`) used to prepare and give `ValueOutcome::Undefined` with
-`static-reference-defect` at the `$ref` keyword. The default evaluator now never
-returns `Undefined` and refuses such a contract at preparation, with
+`static-reference-defect` at the `$ref` keyword. From that pin on, the default evaluator
+never returns `Undefined` and refuses such a contract at preparation, with
 `NoVerdictReason::ConservativePreparation`, code `anchor-missing` and the location of
 the schema that holds the reference. The SDK operation invoker still withholds the
 value with `ERR_SCHEMA_UNRESOLVED`, now at `ValidationStage::Preparation`. Plain
@@ -120,18 +120,54 @@ preparation work charge, its `preparation-work-limit` code and `regex_steps` are
 with the backtracking matcher; `evaluation_steps` is now an opt-in cap, unset by
 default, and `schema_resources` an opt-in cap beside it. The adapter and its consumers
 configure no evaluator limit, and synthesized envelope contracts hold no pattern,
-dynamic reference or unevaluated keyword, so no new limit's refusal can reach them: the
-pattern total, counted over the forms the evaluator keeps for a contract's patterns,
-the specialization limit, and the unevaluated-walk limit, which weighs each reference
-by its kind. An explanation carries the library's first error with a fixed message;
-the adapter reads no problem text, and its explanation test still expects exactly one
-problem. Every other assertion keeps its expected value, and the test suite's run
-time is unchanged.
+dynamic reference or unevaluated keyword, so none of that pin's new limits could refuse
+them: the pattern total, counted over the forms the evaluator keeps for a contract's
+patterns, the specialization limit, and the unevaluated-walk limit, which weighs each
+reference by its kind. An explanation carries the library's first error with a fixed
+message; the adapter reads no problem text, and its explanation test still expects
+exactly one problem. Every other assertion kept its expected value, and the test
+suite's run time was unchanged.
 
-The pinned main also leaves the HTTP discovery attempt deadline to the application:
-`ClientOptions::timeout` is now an `Option<Duration>`, unset by default, and
-`AttemptTimeout` and `DEFAULT_TIMEOUT_SECONDS` are removed. Neither the adapter nor
-its consumers depend on the discovery crate, so the change asks nothing of them.
+That pin also left the HTTP discovery attempt deadline to the application:
+`ClientOptions::timeout` became an `Option<Duration>`, unset by default, and
+`AttemptTimeout` and `DEFAULT_TIMEOUT_SECONDS` were removed. Neither the adapter nor
+its consumers depend on the discovery crate, so the change asked nothing of them.
+
+This SDK revision removes public concepts its API did not need, and the adapter
+follows with one rename. Source inspection's `BindingFragment` is now `BindingValue`,
+the same by-value binding a binding invoker receives, so an inspected target's binding
+invokes as it is. Analysis builds each bindable target's binding
+with it and leaves the author's `operation` and `source` keys absent, which the checked
+`Inspector` now requires. `BindingValue::bind` returns a structural `BoundaryError`;
+the inspection consumer's boxed error carries it unchanged. `SupportedKind` and
+`KindSupportVerdict` are one pair of types, defined in the new internal crate
+`openbindings-internal-interfaces` and reexported at each companion's existing path,
+so a provider serving several jobs may return one advisory list from all three
+traits. The adapter's three lists differ in their job-specific descriptions, and each
+published interface lists the kinds supported for its own job, so each trait keeps its
+own list over the shared `Kind::ALL` and every kind description is unchanged. Every
+editing method now refuses with one `EditError`: `AuthoringError` and
+`EditError::Authoring` are gone, a typed part's field collision is
+`EditError::FieldCollision`, and a typed part over the byte budget is the ordinary
+`Input` byte limit. Synthesis still converts an oversized metadata value into
+`EditError::Input`. The operations and bindings it builds carry no additional fields,
+and a supplied source whose additional field shadows a typed member still refuses as
+`openbindings.synthesis.authoring`. A committed typed part over the byte budget now
+reports `openbindings.synthesis.byte-limit` rather than
+`openbindings.synthesis.authoring`, the code the editing-limit test already expects
+for an oversized metadata value.
+
+The default evaluator's host limits change their settings, not the adapter's results.
+`Limits::stack_bytes`, 256 KiB by default, replaces `evaluation_depth` and still admits
+1,024 nested evaluations at the default; `Limits::program_bytes`, 48 MiB by default,
+replaces the dynamic specialization caps; and `Limits::total_pattern_memory`, 64 MiB
+by default, bounds the regex crate's memory for all of a contract's compiled patterns
+together. The adapter and its consumers configure no evaluator limit, and synthesized
+envelope contracts are shallow and hold no pattern or reference, so none of these
+refusals can reach them. The SDK's other changes touch discovery, TypeScript,
+documentation, publication guards, tests and dead code, none of which the adapter
+uses. Every existing assertion keeps its expected value, and the test suite's run time
+is unchanged.
 
 The client pin is unchanged. The SDK carries no fork of any dependency. The locked
 graph holds one registry identity each of `serde_json`, `jsonschema`,
@@ -139,8 +175,10 @@ graph holds one registry identity each of `serde_json`, `jsonschema`,
 forks earlier SDK revisions carried; qualification refuses a graph that holds any of
 those forks or lacks a single registry identity of one of those libraries. The
 `regress` pattern engine has left the graph, since the SDK matches patterns on the
-`regex` crate. Archive qualification packages the SDK's eight crates. The lock also
-moves `rustls-webpki` to 0.103.16 and `webpki-root-certs` to 1.0.10, past
+`regex` crate. Archive qualification packages the SDK's nine crates, including
+`openbindings-internal-interfaces`, which this pin adds to the lock as a dependency of
+the three companions; no registry package moves. The previous pin moved
+`rustls-webpki` to 0.103.16 and `webpki-root-certs` to 1.0.10, past
 RUSTSEC-2026-0382 and RUSTSEC-2026-0383, which reach the development graph through the
 reqwest transport. `tools/attribution.py` regenerates both attribution inventories
 from cached locked sources: `DEPENDENCIES.json` records the SDK source identities and
@@ -148,9 +186,9 @@ notice hashes, and `THIRD-PARTY-NOTICES.txt` reproduces the SDK packages' own li
 and notice texts at the pinned commit.
 
 These changes follow the pinned SDK's
-[change log](https://github.com/openbindings/sdk/blob/2b45ce5c578284773ce09af0f794302a4a7695c9/CHANGELOG.md),
-[migration notes](https://github.com/openbindings/sdk/blob/2b45ce5c578284773ce09af0f794302a4a7695c9/docs/migration.md)
-and [dependency maintenance contract](https://github.com/openbindings/sdk/blob/2b45ce5c578284773ce09af0f794302a4a7695c9/DEPENDENCY-MAINTENANCE.md).
+[change log](https://github.com/openbindings/sdk/blob/ac50faf499b389c8ea2ef10178ae8dea9177f3ab/CHANGELOG.md),
+[migration notes](https://github.com/openbindings/sdk/blob/ac50faf499b389c8ea2ef10178ae8dea9177f3ab/docs/migration.md)
+and [dependency maintenance contract](https://github.com/openbindings/sdk/blob/ac50faf499b389c8ea2ef10178ae8dea9177f3ab/DEPENDENCY-MAINTENANCE.md).
 
 The table below records the original extraction dispositions, not a claim that
 migrated consumers remain byte-identical to that import.

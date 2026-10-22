@@ -11,12 +11,13 @@ import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
 SDK_URL = "https://github.com/openbindings/sdk"
-SDK_REV = "2b45ce5c578284773ce09af0f794302a4a7695c9"
+SDK_REV = "ac50faf499b389c8ea2ef10178ae8dea9177f3ab"
 CLIENT_URL = "https://github.com/openbindings/openapi-client"
 CLIENT_REV = "fbcb868ea31a34fd4fd566244b7e40857f7df771"
 SDK_PATHS = [
     "crates/openbindings", "crates/openbindings-internal-json",
     "crates/openbindings-internal-cancellation", "crates/openbindings-internal-schema",
+    "crates/openbindings-internal-interfaces",
     "crates/openbindings-source-inspection", "crates/openbindings-interface-synthesis",
     "crates/openbindings-invocation", "crates/openbindings-json-schema-evaluator",
 ]
