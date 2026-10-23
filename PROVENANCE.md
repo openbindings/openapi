@@ -13,7 +13,7 @@ dependency attribution files are new extraction plumbing. The consumer test bina
 serializes its own tests with a local lock because they count process-global owners.
 `NOTICE` describes this resolved graph. No SDK implementation is copied into this
 product repository. The current immutable Git pins are SDK
-`a8e40f340b6195acc4718b150137ab899e5d65e2` and client
+`3546fc29d3fb329656c6a7506f6006b9eb38375d` and client
 `5cc2cf47ad9a05d1aa3cf968d03841ca9bbded61`.
 
 Earlier migrations adopted validation vocabulary, companion-owned cancellation,
@@ -182,29 +182,52 @@ to their baseline still holds, natively and in the Wasm probes. Core's document 
 now name each rule by its identifier internally, and rule evidence and findings stayed
 the same. Every existing assertion kept its expected value.
 
-This SDK revision lowers the default JSON admission byte limit,
+The previous pin lowered the default JSON admission byte limit,
 `JsonLimits::default().max_bytes`, from 64 MiB to 32 MiB; node and nesting limits are
 unchanged. `Document::new`, `Document::parse`, `JsonValue::parse` and
 `JsonValue::string` use the defaults, a document keeps the limits it was admitted
-under for its edits, and `Document::parse_with_limits` and `Document::limits` are new.
+under for its edits, and that pin added `Document::parse_with_limits` and
+`Document::limits`.
 Contract projection keeps its fixed bounds. Under its default `Options` and the
 client's default `Limits`, the adapter's own budgets sit below the new limit: source
 content is held to `source_bytes` (16 MiB), a synthesized document to `source_bytes`
 plus `result_bytes` (24 MiB) by the adapter's own `synthesis-result-limit`, and a 2xx
 JSON response body to the client's `body_bytes` (4 MiB) before `JsonValue::parse`. A
 synthesized document that exceeds 32 MiB, through raised budgets or large request
-metadata, now meets the SDK's default byte limit rather than one at 64 MiB and refuses
-as `openbindings.synthesis.byte-limit`; a response body over 32 MiB, which needs a
+metadata, meets the SDK's default byte limit rather than one at 64 MiB and refuses as
+`openbindings.synthesis.byte-limit`; a response body over 32 MiB, which needs a
 raised client `body_bytes`, refuses as `ERR_EXECUTION_FAILED`. The editing-limit
-test's 64 MiB description still exceeds the limit and keeps its code. Limit refusals
-now name the setting to raise, input refusals read as sentences, OBI-10 findings come
+test's 64 MiB description still exceeds the limit and keeps its code. Since that pin,
+limit refusals name the setting to raise, input refusals read as sentences, OBI-10 findings come
 one per failing meta-schema keyword at its value, and a pattern no-verdict carries the
 pattern's location. The adapter and its consumers assert codes, kinds and the
 `anchor-missing` location, never these messages, OBI-10 findings or pattern locations,
-so every existing assertion keeps its expected value. The SDK's other changes are
-documentation, discovery, TypeScript, release tooling and tests.
+so every existing assertion kept its expected value.
 
-The client pin is unchanged. The SDK carries no fork of any dependency. The locked
+This SDK revision makes the default evaluator's value checks faster with identical
+outcomes: numbers and uniqueness are evaluated without boxed digit strings, and member
+reads keep no per-name state. Its stack guard is now documented as a byte budget, so
+the depth it admits for `unevaluated*` contracts can vary by a level with the build and
+the host; the adapter configures no evaluator limit and its synthesized envelope
+contracts are shallow, so no such contract reaches it. New owned-input calls,
+`validate_document_owned`, `validate_document_owned_with_limits`,
+`Document::parse_owned`, `Document::parse_owned_with_limits` and
+`JsonValue::parse_owned_with_limits`, take a caller's buffer as the text instead of
+copying it, with the borrowed forms' exact results; the SDK hands over the buffers it
+builds itself, including for document edits and synthesized interfaces, so the
+adapter's `Document::new` and edit batches benefit without a code change. The
+TypeScript package's validation memory is lower, which the adapter's Rust-built
+Node/Wasm probes do not use. The SDK's own manifests and lock move tokio to 1.54.1,
+past RUSTSEC-2026-0386, in dev-dependencies and the discovery crate's optional
+`native` feature, neither of which reaches the adapter's graph; the adapter keeps
+tokio 1.53.3 through the client's exact pin, also past that advisory. The SDK's other
+changes are its CI. The adapter and its consumers need no code change, and every
+existing assertion keeps its expected value.
+
+The client pin moved in the preceding change from
+`fbcb868ea31a34fd4fd566244b7e40857f7df771`; its only effect on the graph is tokio
+1.53.3, past RUSTSEC-2026-0386, because the client's reqwest companion pins tokio
+exactly. The SDK carries no fork of any dependency. The locked
 graph holds one registry identity each of `serde_json`, `jsonschema`,
 `jsonschema-value` and `referencing`, at the SDK's versions, and none of the renamed
 forks earlier SDK revisions carried; qualification refuses a graph that holds any of
@@ -223,9 +246,9 @@ regenerates both attribution inventories from cached locked sources:
 the pinned commit.
 
 These changes follow the pinned SDK's
-[change log](https://github.com/openbindings/sdk/blob/a8e40f340b6195acc4718b150137ab899e5d65e2/CHANGELOG.md),
-[migration notes](https://github.com/openbindings/sdk/blob/a8e40f340b6195acc4718b150137ab899e5d65e2/docs/migration.md)
-and [dependency maintenance contract](https://github.com/openbindings/sdk/blob/a8e40f340b6195acc4718b150137ab899e5d65e2/DEPENDENCY-MAINTENANCE.md).
+[change log](https://github.com/openbindings/sdk/blob/3546fc29d3fb329656c6a7506f6006b9eb38375d/CHANGELOG.md),
+[migration notes](https://github.com/openbindings/sdk/blob/3546fc29d3fb329656c6a7506f6006b9eb38375d/docs/migration.md)
+and [dependency maintenance contract](https://github.com/openbindings/sdk/blob/3546fc29d3fb329656c6a7506f6006b9eb38375d/DEPENDENCY-MAINTENANCE.md).
 
 The table below records the original extraction dispositions, not a claim that
 migrated consumers remain byte-identical to that import.
