@@ -1,7 +1,7 @@
 use crate::{Error, ErrorKind, Kind, Options, check, json};
 use dynamic_openapi_client::{
     Document, Operation, ParameterLocation,
-    exact::ValueKind,
+    exact::{Value, ValueKind},
     graph::{DocumentBuilder, ResourceInput},
     inspect::Method,
     schema::SchemaProfile,
@@ -26,6 +26,72 @@ pub(crate) struct Unit {
     pub source_ref: String,
     pub binding: JsonValue,
     pub profile: Result<Profile, &'static str>,
+    /// Generated operation and binding key. `None` only for a suffixed key that
+    /// still collides; see [`crate::naming::operation_keys`].
+    pub key: Option<String>,
+    /// Operation Object documentation, read only for a supported profile.
+    pub metadata: Metadata,
+}
+/// Documentation carried from the Operation Object's own fields, never the Path Item's.
+#[derive(Default)]
+pub(crate) struct Metadata {
+    description: Option<String>,
+    deprecated: Option<bool>,
+    tags: Option<Vec<String>>,
+}
+impl Metadata {
+    /// A non-empty `summary` and `description` join with a blank line; either alone
+    /// is used as is. `deprecated` is carried only when it is `true`. String `tags`
+    /// keep their order without duplicates. Nothing else is carried.
+    fn read(operation: &Value) -> Self {
+        let text = |name| {
+            operation
+                .get(name)
+                .and_then(|v| v.as_str().filter(|s| !s.is_empty()).map(str::to_owned))
+        };
+        let description = match (text("summary"), text("description")) {
+            (Some(summary), Some(description)) => Some(format!("{summary}\n\n{description}")),
+            (summary, description) => summary.or(description),
+        };
+        let deprecated = operation
+            .get("deprecated")
+            .is_some_and(|v| v.as_bool() == Some(true))
+            .then_some(true);
+        let mut tags = Vec::new();
+        let listed = operation.get("tags");
+        if let Some(elements) = listed.as_ref().and_then(Value::elements) {
+            let mut seen = HashSet::new();
+            for tag in elements {
+                if let Some(tag) = tag.as_str()
+                    && !seen.contains(tag)
+                {
+                    seen.insert(tag.to_owned());
+                    tags.push(tag.to_owned());
+                }
+            }
+        }
+        Self {
+            description,
+            deprecated,
+            tags: (!tags.is_empty()).then_some(tags),
+        }
+    }
+    fn retained_bytes(&self) -> usize {
+        self.tags.iter().flatten().fold(
+            self.description.as_ref().map_or(0, String::len),
+            |n, tag| n.saturating_add(tag.len()).saturating_add(32),
+        )
+    }
+    /// Operation framing shared by inspection and synthesis.
+    pub fn framing(&self, profile: &Profile) -> openbindings::Operation {
+        openbindings::Operation {
+            description: self.description.clone(),
+            deprecated: self.deprecated,
+            tags: self.tags.clone(),
+            input: Some(profile.input_schema.clone()),
+            ..Default::default()
+        }
+    }
 }
 pub(crate) struct Profile {
     pub servers: Vec<String>,
@@ -104,10 +170,8 @@ impl Prepared {
                         ..Default::default()
                     },
                 );
-                target.operation = u.profile.as_ref().ok().map(|p| openbindings::Operation {
-                    input: Some(p.input_schema.clone()),
-                    ..Default::default()
-                });
+                target.operation_key = u.key.clone();
+                target.operation = u.profile.as_ref().ok().map(|p| u.metadata.framing(p));
                 target
             })
             .collect();
@@ -193,6 +257,8 @@ pub(crate) fn prepare(
     let mut remaining = options.result_bytes;
     let mut seen = HashSet::new();
     let mut units = Vec::new();
+    // Naming inputs per unit: lowercase method and the raw `operationId` value.
+    let mut names = Vec::new();
     for operation in document.operations() {
         check(control)?;
         let method = operation.method().as_str().to_ascii_lowercase();
@@ -247,22 +313,50 @@ pub(crate) fn prepare(
         } else {
             profile(&operation, kind)
         };
+        let value = operation.value();
+        let metadata = if profile.is_ok() {
+            Metadata::read(&value)
+        } else {
+            Metadata::default()
+        };
         let cost = source_ref
             .len()
             .saturating_add(binding.bytes().len())
             .saturating_add(profile.as_ref().map_or(0, Profile::retained_bytes))
+            .saturating_add(metadata.retained_bytes())
             .saturating_add(512);
         remaining = remaining
             .checked_sub(cost)
             .ok_or_else(|| Error::new(ErrorKind::Limit, "result-limit"))?;
+        names.push((method, value.get("operationId")));
         units.push(Unit {
             operation,
             source_ref,
             binding,
             profile,
+            key: None,
+            metadata,
         });
     }
     check(control)?;
+    let keys = {
+        let candidates: Vec<_> = units
+            .iter()
+            .zip(&names)
+            .map(|(unit, (method, id))| crate::naming::Candidate {
+                method,
+                path: unit.operation.path(),
+                operation_id: id.as_ref().and_then(Value::as_str),
+            })
+            .collect();
+        crate::naming::operation_keys(&candidates)
+    };
+    for (unit, key) in units.iter_mut().zip(keys) {
+        remaining = remaining
+            .checked_sub(key.as_ref().map_or(0, String::len))
+            .ok_or_else(|| Error::new(ErrorKind::Limit, "result-limit"))?;
+        unit.key = key;
+    }
     Ok(Prepared {
         kind,
         content: content.clone(),

@@ -4,8 +4,10 @@ const document=`{"openapi":"3.1.2","x-exact":9007199254740993,"paths":{"/雪~a/b
 const content=JSON.stringify({document});
 async function main() {
   const result = await inspectSource(content, false);
-  const inventory = JSON.parse(result) as { exhaustive: boolean; targets: {sourceRef: string}[] };
+  const inventory = JSON.parse(result) as { exhaustive: boolean; targets: {sourceRef: string; operationKey?: string}[] };
   assert(inventory.exhaustive && inventory.targets[0].sourceRef==='/paths/~1雪~0a~1b/get','target changed');
+  // The suggested key fits the core key grammar without changing case.
+  assert(inventory.targets[0].operationKey==='_.query','operation key suggestion changed');
   // Exact values cross as text; JSON.parse is used only on representable metadata.
   const authored = await authorSource(content, '/paths/~1雪~0a~1b/get');
   assert(authored.includes('9007199254740993'),'exact value rounded');

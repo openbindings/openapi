@@ -1,5 +1,5 @@
 use crate::{Error, ErrorKind, Kind, OpenApi, check};
-use openbindings::{Binding, Document, Edit, EditError, JsonValue, Operation, WorkControl};
+use openbindings::{Binding, Document, Edit, EditError, JsonValue, WorkControl};
 use openbindings_interface_synthesis::{
     CancellationToken, CoverageClaim, CoverageEntry, CoverageLimitation, CoverageScope,
     CoverageStatus, InterfaceSynthesizer, SupportedKind, SynthesisCandidate, SynthesisError,
@@ -76,7 +76,7 @@ impl<T> OpenApi<T> {
                 .map_err(|e| e.synthesis())?;
             let source_key = input.name.unwrap_or("api").to_owned();
             sources = Some(BTreeMap::from([(source_key.clone(), input.source.clone())]));
-            for (index, unit) in prepared.units.iter().enumerate() {
+            for unit in &prepared.units {
                 check(control).map_err(|e| e.synthesis())?;
                 let mut entry = CoverageEntry::new(
                     0,
@@ -84,30 +84,11 @@ impl<T> OpenApi<T> {
                     CoverageScope::Target,
                     CoverageStatus::Represented,
                 );
-                match &unit.profile {
-                    Ok(profile) => {
-                        // Core keys have an ASCII grammar. The ordinal guarantees
-                        // uniqueness; the short path hint is authoring convenience.
-                        let hint: String = unit
-                            .operation
-                            .path()
-                            .chars()
-                            .take(48)
-                            .map(|c| if c.is_ascii_alphanumeric() { c } else { '_' })
-                            .collect();
-                        let key = format!(
-                            "{}_{}_{}",
-                            unit.operation.method().as_str().to_ascii_lowercase(),
-                            index + 1,
-                            hint
-                        );
-                        operations.insert(
-                            key.clone(),
-                            Operation {
-                                input: Some(profile.input_schema.clone()),
-                                ..Default::default()
-                            },
-                        );
+                match (&unit.profile, &unit.key) {
+                    (Ok(profile), Some(key)) => {
+                        // Inspection suggests the same key and framing for this target.
+                        let key = key.clone();
+                        operations.insert(key.clone(), unit.metadata.framing(profile));
                         bindings.insert(
                             key.clone(),
                             Binding {
@@ -145,7 +126,14 @@ impl<T> OpenApi<T> {
                             coverage.entries.push(loss);
                         }
                     }
-                    Err(reason) => {
+                    (Ok(_), None) => {
+                        entry.status = CoverageStatus::ImplementationUnsupported;
+                        entry.reason_code =
+                            Some("openbindings.openapi.operation-key-unresolved".into());
+                        entry.message=Some("No generated operation key is unique for this target; the target is not declared invalid or excluded by a kind rule".into());
+                        coverage.entries.push(entry);
+                    }
+                    (Err(reason), _) => {
                         entry.status = CoverageStatus::ImplementationUnsupported;
                         entry.reason_code = Some(format!("openbindings.openapi.{reason}"));
                         entry.message=Some("This implementation cannot faithfully represent the declared operation profile; the target is not declared invalid or excluded by a kind rule".into());

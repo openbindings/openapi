@@ -8,6 +8,7 @@
 
 mod analysis;
 mod invocation;
+mod naming;
 mod security;
 mod synthesis;
 
