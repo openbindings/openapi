@@ -61,15 +61,9 @@ fn authored(source: &openbindings::Source, document: &client::Document) -> Confo
     let mut operations = BTreeMap::new();
     let mut bindings = BTreeMap::new();
     let schema = schema();
-    for (i, op) in document.operations().enumerate() {
-        let key = format!(
-            "get_{}_{}",
-            i + 1,
-            op.path()
-                .chars()
-                .map(|c| if c.is_ascii_alphanumeric() { c } else { '_' })
-                .collect::<String>()
-        );
+    for op in document.operations() {
+        // Generated paths are `/p{i}` without operationId; synthesis derives `get_p{i}`.
+        let key = format!("get_{}", op.path().trim_start_matches('/'));
         operations.insert(
             key.clone(),
             Operation {

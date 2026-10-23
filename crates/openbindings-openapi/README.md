@@ -59,7 +59,8 @@ A binding's content is an exact entry path and lowercase method:
 ```
 
 Mounted paths identify callable operations. Component pointers, `operationId`, and
-suggested generated names do not. Generated core keys may be renamed consistently.
+generated operation keys do not; [synthesis](#synthesis-and-scope) states how keys
+are generated.
 
 ## Invocation
 
@@ -234,6 +235,35 @@ Synthesis builds typed parts and commits metadata and the complete operations,
 sources and bindings maps in one atomic `Document::edit` batch. A checked result
 exposes `Conformant<Document>`; use `as_document()` for exact bytes and consume
 `into_inner()` to edit it, then establish conformance again.
+
+Synthesis and inspection name operations alike: each inspection target's
+`operationKey` suggestion is the key synthesis gives that operation. Keys are
+computed over every operation the source enumerates, including
+implementation-unsupported ones, so a change in what this implementation supports
+moves no other operation's key, and no key depends on document order. A non-empty
+string `operationId` that no other enumerated operation shares (exact comparison)
+supplies the key. It is kept exactly when it matches the core key grammar
+`^[A-Za-z0-9_][A-Za-z0-9_.-]*$`; otherwise every character outside `[A-Za-z0-9_.-]`
+becomes `_`, and `_` is prefixed when the result starts with `.` or `-`. Case never
+changes. Without a usable `operationId`, the key is derived: the lowercase method,
+then each non-empty segment of the exact Paths key, joined by `_`. Each segment drops
+template braces, replaces characters outside `[A-Za-z0-9_.-]` with `_`, collapses runs
+of `_` and trims them from both ends; a segment left empty contributes nothing.
+`GET /tasks/{id}/comments` gives `get_tasks_id_comments` and `GET /` gives `get`.
+Operations that would share a key each take their derived key, `_`, and the first 8
+lowercase hexadecimal digits of the 64-bit FNV-1a hash of the UTF-8 string
+`"{lowercase method} {exact Paths key}"`. A suffixed key that still collides uses all
+16 digits. One that collides even then has no key: synthesis reports it as
+implementation-unsupported with `openbindings.openapi.operation-key-unresolved`, and
+inspection suggests none. No aliases are generated, and each binding key equals its
+operation key. Generated keys are author-owned and may be renamed consistently.
+
+Generated operations and inspection's operation framing carry metadata from the
+Operation Object's own fields, never the Path Item's. A non-empty `summary` and
+`description` become the `description`, joined by a blank line; either alone is used
+as is. `deprecated` is carried only when it is `true`. String `tags` are carried in
+order without duplicates, and omitted when none remain. `idempotent` is never set,
+and `externalDocs`, examples and extensions are not carried.
 
 Zero sources produce a skeleton; one source is preserved; composition of multiple
 sources is currently unsupported. Generated input schemas describe the mechanical
