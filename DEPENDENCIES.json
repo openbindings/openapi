@@ -454,7 +454,7 @@
       "version": "0.0.0",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/openapi-client",
-      "source": "git+https://github.com/openbindings/openapi-client?rev=fbcb868ea31a34fd4fd566244b7e40857f7df771#fbcb868ea31a34fd4fd566244b7e40857f7df771",
+      "source": "git+https://github.com/openbindings/openapi-client?rev=5cc2cf47ad9a05d1aa3cf968d03841ca9bbded61#5cc2cf47ad9a05d1aa3cf968d03841ca9bbded61",
       "notices": [
         {
           "path": "LICENSE",
@@ -467,7 +467,7 @@
       "version": "0.0.0",
       "declared_license": "Apache-2.0",
       "repository": "https://github.com/openbindings/openapi-client",
-      "source": "git+https://github.com/openbindings/openapi-client?rev=fbcb868ea31a34fd4fd566244b7e40857f7df771#fbcb868ea31a34fd4fd566244b7e40857f7df771",
+      "source": "git+https://github.com/openbindings/openapi-client?rev=5cc2cf47ad9a05d1aa3cf968d03841ca9bbded61#5cc2cf47ad9a05d1aa3cf968d03841ca9bbded61",
       "notices": [
         {
           "path": "repository/LICENSE",
@@ -2621,7 +2621,7 @@
     },
     {
       "name": "tokio",
-      "version": "1.53.2",
+      "version": "1.53.3",
       "declared_license": "MIT",
       "repository": "https://github.com/tokio-rs/tokio",
       "source": "registry+https://github.com/rust-lang/crates.io-index",

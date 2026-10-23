@@ -14,7 +14,7 @@ serializes its own tests with a local lock because they count process-global own
 `NOTICE` describes this resolved graph. No SDK implementation is copied into this
 product repository. The current immutable Git pins are SDK
 `a8e40f340b6195acc4718b150137ab899e5d65e2` and client
-`fbcb868ea31a34fd4fd566244b7e40857f7df771`.
+`5cc2cf47ad9a05d1aa3cf968d03841ca9bbded61`.
 
 Earlier migrations adopted validation vocabulary, companion-owned cancellation,
 caller-owned prepared operations, and the client's checked request builders,
