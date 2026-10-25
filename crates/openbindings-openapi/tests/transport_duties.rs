@@ -7,21 +7,13 @@ use dynamic_openapi_client::{
 };
 use openbindings::{JsonValue, Source};
 use openbindings_invocation::{BindingRequest, BindingValue, InvocationError, binding};
-use openbindings_openapi::{
-    EXPERIMENTAL_KIND, EXPERIMENTAL_KIND_30, HTTP_STATUS_ERROR, HTTP_STATUS_ERROR_30, OpenApi,
-    Options, SERVER_POINT, SERVER_POINT_30,
-};
+use openbindings_openapi::{KIND_30, KIND_31, OpenApi, Options, SERVER_POINT_30, SERVER_POINT_31};
 use serde_json_compat::json;
 use std::{cell::Cell, rc::Rc, sync::Arc};
 
-const KINDS: [(&str, &str, &str, &str); 2] = [
-    ("3.1.2", EXPERIMENTAL_KIND, SERVER_POINT, HTTP_STATUS_ERROR),
-    (
-        "3.0.4",
-        EXPERIMENTAL_KIND_30,
-        SERVER_POINT_30,
-        HTTP_STATUS_ERROR_30,
-    ),
+const KINDS: [(&str, &str, &str); 2] = [
+    ("3.1.2", KIND_31, SERVER_POINT_31),
+    ("3.0.4", KIND_30, SERVER_POINT_30),
 ];
 
 fn value(text: &str) -> JsonValue {
@@ -90,7 +82,7 @@ async fn call<P: binding::BindingInvoker>(
 
 #[tokio::test]
 async fn finite_body_budget_precedes_transport_entry() {
-    for (version, kind, _, _) in KINDS {
+    for (version, kind, _) in KINDS {
         let source = source(version, kind, &["https://api.example.test"]);
         let calls = Rc::new(Cell::new(0));
         let entries = calls.clone();
@@ -123,43 +115,70 @@ async fn finite_body_budget_precedes_transport_entry() {
     }
 }
 
+// A followed redirect is a new transport entry at its `Location`; an https to http
+// redirect is never followed, so its `Location` never reaches the host.
 #[tokio::test]
-async fn redirect_location_never_causes_another_transport_entry() {
-    for (version, kind, _, status_error) in KINDS {
+async fn a_followed_redirect_is_a_new_transport_entry_and_a_downgrade_is_none() {
+    for (version, kind, _) in KINDS {
         for status in [301, 302, 303, 307, 308] {
-            let source = source(version, kind, &["https://api.example.test"]);
-            let calls = Rc::new(Cell::new(0));
-            let entries = calls.clone();
-            let provider = OpenApi::default().with_transport(
-                move |request: PreparedRequest, cancellation: Cancellation| {
-                    entries.set(entries.get() + 1);
-                    assert_eq!(request.target(), "https://api.example.test/request");
-                    async move {
-                        request
-                            .invoke(
-                                cancellation,
-                                &HostCapabilities::programmable(),
-                                |_, _| async move {
-                                    response(
-                                        status,
-                                        vec![Header::new("location", "http://127.0.0.1/private")],
-                                    )
-                                },
-                            )
-                            .await
-                    }
-                },
-            );
-            let error = call(&provider, &source, "{}", None).await.unwrap_err();
-            assert_eq!(error.code(), status_error);
-            assert_eq!(calls.get(), 1);
+            for (location, entered) in [
+                (
+                    "http://127.0.0.1/private",
+                    vec!["https://api.example.test/request"],
+                ),
+                (
+                    "/moved",
+                    vec![
+                        "https://api.example.test/request",
+                        "https://api.example.test/moved",
+                    ],
+                ),
+            ] {
+                let source = source(version, kind, &["https://api.example.test"]);
+                let targets = Rc::new(std::cell::RefCell::new(Vec::new()));
+                let entries = targets.clone();
+                let provider = OpenApi::default().with_transport(
+                    move |request: PreparedRequest, cancellation: Cancellation| {
+                        entries.borrow_mut().push(request.target().to_owned());
+                        let first = entries.borrow().len() == 1;
+                        async move {
+                            request
+                                .invoke(
+                                    cancellation,
+                                    &HostCapabilities::programmable(),
+                                    |_, _| async move {
+                                        if first {
+                                            response(
+                                                status,
+                                                vec![Header::new("location", location)],
+                                            )
+                                        } else {
+                                            response(204, vec![])
+                                        }
+                                    },
+                                )
+                                .await
+                        }
+                    },
+                );
+                let result = call(&provider, &source, "{}", None).await;
+                if entered.len() == 1 {
+                    // The 3xx is the final response, and no adaptation maps a non-2xx.
+                    let error = result.unwrap_err();
+                    assert_eq!(error.code(), "ERR_EXECUTION_FAILED");
+                    assert!(error.data().is_none());
+                } else {
+                    result.unwrap();
+                }
+                assert_eq!(*targets.borrow(), entered, "{version} {status} {location}");
+            }
         }
     }
 }
 
 #[tokio::test]
 async fn status_and_ambiguous_transport_failures_are_never_replayed() {
-    for (version, kind, _, status_error) in KINDS {
+    for (version, kind, _) in KINDS {
         for failed_upload in [false, true] {
             let source = source(version, kind, &["https://api.example.test"]);
             let calls = Rc::new(Cell::new(0));
@@ -191,14 +210,8 @@ async fn status_and_ambiguous_transport_failures_are_never_replayed() {
             let error = call(&provider, &source, r#"{"body":null}"#, None)
                 .await
                 .unwrap_err();
-            assert_eq!(
-                error.code(),
-                if failed_upload {
-                    "ERR_EXECUTION_FAILED"
-                } else {
-                    status_error
-                }
-            );
+            assert_eq!(error.code(), "ERR_EXECUTION_FAILED");
+            assert!(error.data().is_none());
             assert_eq!(calls.get(), 1);
         }
     }
@@ -206,7 +219,7 @@ async fn status_and_ambiguous_transport_failures_are_never_replayed() {
 
 #[tokio::test]
 async fn unsecured_requests_attach_no_unselected_credentials() {
-    for (version, kind, _, _) in KINDS {
+    for (version, kind, _) in KINDS {
         let source = source(version, kind, &["https://api.example.test"]);
         let calls = Rc::new(Cell::new(0));
         let entries = calls.clone();
@@ -247,7 +260,7 @@ async fn unsecured_requests_attach_no_unselected_credentials() {
 
 #[tokio::test]
 async fn server_choices_refuse_invalid_values_and_challenge_only_when_absent() {
-    for (version, kind, server_point, _) in KINDS {
+    for (version, kind, server_point) in KINDS {
         for servers in [
             vec!["https://api.example.test"],
             vec!["https://api.example.test", "https://other.example.test"],
@@ -274,9 +287,16 @@ async fn server_choices_refuse_invalid_values_and_challenge_only_when_absent() {
                 json!(null),
                 json!(false),
                 json!([]),
-                json!({}),
                 json!(""),
-                json!("https://undeclared.example.test"),
+                // A URL alone is not the point's value, which is an object.
+                json!(servers[0]),
+                json!({"url": 17}),
+                json!({"url": ""}),
+                json!({"url": "https://undeclared.example.test"}),
+                json!({"url": servers[0], "extra": true}),
+                json!({"url": servers[0], "variables": []}),
+                json!({"url": servers[0], "variables": {"undeclared": "x"}}),
+                json!({"baseUrl": "https://mine.example.test"}),
             ] {
                 let context = value(&json!({"configuration": {server_point: choice}}).to_string());
                 let error = call(&provider, &source, "{}", Some(&context))
@@ -304,7 +324,8 @@ async fn server_choices_refuse_invalid_values_and_challenge_only_when_absent() {
             }
             let before = calls.get();
             let context = value(
-                &json!({"configuration": {server_point: servers.last().unwrap()}}).to_string(),
+                &json!({"configuration": {server_point: {"url": servers.last().unwrap()}}})
+                    .to_string(),
             );
             call(&provider, &source, "{}", Some(&context))
                 .await

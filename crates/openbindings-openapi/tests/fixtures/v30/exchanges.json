@@ -2,7 +2,7 @@
   {
     "method": "GET",
     "target": "/root/records/a-7?key=alias-9",
-    "input": "{\"parameters\":{\"path\":{\"key\":\"a-7\"},\"query\":{\"key\":\"alias-9\"}}}",
+    "input": "{\"path\":{\"key\":\"a-7\"},\"query\":{\"key\":\"alias-9\"}}",
     "request": null,
     "status": 200,
     "response": "{\"sequence\":9007199254740993}",
@@ -38,11 +38,10 @@
   {
     "method": "GET",
     "target": "/root/records/missing",
-    "input": "{\"parameters\":{\"path\":{\"key\":\"missing\"}}}",
+    "input": "{\"path\":{\"key\":\"missing\"}}",
     "request": null,
     "status": 404,
     "response": "missing record",
-    "error": "local.openapi30-json-probe.r1.http-status",
-    "errorData": "{\"status\":404}"
+    "error": "ERR_EXECUTION_FAILED"
   }
 ]

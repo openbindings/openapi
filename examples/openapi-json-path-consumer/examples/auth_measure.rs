@@ -179,9 +179,9 @@ fn main() {
     let mut rows = vec![];
     for version in ["3.0.4", "3.1.2"] {
         let kind = if version == "3.0.4" {
-            openbindings_openapi::EXPERIMENTAL_KIND_30
+            openbindings_openapi::KIND_30
         } else {
-            openbindings_openapi::EXPERIMENTAL_KIND
+            openbindings_openapi::KIND_31
         };
         for (workload, method, bytes, token_bytes, mechanism) in [
             ("bearer-get", "get", 1024, 64, "bearer"),
@@ -237,12 +237,12 @@ fn main() {
                         .unwrap();
                         let op = doc.operations().next().unwrap();
                         let body = format!("\"{}\"", "x".repeat(bytes - 2));
-                        let envelope = if method == "post" {
+                        let native_request = if method == "post" {
                             format!("{{\"body\":{body}}}")
                         } else {
                             "{}".into()
                         };
-                        let input = JsonValue::parse(&envelope).unwrap();
+                        let input = JsonValue::parse(&native_request).unwrap();
                         let body = std::sync::Arc::new(body);
                         let mut credentials = serde_json::Map::new();
                         let mut origins = serde_json::Map::new();

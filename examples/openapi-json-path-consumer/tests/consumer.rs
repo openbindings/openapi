@@ -12,8 +12,8 @@ static OWNER_COUNTER_LOCK: Mutex<()> = Mutex::new(());
 
 fn editions() -> [(&'static str, &'static str); 2] {
     [
-        (openbindings_openapi::EXPERIMENTAL_KIND, DESCRIPTION),
-        (openbindings_openapi::EXPERIMENTAL_KIND_30, DESCRIPTION_30),
+        (openbindings_openapi::KIND_31, DESCRIPTION),
+        (openbindings_openapi::KIND_30, DESCRIPTION_30),
     ]
 }
 async fn package_consumer_exact_roundtrip_and_owners() {

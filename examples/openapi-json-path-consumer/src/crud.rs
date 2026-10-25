@@ -12,20 +12,20 @@ use openbindings_interface_synthesis::{
     CoverageStatus, SynthesisRequest, SynthesisSource, Synthesizer,
 };
 use openbindings_invocation::{BindingRequest, BindingValue, binding, operation};
-use openbindings_openapi::{EXPERIMENTAL_KIND, EXPERIMENTAL_KIND_30, OpenApi};
+use openbindings_openapi::{KIND_30, KIND_31, OpenApi};
 use openbindings_source_inspection::Inspector;
 use std::{cell::Cell, rc::Rc, sync::Arc};
 
 pub async fn suite(v30: bool) {
     let (kind, description, manual) = if v30 {
         (
-            EXPERIMENTAL_KIND_30,
+            KIND_30,
             include_str!("crud-fixtures/service-3.0.4.json"),
             include_str!("crud-fixtures/manual-3.0.4.obi.json"),
         )
     } else {
         (
-            EXPERIMENTAL_KIND,
+            KIND_31,
             include_str!("crud-fixtures/service-3.1.2.json"),
             include_str!("crud-fixtures/manual-3.1.2.obi.json"),
         )

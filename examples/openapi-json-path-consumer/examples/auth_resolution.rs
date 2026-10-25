@@ -89,9 +89,9 @@ fn factory(
         ..
     } = *row;
     let kind = if version == "3.0.4" {
-        openbindings_openapi::EXPERIMENTAL_KIND_30
+        openbindings_openapi::KIND_30
     } else {
-        openbindings_openapi::EXPERIMENTAL_KIND
+        openbindings_openapi::KIND_31
     };
     let mut functions: Vec<(&str, Box<dyn FnMut()>)> = vec![];
     let mut context_bytes = 0;

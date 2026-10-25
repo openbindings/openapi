@@ -60,6 +60,15 @@ pub async fn crud_consumers() {
     crate::crud::suite(true).await;
     crate::crud::suite(false).await;
 }
+/// Received responses and followed redirects for both kinds; the number of host calls.
+#[wasm_bindgen]
+pub async fn received_responses() -> u32 {
+    let mut entries = 0;
+    for v30 in [false, true] {
+        entries += crate::responses::suite(v30).await;
+    }
+    u32::try_from(entries).unwrap()
+}
 #[wasm_bindgen]
 pub async fn pending_cleanup(kind: &str, description: &str, abandon: bool) -> Result<(), JsValue> {
     struct Guard(Rc<Cell<usize>>);

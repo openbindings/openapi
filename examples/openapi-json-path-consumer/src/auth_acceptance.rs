@@ -1,4 +1,6 @@
-//! Literal acceptance assertions added by the final independent case audit.
+//! Literal acceptance cases for authenticated calls: every scheme of an alternative,
+//! challenges and new attempts, server choice and credential grants, supplied resources,
+//! conveniences, synthesis coverage, incomplete delivery and the context limit.
 use crate::{
     auth::*,
     wire_json::{Value, json},
@@ -58,7 +60,7 @@ pub async fn suite(v30: bool) {
     let seen = Rc::new(Seen::default());
     let provider = OpenApi::default().with_transport(host(seen.clone(), 200, OUTPUT));
 
-    // AJ03/04: every conjunct is needed; order is immaterial; two keys reach distinct fields.
+    // Every scheme of an alternative is needed, in any order; two keys reach their own fields.
     for (s, path, method, names, input) in [
         (
             src.clone(),
@@ -125,7 +127,7 @@ pub async fn suite(v30: bool) {
             }
         }
     }
-    // Select a branch whose authored index actually changes (0 -> 2).
+    // An alternative is chosen by its schemes, wherever the description lists it.
     for s in [&src, &source(kind, &variants["reordered"].to_string())] {
         reset(&seen);
         let path = if std::ptr::eq(s, &src) {
@@ -168,7 +170,7 @@ pub async fn suite(v30: bool) {
     );
     assert_eq!(seen.calls.get(), 0);
 
-    // AJ06: challenge details and a deliberate new attempt leave the old call terminal.
+    // A challenge names what is missing; a deliberate new attempt leaves the old call terminal.
     let b = BindingValue {
         content: Some(value(json!({"path":"/items","method":"get"}))),
         ..Default::default()
@@ -214,7 +216,7 @@ pub async fn suite(v30: bool) {
         "CONTEXT_REQUIRED"
     );
 
-    // AJ07/08: a chosen destination never inherits another destination's grant.
+    // A chosen server never inherits another server's credential grant.
     let two = source(kind, &variants["two-servers"].to_string());
     reset(&seen);
     let e = binding_call(&provider, &two, "/items", "get", None, &["{}"])
@@ -225,7 +227,7 @@ pub async fn suite(v30: bool) {
     assert!(!e.to_json().unwrap().text().contains("auth.bearer"));
     let mut c = context(kind, &["ServiceToken"]);
     let server_point = format!("{kind}.server");
-    c["configuration"][&server_point] = json!("https://api.example.test");
+    c["configuration"][&server_point] = json!({"url": "https://api.example.test"});
     binding_call(
         &provider,
         &two,
@@ -240,7 +242,7 @@ pub async fn suite(v30: bool) {
         seen.wires.borrow()[0]["target"],
         "https://api.example.test/items"
     );
-    c["configuration"][&server_point] = json!("https://second.example.test");
+    c["configuration"][&server_point] = json!({"url": "https://second.example.test"});
     reset(&seen);
     assert_eq!(
         binding_call(
@@ -258,7 +260,7 @@ pub async fn suite(v30: bool) {
     );
     assert_eq!(seen.calls.get(), 0);
     let selected_only =
-        value(json!({"configuration":{&server_point:"https://second.example.test"}}));
+        value(json!({"configuration":{&server_point:{"url":"https://second.example.test"}}}));
     let e = binding_call(
         &provider,
         &two,
@@ -283,7 +285,7 @@ pub async fn suite(v30: bool) {
     );
     header(&seen, "authorization", "Bearer fixture-bearer-A");
 
-    // AJ09: alternate kinds and source bytes through one provider, checking actual credentials.
+    // Alternating kinds and sources through one provider sends each call's own credential.
     for (index, (other, token)) in [
         (v30, "fixture-bearer-A"),
         (!v30, "fixture-bearer-B"),
@@ -314,7 +316,8 @@ pub async fn suite(v30: bool) {
         assert_eq!(seen.calls.get(), 1);
     }
 
-    // AJ10: unavailable mixed-edition resources and ambiguous mounted declarations cannot dispatch.
+    // A supplied resource of the other edition, or an ambiguous mounted Path Item, refuses
+    // before any request.
     for ambiguous in [false, true] {
         let mut d = variants["references"].clone();
         let parts = if v30 {
@@ -357,7 +360,8 @@ pub async fn suite(v30: bool) {
         assert_eq!(seen.calls.get(), 0);
     }
 
-    // AJ11/12: nonempty API-key security requirements and every conflicting compatibility carrier.
+    // A non-empty API-key requirement array is unsupported, and a conflicting convenience
+    // value refuses.
     let mut d: Value = crate::wire_json::from_str(text).unwrap();
     d["paths"]["/items/new"]["post"]["security"] = json!([{"PartnerKey":["writer"]}]);
     let (_, requirement_coverage) = authored(&source(kind, &d.to_string())).await;
@@ -408,7 +412,8 @@ pub async fn suite(v30: bool) {
         assert_eq!(seen.calls.get(), 0);
     }
 
-    // AJ13/17: preserve opaque source fields and keep security prerequisites separate from schema loss.
+    // Synthesis keeps opaque source fields and reports security prerequisites apart from
+    // schema loss.
     let mut preserved = src.clone();
     preserved.additional_fields.insert(
         "x-authoring-style".into(),
@@ -488,7 +493,7 @@ pub async fn suite(v30: bool) {
                 && e.status == CoverageStatus::Lossy)
     );
 
-    // AJ14: valid JSON with explicit incomplete delivery evidence is still execution failure.
+    // Valid JSON in a truncated body still completes unsuccessfully.
     let count = seen.clone();
     let p =
         OpenApi::default().with_transport(move |request: PreparedRequest, cancel: Cancellation| {
@@ -531,7 +536,7 @@ pub async fn suite(v30: bool) {
     );
     assert_eq!(seen.calls.get(), 1);
 
-    // AJ16: a large credential reaches the exact encoded context ceiling; one more byte refuses.
+    // A large credential fits the encoded context limit exactly; one more byte refuses.
     let mut c = context(kind, &["PartnerKey"]);
     c["credentials"]["PartnerKey"] = json!("");
     let overhead = value(c.clone()).bytes().len();

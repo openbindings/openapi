@@ -7,15 +7,12 @@ use openbindings::{JsonValue, Source};
 use openbindings_interface_synthesis::{
     CoverageStatus, SynthesisRequest, SynthesisSource, Synthesizer,
 };
-use openbindings_openapi::{EXPERIMENTAL_KIND, EXPERIMENTAL_KIND_30, OpenApi};
+use openbindings_openapi::{KIND_30, KIND_31, OpenApi};
 use openbindings_source_inspection::Inspector;
 use serde_json_compat::{Value, json};
 use std::collections::BTreeMap;
 
-const EDITIONS: [(&str, &str); 2] = [
-    (EXPERIMENTAL_KIND_30, "3.0.4"),
-    (EXPERIMENTAL_KIND, "3.1.2"),
-];
+const EDITIONS: [(&str, &str); 2] = [(KIND_30, "3.0.4"), (KIND_31, "3.1.2")];
 
 /// A supported Operation Object: no parameters and an empty success, plus `fields`.
 fn op(fields: Value) -> Value {

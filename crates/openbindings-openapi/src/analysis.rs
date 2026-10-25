@@ -7,11 +7,14 @@ use dynamic_openapi_client::{
     schema::SchemaProfile,
     source::SourceFormat,
 };
-use openbindings::{JsonRef, JsonValue, WorkControl};
+use openbindings::{JsonKind, JsonRef, JsonValue, WorkControl};
 use openbindings_source_inspection::{
     BindableTarget, BindingValue, InspectionLimitation, SourceInspection,
 };
-use std::collections::{BTreeMap, HashSet};
+use std::{
+    collections::{BTreeMap, HashSet},
+    sync::Arc,
+};
 
 pub(crate) struct Prepared {
     pub kind: Kind,
@@ -20,6 +23,9 @@ pub(crate) struct Prepared {
     pub units: Vec<Unit>,
     pub exhaustive: bool,
     pub extra_interactions: bool,
+    /// Server declarations examined while preparing.
+    #[cfg(test)]
+    pub servers_examined: usize,
 }
 pub(crate) struct Unit {
     pub operation: Operation,
@@ -94,61 +100,30 @@ impl Metadata {
     }
 }
 pub(crate) struct Profile {
-    pub servers: Vec<String>,
+    /// The effective servers, one per distinct URL, at least one of them usable, shared
+    /// with every operation whose effective list they are and charged once with it.
+    pub servers: Arc<[crate::server::Server]>,
     pub parameters: BTreeMap<&'static str, BTreeMap<String, String>>,
-    pub has_body: bool,
+    /// The declared request body's media, when the operation has a request body.
+    pub body: Option<crate::media::RequestMedia>,
     pub input_schema: JsonValue,
     pub schema_loss: bool,
     pub security: Vec<crate::security::Alternative>,
-    pub empty_responses: EmptyResponses,
-}
-/// One bit per successful status, compiled once from the effective declarations.
-/// This carries no credential or request data across transport execution.
-#[derive(Clone, Copy, Default)]
-pub(crate) struct EmptyResponses(u128);
-impl EmptyResponses {
-    fn from_descriptions(
-        responses: &[dynamic_openapi_client::inspect::ResponseDescription],
-    ) -> Self {
-        let fallback = ["2XX", "default"]
-            .into_iter()
-            .find_map(|key| responses.iter().find(|r| r.status == key));
-        let mut bits = if fallback.is_some_and(|r| r.media.is_empty()) {
-            (1u128 << 100) - 1
-        } else {
-            0
-        };
-        for response in responses {
-            if let Ok(status @ 200..=299) = response.status.parse::<u16>() {
-                let bit = 1u128 << (status - 200);
-                if response.media.is_empty() {
-                    bits |= bit;
-                } else {
-                    bits &= !bit;
-                }
-            }
-        }
-        Self(bits)
-    }
-    pub fn contains(self, status: u16) -> bool {
-        (200..300).contains(&status) && self.0 & (1u128 << (status - 200)) != 0
-    }
 }
 impl Profile {
+    /// What the operation retains of its own; its shared servers are charged with their list.
     fn retained_bytes(&self) -> usize {
-        let servers = self
-            .servers
-            .iter()
-            .fold(0usize, |n, s| n.saturating_add(s.len()).saturating_add(32));
-        let servers = self.security.iter().fold(servers, |n, a| {
+        let media = self
+            .body
+            .as_ref()
+            .map_or(0, crate::media::RequestMedia::retained_bytes);
+        let security = self.security.iter().fold(media, |n, a| {
             a.keys().fold(n.saturating_add(64), |n, k| {
                 n.saturating_add(k.len()).saturating_add(64)
             })
         });
         self.parameters.values().flat_map(|p| p.iter()).fold(
-            servers
-                .saturating_add(self.input_schema.bytes().len())
-                .saturating_add(std::mem::size_of::<EmptyResponses>()),
+            security.saturating_add(self.input_schema.bytes().len()),
             |n, (name, kind)| {
                 n.saturating_add(name.len())
                     .saturating_add(kind.len())
@@ -207,24 +182,52 @@ pub(crate) fn object(value: JsonRef<'_>, allowed: &[&str]) -> Result<(), Error> 
     }
     Ok(())
 }
+/// The entry document's text: a string's decoded text, or an embedded object's own
+/// exact JSON text. The object is never re-serialized, so its numbers stay exact.
+fn document_text(document: JsonRef<'_>) -> Result<&str, Error> {
+    let invalid = || Error::new(ErrorKind::InvalidInput, "document-invalid");
+    match document.kind() {
+        JsonKind::String => document.as_str().ok_or_else(invalid),
+        JsonKind::Object => Ok(document.text()),
+        _ => Err(invalid()),
+    }
+}
 pub(crate) fn prepare(
     kind: Kind,
     content: &JsonValue,
     options: &Options,
     control: &dyn WorkControl,
 ) -> Result<Prepared, Error> {
-    object(content.view(), &["document", "retrievalUri"])?;
-    let text = content
-        .get("document")
-        .and_then(JsonRef::as_str)
-        .ok_or_else(|| Error::new(ErrorKind::InvalidInput, "document-text-required"))?;
-    let input = match content.get("retrievalUri") {
-        Some(v) => ResourceInput::at(
+    object(content.view(), &["document", "location"])?;
+    // The kinds say `location` is an absolute URI: a scheme and no fragment (RFC 3986
+    // section 4.3). Anything else is invalid content, not merely unsupported.
+    let location = content
+        .get("location")
+        .map(|v| {
             v.as_str()
-                .ok_or_else(|| Error::new(ErrorKind::InvalidInput, "retrieval-uri-required"))?,
-            text.as_bytes(),
-        )
-        .map_err(|_| Error::new(ErrorKind::Unsupported, "retrieval-uri-unsupported"))?,
+                .filter(|uri| {
+                    fluent_uri::UriRef::parse(*uri)
+                        .is_ok_and(|u| u.scheme().is_some() && u.fragment().is_none())
+                })
+                .ok_or_else(|| Error::new(ErrorKind::InvalidInput, "location-invalid"))
+        })
+        .transpose()?;
+    let text = match content.get("document") {
+        Some(document) => document_text(document)?,
+        // The adapter never fetches: without `document`, nothing is analyzed.
+        None if location.is_some() => {
+            return Err(Error::new(
+                ErrorKind::Unsupported,
+                "document-retrieval-unimplemented",
+            ));
+        }
+        None => return Err(Error::new(ErrorKind::InvalidInput, "document-required")),
+    };
+    // `location` is the entry document's identity and the base of its relative references
+    // and relative server URLs. An absolute URI the client cannot use is unsupported.
+    let input = match location {
+        Some(uri) => ResourceInput::at(uri, text.as_bytes())
+            .map_err(|_| Error::new(ErrorKind::Unsupported, "location-unsupported"))?,
         None => ResourceInput::anonymous(text.as_bytes()),
     };
     let mut builder = DocumentBuilder::new(options.limits.clone(), options.graph_limits.clone());
@@ -240,6 +243,13 @@ pub(crate) fn prepare(
     let document = builder
         .build(entry)
         .map_err(|_| Error::new(ErrorKind::Unreadable, "graph-admission"))?;
+    if document.format() == SourceFormat::Yaml {
+        // YAML is within both kinds' domain; this implementation reads JSON only.
+        return Err(Error::new(
+            ErrorKind::Unsupported,
+            "yaml-document-unimplemented",
+        ));
+    }
     if document.format() != SourceFormat::Json || document.edition().ok() != Some(kind.edition()) {
         return Err(Error::new(
             ErrorKind::Unsupported,
@@ -255,6 +265,7 @@ pub(crate) fn prepare(
         .get("webhooks")
         .is_some_and(|v| v.members().is_none_or(|mut m| m.next().is_some()));
     let mut remaining = options.result_bytes;
+    let mut servers = crate::server::Lists::default();
     let mut seen = HashSet::new();
     let mut units = Vec::new();
     // Naming inputs per unit: lowercase method and the raw `operationId` value.
@@ -311,7 +322,19 @@ pub(crate) fn prepare(
         let profile = if ambiguous {
             Err("ambiguous-path-item-merge")
         } else {
-            profile(&operation, kind)
+            match profile(
+                &document,
+                &operation,
+                established.as_ref().ok().map(|item| item.chain.as_slice()),
+                kind,
+                &mut servers,
+                &mut remaining,
+                control,
+            ) {
+                Ok(profile) => Ok(profile),
+                Err(NoProfile::Unsupported(reason)) => Err(reason),
+                Err(NoProfile::Stopped(error)) => return Err(error),
+            }
         };
         let value = operation.value();
         let metadata = if profile.is_ok() {
@@ -364,24 +387,46 @@ pub(crate) fn prepare(
         units,
         exhaustive,
         extra_interactions,
+        #[cfg(test)]
+        servers_examined: servers.examined,
     })
 }
-fn profile(operation: &Operation, kind: Kind) -> Result<Profile, &'static str> {
+/// Why [`profile`] has no profile for an operation.
+enum NoProfile {
+    /// The operation is unsupported, for this reason.
+    Unsupported(&'static str),
+    /// The whole source's analysis stops: its budget is spent or it was cancelled.
+    Stopped(Error),
+}
+impl From<&'static str> for NoProfile {
+    fn from(reason: &'static str) -> Self {
+        Self::Unsupported(reason)
+    }
+}
+fn profile(
+    document: &Document,
+    operation: &Operation,
+    path_item: Option<&[Value]>,
+    kind: Kind,
+    servers: &mut crate::server::Lists,
+    budget: &mut usize,
+    control: &dyn WorkControl,
+) -> Result<Profile, NoProfile> {
     if !operation.path().is_ascii() {
-        return Err("literal-unicode-path-unimplemented");
+        return Err("literal-unicode-path-unimplemented".into());
     }
     if !matches!(
         operation.method(),
         Method::Get | Method::Post | Method::Put | Method::Patch | Method::Delete
     ) {
-        return Err("unqualified-method");
+        return Err("unqualified-method".into());
     }
     if operation
         .value()
         .get("callbacks")
         .is_some_and(|v| v.members().is_none_or(|mut m| m.next().is_some()))
     {
-        return Err("callbacks-unimplemented");
+        return Err("callbacks-unimplemented".into());
     }
     let d = operation
         .describe()
@@ -437,17 +482,9 @@ fn profile(operation: &Operation, kind: Kind) -> Result<Profile, &'static str> {
                 .collect::<Result<crate::security::Alternative, _>>()
         })
         .collect::<Result<Vec<_>, _>>()?;
-    if d.servers.is_empty()
-        || d.servers.iter().any(|s| {
-            s.variables
-                .as_ref()
-                .is_some_and(|v| v.members().is_none_or(|mut m| m.next().is_some()))
-                || dynamic_openapi_client::uri::origin(&s.url).is_err()
-                || s.url.contains('?')
-        })
-    {
-        return Err("server-profile-unimplemented");
-    }
+    let servers = servers
+        .effective(document, operation, path_item, d.servers, budget, control)
+        .map_err(NoProfile::Stopped)??;
     let mut locations =
         BTreeMap::<&str, serde_json_compat::Map<String, serde_json_compat::Value>>::from([
             ("path", Default::default()),
@@ -460,7 +497,7 @@ fn profile(operation: &Operation, kind: Kind) -> Result<Profile, &'static str> {
         let location = match param.location() {
             ParameterLocation::Path => "path",
             ParameterLocation::Query => "query",
-            _ => return Err("parameter-location-unimplemented"),
+            _ => return Err("parameter-location-unimplemented".into()),
         };
         let raw = param.resolved().target;
         let expected_style = if location == "path" { "simple" } else { "form" };
@@ -469,7 +506,7 @@ fn profile(operation: &Operation, kind: Kind) -> Result<Profile, &'static str> {
                 .get("style")
                 .is_some_and(|v| v.as_str() != Some(expected_style))
         {
-            return Err("parameter-representation-unimplemented");
+            return Err("parameter-representation-unimplemented".into());
         }
         let description = param
             .schema_description()
@@ -483,22 +520,22 @@ fn profile(operation: &Operation, kind: Kind) -> Result<Profile, &'static str> {
         {
             // Use the client's lexical context, including schema-level overrides.
             // Other dialects may ignore or reinterpret the apparent type keyword.
-            return Err("parameter-schema-dialect-unimplemented");
+            return Err("parameter-schema-dialect-unimplemented".into());
         }
         let schema = description.value;
         if kind == Kind::OpenApi30 {
             // A 3.0 Schema Reference Object's siblings do not establish a type.
             // Resolving/translating schema contracts remains outside this profile.
             if schema.get("$ref").is_some() {
-                return Err("parameter-schema-reference-unimplemented");
+                return Err("parameter-schema-reference-unimplemented".into());
             }
-            // This experiment has no caller-to-wire mapping for null parameters.
+            // This implementation has no caller-to-wire mapping for null parameters.
             // Refuse the profile rather than synthesize a narrower claimed contract.
             if schema
                 .get("nullable")
                 .is_some_and(|v| v.as_bool() != Some(false))
             {
-                return Err("nullable-parameter-unimplemented");
+                return Err("nullable-parameter-unimplemented".into());
             }
         }
         let kind = schema
@@ -506,7 +543,7 @@ fn profile(operation: &Operation, kind: Kind) -> Result<Profile, &'static str> {
             .and_then(|v| v.as_str().map(str::to_owned))
             .ok_or("parameter-shape-unestablished")?;
         if !matches!(kind.as_str(), "string" | "integer" | "number" | "boolean") {
-            return Err("parameter-shape-unimplemented");
+            return Err("parameter-shape-unimplemented".into());
         }
         parameters
             .entry(location)
@@ -526,57 +563,39 @@ fn profile(operation: &Operation, kind: Kind) -> Result<Profile, &'static str> {
             .members()
             .is_none_or(|mut m| m.any(|(k, _)| k != "type"));
     }
-    if let Some(body) = &d.request_body {
-        if body.media_unrestricted
-            || body.media.len() != 1
-            || body.media[0].media_type != "application/json"
-        {
-            return Err("request-media-unimplemented");
-        }
-        if body.media[0].encoding.is_some() {
-            return Err("request-encoding-unimplemented");
-        }
-        schema_loss |= body.media[0].schema.is_some();
-    }
+    let body = d
+        .request_body
+        .as_ref()
+        .map(|body| {
+            schema_loss |= body.media.iter().any(|m| m.schema.is_some());
+            crate::media::RequestMedia::declared(body)
+        })
+        .transpose()?;
+    // The received response alone decides how it is read, so response declarations only
+    // inform coverage; none makes the operation unsupported.
     for response in &d.responses {
-        if !response.status.starts_with('2') && response.status != "default" {
-            schema_loss |=
-                !response.media.is_empty() || response.declaration.target.get("headers").is_some();
-            continue;
-        }
-        if response
-            .media
-            .iter()
-            .any(|m| m.media_type != "application/json")
-        {
-            return Err("response-media-unimplemented");
-        }
-        if response
-            .declaration
-            .target
-            .get("headers")
-            .is_some_and(|v| v.members().is_none_or(|mut m| m.next().is_some()))
-        {
-            return Err("response-headers-unimplemented");
-        }
-        schema_loss |= response.media.iter().any(|m| m.schema.is_some());
+        let declared = &response.declaration.target;
+        schema_loss |= if response.status.starts_with('2') || response.status == "default" {
+            // Headers never become values, and no output schema is projected.
+            declared
+                .get("headers")
+                .is_some_and(|v| v.members().is_none_or(|mut m| m.next().is_some()))
+                || response.media.iter().any(|m| m.schema.is_some())
+        } else {
+            // A non-2xx completes unsuccessfully with no data, so nothing it declares
+            // reaches the caller.
+            !response.media.is_empty() || declared.get("headers").is_some()
+        };
     }
-    let mut parameter_properties = serde_json_compat::Map::new();
-    let mut required_locations = Vec::new();
+    // The native request: one member per supported parameter location, then `body`.
+    let mut properties = serde_json_compat::Map::new();
+    let mut required_fields = Vec::new();
     for (location, props) in locations {
         let needed = required.remove(location).unwrap_or_default();
         if !needed.is_empty() {
-            required_locations.push(location);
+            required_fields.push(location);
         }
-        parameter_properties.insert(location.into(), serde_json_compat::json!({"type":"object","properties":props,"required":needed,"additionalProperties":false}));
-    }
-    let mut properties = serde_json_compat::Map::new();
-    let mut required_fields = Vec::new();
-    if !parameter_properties.is_empty() {
-        if !required_locations.is_empty() {
-            required_fields.push("parameters");
-        }
-        properties.insert("parameters".into(), serde_json_compat::json!({"type":"object","properties":parameter_properties,"required":required_locations,"additionalProperties":false}));
+        properties.insert(location.into(), serde_json_compat::json!({"type":"object","properties":props,"required":needed,"additionalProperties":false}));
     }
     if let Some(body) = &d.request_body {
         properties.insert("body".into(), serde_json_compat::Value::Bool(true));
@@ -586,10 +605,9 @@ fn profile(operation: &Operation, kind: Kind) -> Result<Profile, &'static str> {
     }
     let input_schema = json(&serde_json_compat::json!({"type":"object","properties":properties,"required":required_fields,"additionalProperties":false})).map_err(|_| "schema-budget")?;
     Ok(Profile {
-        empty_responses: EmptyResponses::from_descriptions(&d.responses),
         security,
-        has_body: d.request_body.is_some(),
-        servers: d.servers.into_iter().map(|s| s.url).collect(),
+        body,
+        servers,
         parameters,
         input_schema,
         schema_loss,

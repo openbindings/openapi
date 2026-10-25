@@ -1,4 +1,5 @@
-//! Authenticated consumers shared by native and local Wasm qualification.
+//! Authenticated calls shared by native and local Wasm qualification: security
+//! alternatives, credential origins, challenges, server choice and context bounds.
 use crate::wire_json::{Value, json};
 use dynamic_openapi_client::{
     Cancellation, Header, Outcome,
@@ -23,14 +24,14 @@ pub fn value(v: Value) -> JsonValue {
 pub fn edition(v30: bool) -> (&'static str, &'static str, &'static str, &'static str) {
     if v30 {
         (
-            openbindings_openapi::EXPERIMENTAL_KIND_30,
+            openbindings_openapi::KIND_30,
             include_str!("auth-fixtures/service-3.0.4.json"),
             include_str!("auth-fixtures/manual-3.0.4.obi.json"),
             include_str!("auth-fixtures/variants-3.0.4.json"),
         )
     } else {
         (
-            openbindings_openapi::EXPERIMENTAL_KIND,
+            openbindings_openapi::KIND_31,
             include_str!("auth-fixtures/service-3.1.2.json"),
             include_str!("auth-fixtures/manual-3.1.2.obi.json"),
             include_str!("auth-fixtures/variants-3.1.2.json"),
@@ -41,7 +42,7 @@ pub fn source(kind: &str, text: &str) -> Source {
     Source {
         kind: kind.into(),
         content: Some(value(
-            json!({"document":text,"retrievalUri":"https://source.example.test/service.json"}),
+            json!({"document":text,"location":"https://source.example.test/service.json"}),
         )),
         ..Default::default()
     }
@@ -453,9 +454,9 @@ pub async fn suite(v30: bool) {
         .remove("origins");
     contexts.push((missing, "CONTEXT_REQUIRED"));
     let wrong_kind = if v30 {
-        openbindings_openapi::EXPERIMENTAL_KIND
+        openbindings_openapi::KIND_31
     } else {
-        openbindings_openapi::EXPERIMENTAL_KIND_30
+        openbindings_openapi::KIND_30
     };
     contexts.push((context(wrong_kind, &["ServiceToken"]), "CONTEXT_REQUIRED"));
     let seen = Rc::new(Seen::default());
@@ -575,12 +576,15 @@ pub async fn suite(v30: bool) {
     assert!(encoded.contains(&format!("{kind}.server")));
     assert!(!encoded.contains("auth.bearer"));
     let mut c = good.clone();
-    c["configuration"][format!("{kind}.server")] = json!("https://api.example.test");
+    c["configuration"][format!("{kind}.server")] = json!({"url": "https://api.example.test"});
     assert!(
         binding_call(&p, &two, "/items", "get", Some(&value(c)), &["{}"])
             .await
             .is_ok()
     );
+    // A final non-2xx completes unsuccessfully with no data, after its one request. The
+    // host's 302 carries no `Location`, so it is a final response, not a redirect to
+    // follow; `crate::responses` follows redirects that carry one.
     for status in [401, 403, 302] {
         let seen = Rc::new(Seen::default());
         let p = OpenApi::default().with_transport(host(seen.clone(), status, OUTPUT));
@@ -596,7 +600,7 @@ pub async fn suite(v30: bool) {
             .await
             .unwrap_err()
             .code(),
-            format!("{kind}.http-status")
+            "ERR_EXECUTION_FAILED"
         );
         assert_eq!(seen.calls.get(), 1);
     }
@@ -617,24 +621,25 @@ pub async fn suite(v30: bool) {
         "ERR_EXECUTION_FAILED"
     );
     assert_eq!(seen.calls.get(), 1);
-    for inputs in [vec![], vec!["{}", "{}"]] {
+    // One request per invocation: from no value when input closes first, never from two.
+    for (inputs, sent) in [(vec![], 1), (vec!["{}", "{}"], 0)] {
         let seen = Rc::new(Seen::default());
         let p = OpenApi::default().with_transport(host(seen.clone(), 200, OUTPUT));
-        assert_eq!(
-            binding_call(
-                p,
-                &src,
-                "/items",
-                "get",
-                Some(&value(good.clone())),
-                &inputs
-            )
-            .await
-            .unwrap_err()
-            .code(),
-            "ERR_REFUSED"
-        );
-        assert_eq!(seen.calls.get(), 0);
+        let result = binding_call(
+            p,
+            &src,
+            "/items",
+            "get",
+            Some(&value(good.clone())),
+            &inputs,
+        )
+        .await;
+        if sent == 1 {
+            assert_eq!(result.unwrap(), [OUTPUT]);
+        } else {
+            assert_eq!(result.unwrap_err().code(), "ERR_REFUSED");
+        }
+        assert_eq!(seen.calls.get(), sent);
     }
     let c = value(good.clone());
     for (limit, ok) in [(c.bytes().len(), true), (c.bytes().len() - 1, false)] {
@@ -652,7 +657,8 @@ pub async fn suite(v30: bool) {
         );
         assert_eq!(seen.calls.get(), usize::from(ok));
     }
-    // External resource names are resolved in the entry OpenAPI document in this experiment.
+    // The entry document's references resolve against its `location`; the application
+    // supplies the referenced resource at that identity, and without it the call refuses.
     let mut o = Options::default();
     o.resources.push(
         openbindings_openapi::ResourceInput::at(
@@ -753,17 +759,7 @@ pub async fn cycle(v30: bool) {
     for (ctx, status, body, code, effects) in [
         (Some(&good), 200, OUTPUT, None, 1),
         (None, 200, OUTPUT, Some("CONTEXT_REQUIRED"), 0),
-        (
-            Some(&good),
-            401,
-            OUTPUT,
-            Some(if v30 {
-                openbindings_openapi::HTTP_STATUS_ERROR_30
-            } else {
-                openbindings_openapi::HTTP_STATUS_ERROR
-            }),
-            1,
-        ),
+        (Some(&good), 401, OUTPUT, Some("ERR_EXECUTION_FAILED"), 1),
         (Some(&good), 200, "{", Some("ERR_EXECUTION_FAILED"), 1),
     ] {
         let seen = Rc::new(Seen::default());
@@ -1058,12 +1054,18 @@ pub async fn additional_admission(v30: bool) {
             assert_eq!(seen.calls.get(), 0);
         }
     }
+    // Credentials for two alternatives leave the choice to the caller.
+    let mut both = context(kind, &["ServiceToken", "PartnerKey"]);
+    both["configuration"][&point]
+        .as_object_mut()
+        .unwrap()
+        .remove("schemes");
     let e = binding_call(
         OpenApi::default().with_transport(host(Rc::new(Seen::default()), 200, OUTPUT)),
         &src,
         "/choice",
         "get",
-        None,
+        Some(&value(both)),
         &["{}"],
     )
     .await

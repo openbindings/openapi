@@ -13,6 +13,9 @@ impl Error {
     fn synthesis(&self) -> SynthesisError {
         let kind = match self.kind() {
             ErrorKind::InvalidInput => SynthesisErrorKind::InvalidInput,
+            ErrorKind::Unsupported if self.code() == "unsupported-kind" => {
+                SynthesisErrorKind::UnsupportedKind
+            }
             ErrorKind::Unsupported => SynthesisErrorKind::UnsupportedRequest,
             ErrorKind::Unreadable => SynthesisErrorKind::UnreadableSource,
             ErrorKind::Limit => SynthesisErrorKind::ProviderFailure,
@@ -38,7 +41,7 @@ impl<T> InterfaceSynthesizer for OpenApi<T> {
             .into_iter()
             .map(|kind| {
                 SupportedKind::new(kind.label()).with_description(
-                    "Private JSON experiment, with disclosed schema projection and capability limits",
+                    "Private kind, not a published standard; coverage discloses schema projection and capability limits",
                 )
             })
             .collect()
@@ -62,7 +65,7 @@ impl<T> OpenApi<T> {
             return Err(SynthesisError::new(
                 SynthesisErrorKind::UnsupportedRequest,
                 "openbindings.openapi.composition-unimplemented",
-                "This experiment accepts at most one supplied source",
+                "This implementation accepts at most one supplied source",
             ));
         }
         let mut document = Document::new();
@@ -122,7 +125,7 @@ impl<T> OpenApi<T> {
                             loss.binding_key = Some(key);
                             loss.reason_code =
                                 Some("openbindings.openapi.schema-contract-not-projected".into());
-                            loss.message=Some("The input schema describes the adapter envelope; source value constraints and response schemas are not fully projected".into());
+                            loss.message=Some("The input schema describes the native request; source value constraints and response schemas are not fully projected".into());
                             coverage.entries.push(loss);
                         }
                     }

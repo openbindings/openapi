@@ -14,12 +14,32 @@ serializes its own tests with a local lock because they count process-global own
 `NOTICE` describes this resolved graph. No SDK implementation is copied into this
 product repository. The current immutable Git pins are SDK
 `3546fc29d3fb329656c6a7506f6006b9eb38375d` and client
-`5cc2cf47ad9a05d1aa3cf968d03841ca9bbded61`.
+`c6a8236edbd02f4527d724bab60560861bf2722d`.
 
 Earlier migrations adopted validation vocabulary, companion-owned cancellation,
 caller-owned prepared operations, and the client's checked request builders,
 scoped credentials and advanced transport execution. The adapter retains its
 bounded source-analysis cache and the existing finite OpenAPI profile.
+
+**Current state, 2026-10-24.** The records below describe the adapter as each change
+left it; this note states what has changed since. The adapter now implements the
+private `local.openapi-3.1.r2` and `local.openapi-3.0.r2` kinds and refuses the retired
+`local.openapi-json-probe.r1` and `local.openapi30-json-probe.r1` labels; the package
+README states the kind contract. Source content carries `document`, embedded as a JSON
+object or as JSON text, and an optional `location`, which replaced `retrievalUri`. An
+operation's input is the native request rather than the `parameters` and `body`
+envelope, and the synthesized input contracts that the records below call envelope
+contracts now describe it; they stay shallow, with no pattern, reference or unevaluated
+keyword, so the evaluator observations below still hold for them. The finite profile
+now admits declared servers with variables and relative URLs, chooses among security
+alternatives by the credentials supplied, reads every final 2xx by its received media
+as a JSON, text or Base64 value, fails every final non-2xx without data, and follows
+redirects through the client's explicit step, one `Transport::execute` call per hop. A
+2xx JSON body is parsed once from the delivered bytes, under the client's `body_bytes`,
+`depth` and `nodes` limits within the SDK's default JSON limits, rather than through
+the client's JSON read. For the redirect step the client pin moved from
+`5cc2cf47ad9a05d1aa3cf968d03841ca9bbded61` to `c6a8236edbd02f4527d724bab60560861bf2722d`;
+the lock changed only the client packages' source revisions.
 
 The current SDK migration requires conformance proof before operation invocation or
 normative value-contract preparation. Consumers validate reloaded documents
@@ -251,7 +271,11 @@ These changes follow the pinned SDK's
 and [dependency maintenance contract](https://github.com/openbindings/sdk/blob/3546fc29d3fb329656c6a7506f6006b9eb38375d/DEPENDENCY-MAINTENANCE.md).
 
 The table below records the original extraction dispositions, not a claim that
-migrated consumers remain byte-identical to that import.
+migrated consumers remain byte-identical to that import. On 2026-10-24 the
+`crates/openbindings-openapi/tests/fixtures/r1/` files moved, keeping their names, to
+`crates/openbindings-openapi/tests/fixtures/parcels/`, and `expected-caller.json` and
+`wire-oracle.json` were removed from it: no test read them, and the maintained tests
+state and check the same exchanges themselves.
 
 | Imported file | SDK source at the pinned commit | Disposition |
 | --- | --- | --- |

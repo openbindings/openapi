@@ -4,7 +4,8 @@ use std::{
     task::{Context, Poll, Waker},
 };
 fn main() {
-    let content = r#"{"document":"{\"openapi\":\"3.1.2\",\"paths\":{\"/items\":{\"get\":{\"operationId\":\"listItems\"}}}}"}"#;
+    // The source embeds the description as a JSON object; JSON text in a string works too.
+    let content = r#"{"document":{"openapi":"3.1.2","paths":{"/items":{"get":{"operationId":"listItems"}}}}}"#;
     let result = pin!(openapi_inspection_consumer::inspect_and_author(
         content,
         "/paths/~1items/get"
