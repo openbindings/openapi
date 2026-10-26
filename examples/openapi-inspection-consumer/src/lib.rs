@@ -1,12 +1,14 @@
 //! Public Rust consumer. Host instrumentation is qualification-only.
 use openbindings::{Binding, Document, Edit, JsonValue, Operation, Source};
-use openbindings_openapi::{EXPERIMENTAL_KIND, OpenApi};
+use openbindings_openapi::{KIND_31, OpenApi};
 use openbindings_source_inspection::{BindableTarget, Inspector};
 use std::collections::BTreeMap;
 
+/// A source of the 3.1 kind from its content text: `document`, the description embedded
+/// as a JSON object or as JSON text, and an optional absolute `location`.
 pub fn source(content: &str) -> Result<Source, openbindings::InputError> {
     Ok(Source {
-        kind: EXPERIMENTAL_KIND.into(),
+        kind: KIND_31.into(),
         content: Some(JsonValue::parse(content)?),
         ..Default::default()
     })

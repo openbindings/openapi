@@ -11,7 +11,7 @@ use openbindings_interface_synthesis::{
     CoverageStatus, SynthesisRequest, SynthesisSource, Synthesizer,
 };
 use openbindings_invocation::{BindingRequest, BindingValue, binding};
-use openbindings_openapi::{EXPERIMENTAL_KIND, EXPERIMENTAL_KIND_30, OpenApi};
+use openbindings_openapi::{KIND_30, KIND_31, OpenApi};
 use openbindings_source_inspection::CancellationToken;
 use serde_json_compat::{Value, json};
 use std::{cell::Cell, rc::Rc, sync::Arc};
@@ -23,12 +23,7 @@ fn source(v30: bool, method: &str, responses: Value, body: bool) -> Source {
     }
     let doc = json!({"openapi":if v30 {"3.0.4"} else {"3.1.2"},"info":{"title":"CRUD boundaries","version":"1"},"servers":[{"url":"https://crud.example.test"}],"paths":{"/records":{method:op}},"components":{"responses":{"Empty":{"description":"no representation"}}}});
     Source {
-        kind: if v30 {
-            EXPERIMENTAL_KIND_30
-        } else {
-            EXPERIMENTAL_KIND
-        }
-        .into(),
+        kind: if v30 { KIND_30 } else { KIND_31 }.into(),
         content: Some(JsonValue::parse(json!({"document":doc.to_string()}).to_string()).unwrap()),
         ..Default::default()
     }
@@ -186,13 +181,22 @@ async fn crud_methods_preserve_required_absent_and_null_bodies() {
     }
 }
 
+// The received response decides: exact, range and `default` declarations, and their
+// content or its absence, change nothing about how a 2xx is read. Empty content emits no
+// value and JSON content its value, whatever is declared; a 204 carries no content and
+// content on a 205 fails.
 #[tokio::test]
-async fn successful_response_correspondence_and_precedence() {
+async fn declarations_never_change_how_a_response_is_read() {
     for v30 in [true, false] {
         for (responses, status, bytes, expected) in [
             (json!({"202":empty_response()}), 202, "", Some(vec![])),
-            (json!({"202":empty_response()}), 202, "null", None),
-            (json!({"200":json_response()}), 200, "", None),
+            (
+                json!({"202":empty_response()}),
+                202,
+                "null",
+                Some(vec!["null".into()]),
+            ),
+            (json!({"200":json_response()}), 200, "", Some(vec![])),
             (
                 json!({"200":json_response()}),
                 200,
@@ -210,7 +214,7 @@ async fn successful_response_correspondence_and_precedence() {
                 json!({"201":empty_response(),"2XX":json_response(),"default":empty_response()}),
                 202,
                 "",
-                None,
+                Some(vec![]),
             ),
             (
                 json!({"200":json_response(),"2XX":empty_response()}),
@@ -225,7 +229,12 @@ async fn successful_response_correspondence_and_precedence() {
                 Some(vec![]),
             ),
             (json!({"default":empty_response()}), 202, "", Some(vec![])),
-            (json!({"default":empty_response()}), 202, "null", None),
+            (
+                json!({"default":empty_response()}),
+                202,
+                "null",
+                Some(vec!["null".into()]),
+            ),
             (
                 json!({"202":{"$ref":"#/components/responses/Empty"}}),
                 202,
@@ -238,7 +247,7 @@ async fn successful_response_correspondence_and_precedence() {
                 "null",
                 Some(vec!["null".into()]),
             ),
-            (json!({"200":json_response()}), 201, "", None),
+            (json!({"200":json_response()}), 201, "", Some(vec![])),
             (json!({"204":empty_response()}), 204, "", Some(vec![])),
             (json!({"204":empty_response()}), 204, "null", None),
             (json!({"205":empty_response()}), 205, "", Some(vec![])),
@@ -257,7 +266,7 @@ async fn successful_response_correspondence_and_precedence() {
         let src = source(v30, "delete", json!({"default":empty_response()}), false);
         assert_eq!(
             run(&src, "delete", "{}", 409, "").await,
-            (Err(format!("{}.http-status", src.kind)), 1)
+            (Err("ERR_EXECUTION_FAILED".into()), 1)
         );
     }
 }
@@ -310,7 +319,7 @@ async fn empty_delivery_still_requires_complete_evidence_and_obeys_cancellation(
 }
 
 #[tokio::test]
-async fn unsupported_methods_and_media_remain_explicit() {
+async fn unsupported_methods_remain_explicit_and_response_media_do_not_exclude() {
     for v30 in [true, false] {
         for method in ["head", "options", "trace"] {
             let src = source(v30, method, json!({"202":empty_response()}), false);
@@ -334,6 +343,8 @@ async fn unsupported_methods_and_media_remain_explicit() {
                 (Err("ERR_REFUSED".into()), 0)
             );
         }
+        // A declared non-JSON success media no longer excludes the operation: the
+        // received response decides, and this one is JSON.
         let src = source(
             v30,
             "patch",
@@ -342,7 +353,7 @@ async fn unsupported_methods_and_media_remain_explicit() {
         );
         assert_eq!(
             run(&src, "patch", r#"{"body":{}}"#, 200, "{}").await,
-            (Err("ERR_REFUSED".into()), 0)
+            (Ok(vec!["{}".into()]), 1)
         );
     }
 }

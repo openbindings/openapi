@@ -1,7 +1,7 @@
 //! Qualification executable. Compare additional adapter work with the direct client.
 use dynamic_openapi_client::{Document, Limits};
 use openbindings::{JsonValue, Source};
-use openbindings_openapi::{EXPERIMENTAL_KIND, OpenApi};
+use openbindings_openapi::{KIND_31, OpenApi};
 use openbindings_source_inspection::Inspector;
 use serde_json::{Value, json};
 use std::{
@@ -61,7 +61,7 @@ fn main() {
             serde_json::to_string(&json!({"document": std::str::from_utf8(&bytes).unwrap()}))
                 .unwrap();
         let source = Source {
-            kind: EXPERIMENTAL_KIND.into(),
+            kind: KIND_31.into(),
             content: Some(JsonValue::parse(&carrier).unwrap()),
             ..Default::default()
         };

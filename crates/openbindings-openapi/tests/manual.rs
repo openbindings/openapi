@@ -22,8 +22,8 @@ pub struct Reply {
 #[tokio::test]
 async fn crud_methods_and_empty_success_over_native_http() {
     for (version, kind) in [
-        ("3.0.4", openbindings_openapi::EXPERIMENTAL_KIND_30),
-        ("3.1.2", openbindings_openapi::EXPERIMENTAL_KIND),
+        ("3.0.4", openbindings_openapi::KIND_30),
+        ("3.1.2", openbindings_openapi::KIND_31),
     ] {
         let (origin, server) = server(vec![
             Reply {
@@ -172,7 +172,7 @@ fn document(origin: &str) -> Document {
     // Recorded harness substitution before both authoring routes. The source text
     // remains a text value; its exact large integer never passes through a JS number.
     Document::parse(
-        include_str!("fixtures/r1/parcels.obi.json")
+        include_str!("fixtures/parcels/parcels.obi.json")
             .replace("https://parcel.example.invalid", origin),
     )
     .unwrap()
@@ -256,7 +256,7 @@ async fn authored_bindings_make_real_http_calls_and_preserve_exact_values() {
         call(
             &invoker,
             "lookup",
-            r#"{"parameters":{"path":{"parcelId":"box-7"},"query":{"parcelId":"alias-9"}}}"#
+            r#"{"path":{"parcelId":"box-7"},"query":{"parcelId":"alias-9"}}"#
         )
         .await
         .unwrap()
@@ -289,15 +289,12 @@ async fn authored_bindings_make_real_http_calls_and_preserve_exact_values() {
             .text(),
         "null"
     );
-    let error = call(
-        &invoker,
-        "lookup",
-        r#"{"parameters":{"path":{"parcelId":"missing"}}}"#,
-    )
-    .await
-    .unwrap_err();
-    assert_eq!(error.code(), openbindings_openapi::HTTP_STATUS_ERROR);
-    assert_eq!(error.data().unwrap().text(), r#"{"status":404}"#);
+    let error = call(&invoker, "lookup", r#"{"path":{"parcelId":"missing"}}"#)
+        .await
+        .unwrap_err();
+    // The 404 and its body never reach the caller: no adaptation maps them.
+    assert_eq!(error.code(), "ERR_EXECUTION_FAILED");
+    assert!(error.data().is_none());
     server.join().unwrap();
 }
 #[test]
@@ -422,7 +419,7 @@ async fn synthesized_reloaded_document_repeats_the_independent_wire_call() {
     let output = call(
         &invoker,
         &operation,
-        r#"{"parameters":{"path":{"parcelId":"box-7"},"query":{"parcelId":"alias-9"}}}"#,
+        r#"{"path":{"parcelId":"box-7"},"query":{"parcelId":"alias-9"}}"#,
     )
     .await
     .unwrap()
@@ -450,18 +447,18 @@ async fn synthesized_reloaded_document_repeats_the_independent_wire_call() {
 async fn cold_reloaded_mounts_use_supplied_reference_bases_on_real_http() {
     use openbindings_interface_synthesis::{SynthesisRequest, SynthesisSource, Synthesizer};
     use openbindings_json_schema_evaluator::DefaultEvaluator;
-    use openbindings_openapi::{EXPERIMENTAL_KIND, Options, ResourceInput};
+    use openbindings_openapi::{KIND_31, Options, ResourceInput};
     fn options() -> Options {
         let mut o = Options::default();
         o.resources = vec![
             ResourceInput::at(
                 "https://descriptions.example.invalid/fragments/parts.json",
-                include_bytes!("fixtures/r1/nested-parts.json").as_slice(),
+                include_bytes!("fixtures/parcels/nested-parts.json").as_slice(),
             )
             .unwrap(),
             ResourceInput::at(
                 "https://descriptions.example.invalid/fragments/parameters.json",
-                include_bytes!("fixtures/r1/nested-parameters.json").as_slice(),
+                include_bytes!("fixtures/parcels/nested-parameters.json").as_slice(),
             )
             .unwrap(),
         ];
@@ -484,9 +481,9 @@ async fn cold_reloaded_mounts_use_supplied_reference_bases_on_real_http() {
         },
     ]);
     let saved = {
-        let text = include_str!("fixtures/r1/nested-entry.json")
+        let text = include_str!("fixtures/parcels/nested-entry.json")
             .replace("https://parcel.example.invalid", &origin);
-        let source=openbindings::Source{kind:EXPERIMENTAL_KIND.into(),content:Some(JsonValue::parse(serde_json_compat::json!({"document":text,"retrievalUri":"https://descriptions.example.invalid/root.json"}).to_string()).unwrap()),..Default::default()};
+        let source=openbindings::Source{kind:KIND_31.into(),content:Some(JsonValue::parse(serde_json_compat::json!({"document":text,"location":"https://descriptions.example.invalid/root.json"}).to_string()).unwrap()),..Default::default()};
         let provider = OpenApi::new(options()).unwrap();
         let sources = [SynthesisSource {
             name: None,
@@ -540,17 +537,13 @@ async fn cold_reloaded_mounts_use_supplied_reference_bases_on_real_http() {
     );
     for key in &keys {
         assert_eq!(
-            call(
-                &invoker,
-                key,
-                r#"{"parameters":{"path":{"parcelId":"box-7"}}}"#
-            )
-            .await
-            .unwrap()
-            .unwrap()
-            .get("parcelId")
-            .unwrap()
-            .as_str(),
+            call(&invoker, key, r#"{"path":{"parcelId":"box-7"}}"#)
+                .await
+                .unwrap()
+                .unwrap()
+                .get("parcelId")
+                .unwrap()
+                .as_str(),
             Some("box-7")
         );
     }
@@ -580,14 +573,10 @@ async fn cold_reloaded_mounts_use_supplied_reference_bases_on_real_http() {
         openbindings::ResourceSet::default(),
     );
     assert_eq!(
-        call(
-            &invoker,
-            &keys[0],
-            r#"{"parameters":{"path":{"parcelId":"box-7"}}}"#
-        )
-        .await
-        .unwrap_err()
-        .code(),
+        call(&invoker, &keys[0], r#"{"path":{"parcelId":"box-7"}}"#)
+            .await
+            .unwrap_err()
+            .code(),
         "ERR_REFUSED"
     );
 }
@@ -612,7 +601,7 @@ async fn manual_mount_and_renamed_unicode_target_use_literal_locations() {
         },
     ]);
     let doc = Document::parse(
-        include_str!("fixtures/r1/mounted.obi.json")
+        include_str!("fixtures/parcels/mounted.obi.json")
             .replace("https://parcel.example.invalid", &origin),
     )
     .unwrap();
@@ -620,7 +609,7 @@ async fn manual_mount_and_renamed_unicode_target_use_literal_locations() {
     options.resources = vec![
         ResourceInput::at(
             "https://descriptions.example.invalid/parts.json",
-            include_bytes!("fixtures/r1/parts.json").as_slice(),
+            include_bytes!("fixtures/parcels/parts.json").as_slice(),
         )
         .unwrap(),
     ];
@@ -640,7 +629,7 @@ async fn manual_mount_and_renamed_unicode_target_use_literal_locations() {
                 provider
             ),
             "lookup",
-            r#"{"parameters":{"path":{"parcelId":"box-7"}}}"#
+            r#"{"path":{"parcelId":"box-7"}}"#
         )
         .await
         .unwrap()
@@ -669,7 +658,7 @@ async fn manual_mount_and_renamed_unicode_target_use_literal_locations() {
         call(
             &invoker,
             "chosen_operation",
-            r#"{"parameters":{"path":{"parcelId":"box-7"},"query":{"parcelId":"alias-9"}}}"#
+            r#"{"path":{"parcelId":"box-7"},"query":{"parcelId":"alias-9"}}"#
         )
         .await
         .unwrap()
@@ -704,6 +693,14 @@ async fn real_http_redirect_and_post_receipt_cancellation_have_one_effect() {
                 let _ = wait.recv_timeout(std::time::Duration::from_secs(5));
             } else {
                 socket.write_all(b"HTTP/1.1 302 Found\r\nLocation: /api/parcels/elsewhere\r\nContent-Length: 0\r\nConnection: close\r\n\r\n").unwrap();
+                // The redirect turns the POST into a GET without content, so the POST's
+                // effect happens once.
+                let (mut socket, _) = listener.accept().unwrap();
+                let (head, body) = request(&mut socket);
+                assert!(head.starts_with("GET /api/parcels/elsewhere HTTP/1.1"));
+                assert!(!head.to_ascii_lowercase().contains("content-type:"));
+                assert!(body.is_empty());
+                socket.write_all(b"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 20\r\nConnection: close\r\n\r\n{\"parcelId\":\"box-7\"}").unwrap();
             }
             listener.set_nonblocking(true).unwrap();
             assert!(listener.accept().is_err());
@@ -742,15 +739,17 @@ async fn real_http_redirect_and_post_receipt_cancellation_have_one_effect() {
                 .unwrap();
             control.cancel();
         }
-        let error = job.next().await.unwrap().unwrap_err();
-        assert_eq!(
-            error.code(),
-            if cancel {
-                "ERR_CANCELLED"
-            } else {
-                openbindings_openapi::HTTP_STATUS_ERROR
-            }
-        );
+        if cancel {
+            let error = job.next().await.unwrap().unwrap_err();
+            assert_eq!(error.code(), "ERR_CANCELLED");
+        } else {
+            assert_eq!(
+                job.next().await.unwrap().unwrap().text(),
+                r#"{"parcelId":"box-7"}"#
+            );
+            assert!(job.next().await.is_none());
+            job.outcome().unwrap().unwrap();
+        }
         drop(job);
         let _ = release.send(());
         server.join().unwrap();

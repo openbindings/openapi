@@ -1,7 +1,7 @@
 {
   "openapi": "3.1.2",
   "info": {
-    "title": "Parcel service experiment",
+    "title": "Parcel service",
     "version": "1"
   },
   "servers": [

@@ -1,6 +1,6 @@
 {
   "format": "openbindings.auth-json-seed-wire@1",
-  "status": "fresh authored expectations; not executed",
+  "status": "authored expectations, asserted by the tests that read this file",
   "headersCompared": "Case-insensitive header names, exact values and multiplicity; permit unrelated ordinary host headers. Expected auth headers are exhaustive. No credential query/body additions.",
   "responseText": "{\"ok\":true,\"n\":9007199254740993,\"label\":\"雪\"}",
   "requests": [

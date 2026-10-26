@@ -1,4 +1,4 @@
-//! Private experiment policy. Source interpretation and HTTP encoding stay in the client.
+//! Security policy for the private kinds. Source interpretation and HTTP encoding stay in the client.
 use crate::{Kind, Options, analysis::Profile};
 use dynamic_openapi_client::{Credential, RequestBuilder};
 use openbindings::{JsonRef, JsonValue, WorkControl};
@@ -18,6 +18,13 @@ impl Family {
             Self::Key => "auth.apiKey",
         }
     }
+    /// The interface's flat convenience for this family.
+    fn flat_name(self) -> &'static str {
+        match self {
+            Self::Bearer => "bearerToken",
+            Self::Key => "apiKey",
+        }
+    }
 }
 pub(crate) type Alternative = BTreeMap<String, Family>;
 
@@ -25,12 +32,37 @@ pub(crate) fn details(profile: &Profile) -> Value {
     j!({"alternatives":profile.security.iter().map(|a|a.iter().map(|(n,f)|j!({"type":f.requirement(),"name":n})).collect::<Vec<_>>()).collect::<Vec<_>>()})
 }
 
-/// Only applicable context is admitted. Unsecured operations keep ignoring auth context.
+/// The operation and destination credentials are selected for. Unsecured operations read
+/// no credentials.
 pub(crate) struct Target<'a> {
     pub kind: Kind,
     pub path: &'a str,
     pub method: &'a str,
-    pub server: &'a str,
+    /// The origin of the chosen destination, which credential grants must name.
+    pub origin: &'a str,
+}
+
+/// The credential material a context supplies, as the interface defines it: named
+/// `credentials`, and the `apiKeys`, `bearerToken` and `apiKey` conveniences.
+struct Supplied<'a> {
+    root: Option<JsonRef<'a>>,
+    credentials: Option<JsonRef<'a>>,
+    keys: Option<JsonRef<'a>>,
+}
+impl Supplied<'_> {
+    /// Whether the context has a credential for one scheme of an alternative. A flat
+    /// convenience counts only for an alternative with exactly one scheme of its family.
+    fn has(&self, alternative: &Alternative, name: &str, family: Family) -> bool {
+        self.credentials.and_then(|c| c.get(name)).is_some()
+            || (family == Family::Key && self.keys.and_then(|k| k.get(name)).is_some())
+            || (self.root.and_then(|r| r.get(family.flat_name())).is_some()
+                && alternative.values().filter(|f| **f == family).count() == 1)
+    }
+    fn satisfies(&self, alternative: &Alternative) -> bool {
+        alternative
+            .iter()
+            .all(|(name, family)| self.has(alternative, name, *family))
+    }
 }
 
 pub(crate) fn apply(
@@ -49,11 +81,9 @@ pub(crate) fn apply(
         }
         return Ok(input);
     }
-    if let Some(c) = context
-        && (c.bytes().len() > options.context_bytes
-            || c.view().members().is_none()
-            || c.has_duplicate_names())
-    {
+    // The invocation admitted the whole context before reading it; credentials need it
+    // to be an object as well.
+    if context.is_some_and(|c| c.view().members().is_none()) {
         return Err(fail());
     }
     let root = context.map(JsonValue::view);
@@ -62,7 +92,13 @@ pub(crate) fn apply(
     if let Some(p) = point {
         crate::analysis::object(p, &["schemes", "origins"]).map_err(|_| fail())?;
     }
-    let origin = dynamic_openapi_client::uri::origin(target.server).map_err(|_| fail())?;
+    let origin = target.origin;
+    let supplied = Supplied {
+        root,
+        credentials: member_object(root, "credentials")?,
+        keys: member_object(root, "apiKeys")?,
+    };
+    let origins = member_object(point, "origins")?;
     // Only challenges need the sorted, deduplicated public choice inventory.
     // Successful attempts compare borrowed source keys without rebuilding it.
     let choice_inventory = std::cell::OnceCell::new();
@@ -77,34 +113,6 @@ pub(crate) fn apply(
                 .collect::<BTreeMap<Vec<&str>, usize>>()
         })
     };
-    let selected = if let Some(s) = point.and_then(|p| p.get("schemes")) {
-        let mut names = BTreeSet::new();
-        for v in s.elements().ok_or_else(fail)? {
-            if work.is_cancelled() {
-                return Err(InvocationError::cancelled());
-            }
-            if !names.insert(v.as_str().ok_or_else(fail)?) {
-                return Err(fail());
-            }
-        }
-        Some(
-            profile
-                .security
-                .iter()
-                .position(|a| {
-                    a.len() == names.len() && a.keys().map(String::as_str).eq(names.iter().copied())
-                })
-                .ok_or_else(fail)?,
-        )
-    } else if profile
-        .security
-        .iter()
-        .all(|a| a.keys().eq(profile.security[0].keys()))
-    {
-        Some(0)
-    } else {
-        None
-    };
     let challenge = || {
         let mut identity = Bounded::new(options.result_bytes);
         identity.value(&j!([
@@ -116,57 +124,10 @@ pub(crate) fn apply(
         ]))?;
         Challenge::new(&identity.text()?, options.result_bytes)
     };
-    let Some(index) = selected else {
-        let mut challenge = challenge()?;
-        for names in choices().keys() {
-            if work.is_cancelled() {
-                return Err(InvocationError::cancelled());
-            }
-            challenge.begin_alternative()?;
-            challenge.selector(kind.security_point(), names)?;
-            challenge.end_alternative()?;
-        }
-        return Err(challenge.finish()?);
-    };
-    input = input.security(index);
-    let selected = &profile.security[index];
-    if selected.is_empty() {
-        return Ok(input);
-    }
-    let credentials = member_object(root, "credentials")?;
-    let keys = member_object(root, "apiKeys")?;
-    let origins = member_object(point, "origins")?;
-    let mut missing = None;
-    let bearer_count = selected.values().filter(|f| **f == Family::Bearer).count();
-    let key_count = selected.len() - bearer_count;
-    for (name, family) in selected {
-        if work.is_cancelled() {
-            return Err(InvocationError::cancelled());
-        }
-        let flat_name = match family {
-            Family::Bearer => "bearerToken",
-            Family::Key => "apiKey",
-        };
-        let flat = root.and_then(|r| r.get(flat_name));
-        if flat.is_some()
-            && (if *family == Family::Bearer {
-                bearer_count
-            } else {
-                key_count
-            }) != 1
-        {
-            return Err(fail());
-        }
-        let material = consistent([
-            credentials.and_then(|c| c.get(name)),
-            if *family == Family::Key {
-                keys.and_then(|k| k.get(name))
-            } else {
-                None
-            },
-            flat,
-        ])?;
-        let grant = origins
+    // A grant releases a credential only to caller-approved origins. Every supplied grant
+    // is validated; one that does not name the destination refuses rather than prompting.
+    let grant = |name: &str| {
+        origins
             .and_then(|o| o.get(name))
             .map(|v| {
                 let mut result = vec![];
@@ -186,7 +147,118 @@ pub(crate) fn apply(
                 }
                 Ok(result)
             })
-            .transpose()?;
+            .transpose()
+    };
+    let selected = if let Some(s) = point.and_then(|p| p.get("schemes")) {
+        // A supplied choice wins: an exact set of scheme names, `[]` for anonymous.
+        let mut names = BTreeSet::new();
+        for v in s.elements().ok_or_else(fail)? {
+            if work.is_cancelled() {
+                return Err(InvocationError::cancelled());
+            }
+            if !names.insert(v.as_str().ok_or_else(fail)?) {
+                return Err(fail());
+            }
+        }
+        profile
+            .security
+            .iter()
+            .position(|a| {
+                a.len() == names.len() && a.keys().map(String::as_str).eq(names.iter().copied())
+            })
+            .ok_or_else(fail)?
+    } else {
+        // Otherwise the alternatives whose every scheme has a credential decide: exactly
+        // one that needs credentials is used; with none, the anonymous alternative.
+        let mut satisfied: Option<usize> = None;
+        let mut several = false;
+        for (i, a) in profile.security.iter().enumerate() {
+            if work.is_cancelled() {
+                return Err(InvocationError::cancelled());
+            }
+            if a.is_empty() || !supplied.satisfies(a) {
+                continue;
+            }
+            match satisfied {
+                None => satisfied = Some(i),
+                Some(first) if !profile.security[first].keys().eq(a.keys()) => {
+                    several = true;
+                    break;
+                }
+                Some(_) => {}
+            }
+        }
+        if several {
+            // The caller's own credentials leave the choice open: the caller chooses.
+            let mut challenge = challenge()?;
+            for names in choices().keys() {
+                if work.is_cancelled() {
+                    return Err(InvocationError::cancelled());
+                }
+                challenge.begin_alternative()?;
+                challenge.selector(kind.security_point(), names)?;
+                challenge.end_alternative()?;
+            }
+            return Err(challenge.finish()?);
+        }
+        match satisfied.or_else(|| profile.security.iter().position(Alternative::is_empty)) {
+            Some(index) => index,
+            None => {
+                // Nothing is satisfied and nothing is anonymous: ask for the missing
+                // credentials of each alternative, any one of which would do.
+                let mut challenge = challenge()?;
+                for &index in choices().values() {
+                    let alternative = &profile.security[index];
+                    challenge.begin_alternative()?;
+                    for (name, family) in alternative {
+                        if work.is_cancelled() {
+                            return Err(InvocationError::cancelled());
+                        }
+                        if !supplied.has(alternative, name, *family) {
+                            challenge.auth(family.requirement(), name)?;
+                        }
+                        if grant(name)?.is_none() {
+                            challenge.grant(kind.security_point(), name, origin)?;
+                        }
+                    }
+                    challenge.end_alternative()?;
+                }
+                return Err(challenge.finish()?);
+            }
+        }
+    };
+    input = input.security(selected);
+    let selected = &profile.security[selected];
+    if selected.is_empty() {
+        return Ok(input);
+    }
+    let mut missing = None;
+    let bearer_count = selected.values().filter(|f| **f == Family::Bearer).count();
+    let key_count = selected.len() - bearer_count;
+    for (name, family) in selected {
+        if work.is_cancelled() {
+            return Err(InvocationError::cancelled());
+        }
+        let flat = root.and_then(|r| r.get(family.flat_name()));
+        if flat.is_some()
+            && (if *family == Family::Bearer {
+                bearer_count
+            } else {
+                key_count
+            }) != 1
+        {
+            return Err(fail());
+        }
+        let material = consistent([
+            supplied.credentials.and_then(|c| c.get(name)),
+            if *family == Family::Key {
+                supplied.keys.and_then(|k| k.get(name))
+            } else {
+                None
+            },
+            flat,
+        ])?;
+        let grant = grant(name)?;
         if material.is_none() || grant.is_none() {
             if missing.is_none() {
                 let mut c = challenge()?;
@@ -198,7 +270,7 @@ pub(crate) fn apply(
                 c.auth(family.requirement(), name)?;
             }
             if grant.is_none() {
-                c.grant(kind.security_point(), name, &origin)?;
+                c.grant(kind.security_point(), name, origin)?;
             }
         }
         if let (Some(value), Some(origins)) = (material, grant) {

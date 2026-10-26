@@ -5,9 +5,8 @@ use openbindings::{Document, JsonValue, Source};
 use openbindings_interface_synthesis::{
     CoverageStatus, SynthesisRequest, SynthesisSource, Synthesizer,
 };
-use openbindings_openapi::{EXPERIMENTAL_KIND, OpenApi, Options, ResourceInput};
+use openbindings_openapi::{KIND_30, KIND_31, OpenApi, Options, ResourceInput};
 use openbindings_source_inspection::Inspector;
-const KIND_30: &str = "local.openapi30-json-probe.r1";
 const SIMPLE: &str = r#"{"openapi":"3.0.4","info":{"title":"Version test","version":"1"},"servers":[{"url":"https://version.example.invalid"}],"paths":{"/ping":{"get":{"responses":{"204":{"description":"No entity"}}}}}}"#;
 fn json(t: &str) -> JsonValue {
     JsonValue::parse(t).unwrap()
@@ -42,10 +41,7 @@ async fn synth<P: openbindings_interface_synthesis::InterfaceSynthesizer>(
 #[tokio::test]
 async fn correct_editions_and_kind_sensitive_cache() {
     let provider = OpenApi::default();
-    for (kind, version, other) in [
-        (KIND_30, "3.0.4", EXPERIMENTAL_KIND),
-        (EXPERIMENTAL_KIND, "3.1.2", KIND_30),
-    ] {
+    for (kind, version, other) in [(KIND_30, "3.0.4", KIND_31), (KIND_31, "3.1.2", KIND_30)] {
         let src = source(kind, &SIMPLE.replace("3.0.4", version));
         assert_eq!(
             Inspector::new(&provider)
@@ -200,18 +196,7 @@ async fn preflight_makes_no_prediction_without_dispatch() {
 
 #[tokio::test]
 async fn kinds_are_advertised_and_crossed_editions_never_dispatch() {
-    use openbindings_openapi::{
-        EXPERIMENTAL_KIND_30, HTTP_STATUS_ERROR, HTTP_STATUS_ERROR_30, SERVER_POINT,
-        SERVER_POINT_30,
-    };
-    assert_eq!(EXPERIMENTAL_KIND_30, KIND_30);
-    assert_eq!(SERVER_POINT, "local.openapi-json-probe.r1.server");
-    assert_eq!(SERVER_POINT_30, "local.openapi30-json-probe.r1.server");
-    assert_eq!(HTTP_STATUS_ERROR, "local.openapi-json-probe.r1.http-status");
-    assert_eq!(
-        HTTP_STATUS_ERROR_30,
-        "local.openapi30-json-probe.r1.http-status"
-    );
+    // Label and point values are asserted with the retired labels in `kinds.rs`.
     let count = Rc::new(Cell::new(0));
     let provider = OpenApi::default().with_transport(transport(
         count.clone(),
@@ -220,7 +205,7 @@ async fn kinds_are_advertised_and_crossed_editions_never_dispatch() {
         "",
         BodyState::Complete,
     ));
-    let expected = vec![EXPERIMENTAL_KIND.to_owned(), KIND_30.to_owned()];
+    let expected = vec![KIND_31.to_owned(), KIND_30.to_owned()];
     assert_eq!(
         openbindings_source_inspection::SourceInspector::supported_kinds(&provider)
             .into_iter()
@@ -242,10 +227,7 @@ async fn kinds_are_advertised_and_crossed_editions_never_dispatch() {
             .collect::<Vec<_>>(),
         expected
     );
-    for (kind, version, other) in [
-        (KIND_30, "3.0.4", EXPERIMENTAL_KIND),
-        (EXPERIMENTAL_KIND, "3.1.2", KIND_30),
-    ] {
+    for (kind, version, other) in [(KIND_30, "3.0.4", KIND_31), (KIND_31, "3.1.2", KIND_30)] {
         let src = source(kind, &SIMPLE.replace("3.0.4", version));
         invoke(&provider, &src, "/ping", "get", &["{}"], None)
             .await
@@ -267,7 +249,7 @@ async fn kinds_are_advertised_and_crossed_editions_never_dispatch() {
             .await
             .unwrap();
     }
-    for kind in [EXPERIMENTAL_KIND, KIND_30, "unknown.kind"] {
+    for kind in [KIND_31, KIND_30, "unknown.kind"] {
         for version in ["2.0", "3.2.0"] {
             let src = source(kind, &SIMPLE.replace("3.0.4", version));
             let before = count.get();
@@ -329,7 +311,7 @@ async fn parameter_types_require_a_supported_lexical_schema_dialect() {
         api["paths"]["/ping"]["get"]["parameters"] = serde_json_compat::json!([
             {"name":"limit","in":"query","schema":schema}
         ]);
-        let src = source(EXPERIMENTAL_KIND, &api.to_string());
+        let src = source(KIND_31, &api.to_string());
         let calls = Rc::new(Cell::new(0));
         let targets = Rc::new(RefCell::new(Vec::new()));
         let provider = OpenApi::default().with_transport(transport(
@@ -366,10 +348,6 @@ async fn parameter_types_require_a_supported_lexical_schema_dialect() {
                 input
                     .get("properties")
                     .unwrap()
-                    .get("parameters")
-                    .unwrap()
-                    .get("properties")
-                    .unwrap()
                     .get("query")
                     .unwrap()
                     .get("properties")
@@ -386,7 +364,7 @@ async fn parameter_types_require_a_supported_lexical_schema_dialect() {
                 &src,
                 "/ping",
                 "get",
-                &[r#"{"parameters":{"query":{"limit":"abc"}}}"#],
+                &[r#"{"query":{"limit":"abc"}}"#],
                 None,
             )
             .await
@@ -401,10 +379,7 @@ async fn parameter_types_require_a_supported_lexical_schema_dialect() {
                 == CoverageStatus::ImplementationUnsupported
                 && entry.reason_code.as_deref()
                     == Some("openbindings.openapi.parameter-schema-dialect-unimplemented")));
-            for input in [
-                r#"{"parameters":{"query":{"limit":5}}}"#,
-                r#"{"parameters":{"query":{"limit":"abc"}}}"#,
-            ] {
+            for input in [r#"{"query":{"limit":5}}"#, r#"{"query":{"limit":"abc"}}"#] {
                 assert_eq!(
                     invoke(&provider, &src, "/ping", "get", &[input], None)
                         .await
@@ -442,18 +417,13 @@ async fn schema_dialect_boundaries_do_not_invent_a_caller_contract() {
             false,
         ),
         (
-            EXPERIMENTAL_KIND,
+            KIND_31,
             "3.1.2",
             r##"{"$ref":"#/components/schemas/Text","type":"string"}"##,
             true,
         ),
-        (
-            EXPERIMENTAL_KIND,
-            "3.1.2",
-            r#"{"type":["string","null"]}"#,
-            false,
-        ),
-        (EXPERIMENTAL_KIND, "3.1.2", "true", false),
+        (KIND_31, "3.1.2", r#"{"type":["string","null"]}"#, false),
+        (KIND_31, "3.1.2", "true", false),
     ] {
         let mut api: serde_json_compat::Value = serde_json_compat::from_str(SIMPLE).unwrap();
         api["openapi"] = version.into();
@@ -538,7 +508,7 @@ async fn schema_dialect_boundaries_do_not_invent_a_caller_contract() {
             &src,
             "/ping",
             "post",
-            &[r#"{"parameters":{"query":{"q":"x"}},"body":null}"#],
+            &[r#"{"query":{"q":"x"},"body":null}"#],
             None
         )
         .await
@@ -749,10 +719,7 @@ async fn independent_manual_and_synthesized_reloaded_consumers_use_real_http() {
             if let Some(error) = row.get("error") {
                 let error_actual = job.next().await.unwrap().unwrap_err();
                 assert_eq!(error_actual.code(), error.as_str().unwrap());
-                assert_eq!(
-                    error_actual.data().unwrap().text(),
-                    row["errorData"].as_str().unwrap()
-                );
+                assert!(error_actual.data().is_none());
                 assert!(job.next().await.is_none());
             } else {
                 if let Some(expected) = row["output"].as_str() {
@@ -781,7 +748,7 @@ async fn independent_manual_and_synthesized_reloaded_consumers_use_real_http() {
             src,
             "/records/{key}",
             "get",
-            &[r#"{"parameters":{"path":{"key":"a-7"}}}"#],
+            &[r#"{"path":{"key":"a-7"}}"#],
             None
         )
         .await
@@ -791,24 +758,10 @@ async fn independent_manual_and_synthesized_reloaded_consumers_use_real_http() {
 }
 #[tokio::test]
 async fn contexts_statuses_and_finite_boundaries_are_scoped_to_each_kind() {
-    use openbindings_openapi::{
-        HTTP_STATUS_ERROR, HTTP_STATUS_ERROR_30, SERVER_POINT, SERVER_POINT_30,
-    };
-    for (kind, version, point, wrong, status_code) in [
-        (
-            KIND_30,
-            "3.0.4",
-            SERVER_POINT_30,
-            SERVER_POINT,
-            HTTP_STATUS_ERROR_30,
-        ),
-        (
-            EXPERIMENTAL_KIND,
-            "3.1.2",
-            SERVER_POINT,
-            SERVER_POINT_30,
-            HTTP_STATUS_ERROR,
-        ),
+    use openbindings_openapi::{SERVER_POINT_30, SERVER_POINT_31};
+    for (kind, version, point, wrong) in [
+        (KIND_30, "3.0.4", SERVER_POINT_30, SERVER_POINT_31),
+        (KIND_31, "3.1.2", SERVER_POINT_31, SERVER_POINT_30),
     ] {
         let src=source(kind,&SIMPLE.replace("3.0.4",version).replace(r#"{"url":"https://version.example.invalid"}"#,r#"{"url":"https://version.example.invalid"},{"url":"https://second.example.invalid"}"#));
         let count = Rc::new(Cell::new(0));
@@ -824,14 +777,14 @@ async fn contexts_statuses_and_finite_boundaries_are_scoped_to_each_kind() {
             (json("{}"), "CONTEXT_REQUIRED"),
             (
                 json(
-                    &serde_json_compat::json!({"configuration":{wrong:"https://second.example.invalid"}})
+                    &serde_json_compat::json!({"configuration":{wrong:{"url":"https://second.example.invalid"}}})
                         .to_string(),
                 ),
                 "CONTEXT_REQUIRED",
             ),
             (
                 json(
-                    &serde_json_compat::json!({"configuration":{point:"https://unlisted.example.invalid"}})
+                    &serde_json_compat::json!({"configuration":{point:{"url":"https://unlisted.example.invalid"}}})
                         .to_string(),
                 ),
                 "ERR_REFUSED",
@@ -852,14 +805,14 @@ async fn contexts_statuses_and_finite_boundaries_are_scoped_to_each_kind() {
             assert_eq!(count.get(), 0);
         }
         let context = json(
-            &serde_json_compat::json!({"configuration":{point:"https://second.example.invalid"}})
+            &serde_json_compat::json!({"configuration":{point:{"url":"https://second.example.invalid"}}})
                 .to_string(),
         );
         let error = invoke(&provider, &src, "/ping", "get", &["{}"], Some(&context))
             .await
             .unwrap_err();
-        assert_eq!(error.code(), status_code);
-        assert_eq!(error.data().unwrap().text(), r#"{"status":404}"#);
+        assert_eq!(error.code(), "ERR_EXECUTION_FAILED");
+        assert!(error.data().is_none());
         assert_eq!(&*targets.borrow(), &["https://second.example.invalid/ping"]);
         assert_eq!(
             invoke(&provider, &src, "/ping", "get", &["{}"], None)
@@ -870,11 +823,7 @@ async fn contexts_statuses_and_finite_boundaries_are_scoped_to_each_kind() {
         );
         assert_eq!(count.get(), 1);
         let src = source(kind, &SIMPLE.replace("3.0.4", version));
-        for inputs in [
-            vec![],
-            vec!["{}", "{}"],
-            vec![r#"{"body":null,"body":null}"#],
-        ] {
+        for inputs in [vec!["{}", "{}"], vec![r#"{"body":null,"body":null}"#]] {
             assert_eq!(
                 invoke(&provider, &src, "/ping", "get", &inputs, None)
                     .await
@@ -884,6 +833,15 @@ async fn contexts_statuses_and_finite_boundaries_are_scoped_to_each_kind() {
             );
             assert_eq!(count.get(), 1);
         }
+        // No value makes the one request too; this host answers it with a 404.
+        assert_eq!(
+            invoke(&provider, &src, "/ping", "get", &[], None)
+                .await
+                .unwrap_err()
+                .code(),
+            "ERR_EXECUTION_FAILED"
+        );
+        assert_eq!(count.get(), 2);
         let bytes = src.content.as_ref().unwrap().bytes().len();
         for (limit, ok) in [(bytes, true), (bytes - 1, false)] {
             let mut options = Options::default();
@@ -953,10 +911,7 @@ async fn contexts_statuses_and_finite_boundaries_are_scoped_to_each_kind() {
 
 #[tokio::test]
 async fn get_request_body_uses_the_source_edition_semantics() {
-    for (kind, version, has_body) in [
-        (KIND_30, "3.0.4", false),
-        (EXPERIMENTAL_KIND, "3.1.2", true),
-    ] {
+    for (kind, version, has_body) in [(KIND_30, "3.0.4", false), (KIND_31, "3.1.2", true)] {
         let mut api: serde_json_compat::Value = serde_json_compat::from_str(SIMPLE).unwrap();
         api["openapi"] = version.into();
         api["paths"]["/ping"]["get"]["requestBody"] =

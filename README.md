@@ -2,20 +2,23 @@ The OpenBindings implementation of the source-inspection, interface-synthesis an
 
 The packages are unpublished. This repository depends on the SDK at
 `3546fc29d3fb329656c6a7506f6006b9eb38375d` and the independent client at
-`5cc2cf47ad9a05d1aa3cf968d03841ca9bbded61`. The SDK defines the interfaces and supplies
+`c6a8236edbd02f4527d724bab60560861bf2722d`. The SDK defines the interfaces and supplies
 no kind-specific instances. This project supplies the OpenAPI provider.
 
 Use `OpenApi::default()` with the SDK's checked `Inspector` or `Synthesizer`.
 Use `OpenApi::with_transport` with application-owned execution and the checked
 binding or operation invoker. The [JSON-path consumer](examples/openapi-json-path-consumer/)
-shows inspection, synthesis, save/reload and invocation. The independent
+shows inspection, synthesis, save/reload and invocation with exact JSON, including
+authenticated calls, received responses and followed redirects. The independent
 [inspection consumer](examples/openapi-inspection-consumer/) covers manual authoring
-and supplied-resource recovery, and the [minimal consumer](examples/openapi-invocation-only/)
-guards dependency isolation.
+from either document carrier and supplied-resource recovery, and the
+[minimal consumer](examples/openapi-invocation-only/) guards dependency isolation.
 
-The private `local.openapi-json-probe.r1` and `local.openapi30-json-probe.r1` kinds
-retain their meanings. Sources carry exact JSON text in `document` and optional
-`retrievalUri`; bindings carry `path` and lowercase `method`. Reloaded documents
+The adapter implements the private `local.openapi-3.1.r2` and `local.openapi-3.0.r2`
+kinds; the earlier `local.openapi-json-probe.r1` and `local.openapi30-json-probe.r1`
+labels are retired and refused. Sources carry the entry `document`, embedded as a JSON
+object or as JSON text, and an optional `location`; bindings carry `path` and lowercase
+`method`, and an operation's input is the native request. Reloaded documents
 must pass SDK validation before operation invocation or
 value-contract preparation. The current SDK pin uses one exact `Document`, `Conformant<Document>` proof with infallible typed
 views, value contracts handed out by conformant operations and companion-owned
@@ -24,20 +27,23 @@ the caller asks for an explanation; [migration details](PROVENANCE.md) describe 
 diagnostic and reference boundaries. It implements no
 published OpenAPI binding standard.
 
-The existing finite JSON profile admits GET, POST, PUT, PATCH and DELETE for OpenAPI
-3.0 and 3.1, supplied references, scalar path/query parameters, finite JSON bodies,
-empty declared successes, and caller-supplied bearer and header API-key credentials.
+The finite profile admits GET, POST, PUT, PATCH and DELETE for OpenAPI 3.0 and 3.1,
+supplied references, declared servers with variables, scalar path/query parameters,
+finite JSON request bodies, finite responses read by their received media, followed
+redirects, and caller-supplied bearer and header API-key credentials.
 No schema-constraint translation, security acquisition, implicit fetching, automatic
-retry or full OpenAPI coverage is claimed. HEAD/OPTIONS/TRACE, richer encodings,
-streaming/binary delivery and literal Unicode path templates remain outside the
-invocation profile. See the [complete package guide](crates/openbindings-openapi/README.md)
-for kind contracts, budgets, security policy, synthesis loss and refusal behavior.
+retry or full OpenAPI coverage is claimed. YAML documents and bindings carrying JSONata
+adaptation members are refused for now. HEAD/OPTIONS/TRACE, richer encodings, streaming
+delivery and literal Unicode path templates remain outside the invocation profile. See the
+[complete package guide](crates/openbindings-openapi/README.md) for the kind contract,
+what is refused for now, budgets, security policy and synthesis loss.
 
 The incremental-auth performance check remains unresolved and deferred with
 its original budgets unchanged. The stopped measurement examples are compiled and
 linted but never run by CI. This repository carries no historical loop evidence.
-Native HTTP and local Node/Wasm probes do not establish browser/Worker network
-support or a released TypeScript interface API.
+The Wasm probes run in Node, not in a browser or a Worker runtime: native HTTP and
+local Node/Wasm probes do not establish browser/Worker network support or a released
+TypeScript interface API.
 
 Use Rust 1.99.0 with the wasm32-unknown-unknown target, wasm-bindgen-cli 0.2.129,
 Node 22.19.0, npm and Python 3.13+. With dependency caches populated:
@@ -54,7 +60,12 @@ python3 tools/verify-openapi-invocation-only.py
 
 The verifiers generate independent consumers under `target/`, preserve selected
 lockfile versions, and check a single source identity for each SDK package and the
-exact client revision. They require no SDK checkout in the source-Git mode.
+exact client revision. They run each consumer's tests and lints, check that core gains
+no OpenAPI dependency and that the minimal consumer needs no evaluator, reqwest, Tokio
+or Wasm runtime, and with `--wasm` run the consumer's Node/Wasm probe. Each writes a
+receipt with the hashes of the inputs it tested, the commit checked out and its
+commands; with `--wasm` it also keeps the probe's summaries, such as the kinds the
+JSON-path probe exercised. They require no SDK checkout in the source-Git mode.
 Archive qualification packages only an explicitly supplied clean cached SDK source:
 
 ```sh

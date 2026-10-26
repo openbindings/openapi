@@ -1,31 +1,50 @@
 use dynamic_openapi_client::{Document as ClientDocument, Limits, inspect::Method};
 use openapi_inspection_consumer::{author, inspect_and_author, source};
-use openbindings::{Binding, Document, JsonValue};
+use openbindings::{Binding, Document, JsonKind, JsonValue};
 
+const LOCATION: &str = "https://fixture.invalid/openapi.json";
+
+/// Source content carrying the description as JSON text, a string `document`.
 fn carrier(document: &str) -> String {
     serde_json::to_string(&serde_json::json!({
         "document": document,
-        "retrievalUri": "https://fixture.invalid/openapi.json"
+        "location": LOCATION
     }))
     .unwrap()
 }
 
+/// Source content embedding the description as a JSON object, its text spliced in as
+/// written so its numbers keep their exact values.
+fn embedded(document: &str) -> String {
+    format!(r#"{{"document":{document},"location":"{LOCATION}"}}"#)
+}
+
 #[tokio::test]
 async fn public_inspection_manual_authoring_and_exact_reload() {
-    let content = carrier(
-        r#"{"openapi":"3.1.2","x-exact":9007199254740993,"components":{"schemas":{"Opaque":{"$schema":"urn:example:unknown-dialect","const":9007199254740993}}},"paths":{"/a~b/c":{"get":{"operationId":"totally.different-É"}}}}"#,
-    );
-    let result = inspect_and_author(&content, "/paths/~1a~0b~1c/get")
+    let description = r#"{"openapi":"3.1.2","x-exact":9007199254740993,"components":{"schemas":{"Opaque":{"$schema":"urn:example:unknown-dialect","const":9007199254740993}}},"paths":{"/a~b/c":{"get":{"operationId":"totally.different-É"}}}}"#;
+    for (content, kind) in [
+        (carrier(description), JsonKind::String),
+        (embedded(description), JsonKind::Object),
+    ] {
+        authored_and_reloaded(&content, kind).await;
+    }
+}
+
+async fn authored_and_reloaded(content: &str, kind: JsonKind) {
+    let result = inspect_and_author(content, "/paths/~1a~0b~1c/get")
         .await
         .unwrap();
     assert!(result.text().contains("9007199254740993"));
     assert!(result.text().contains("urn:example:unknown-dialect"));
     let reloaded = Document::from_json(result.clone());
     let source = &reloaded.source("catalog-source").unwrap().unwrap();
+    // The OBI carries the source as authored: an embedded object stays an object, and its
+    // own text is the description the client reads.
     let document = source.content().unwrap().get("document").unwrap();
+    assert_eq!(document.kind(), kind);
     let client = ClientDocument::parse(
-        document.as_str().unwrap(),
-        Some("https://fixture.invalid/openapi.json"),
+        document.as_str().unwrap_or(document.text()),
+        Some(LOCATION),
         Limits::default(),
     )
     .unwrap();
@@ -46,7 +65,7 @@ async fn public_inspection_manual_authoring_and_exact_reload() {
     );
     // Independent manual OBI construction does not use inspection suggestions.
     let manual = author(
-        openapi_inspection_consumer::source(&content).unwrap(),
+        openapi_inspection_consumer::source(content).unwrap(),
         Binding {
             operation: "catalog.lookup".into(),
             source: "catalog-source".into(),
@@ -107,7 +126,7 @@ async fn real_resource_recovery_from_public_packages() {
     let entry = graph
         .add(
             ResourceInput::at(
-                content.get("retrievalUri").unwrap().as_str().unwrap(),
+                content.get("location").unwrap().as_str().unwrap(),
                 content
                     .get("document")
                     .unwrap()
@@ -180,7 +199,7 @@ async fn inspected_neighbors_remain_preparable_after_manual_authoring_and_reload
                 .iter()
                 .any(|entry| entry.source_ref == target)
         );
-        // r1 inspection includes known unsupported targets; authoring selects
+        // Inspection includes known unsupported targets; authoring selects
         // the neighbor whose direct client preparation succeeds.
         let authored = inspect_and_author(&content, target).await.unwrap();
         let reloaded = Document::from_json(authored.clone());

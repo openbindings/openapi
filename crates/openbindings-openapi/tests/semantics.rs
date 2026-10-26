@@ -9,14 +9,14 @@ use dynamic_openapi_client::{
 };
 use openbindings::{Document, JsonValue};
 use openbindings_invocation::{BindingRequest, BindingValue, InvocationError, binding, operation};
-use openbindings_openapi::{OpenApi, SERVER_POINT};
+use openbindings_openapi::{OpenApi, SERVER_POINT_31};
 use openbindings_source_inspection::CancellationToken;
 use std::{cell::Cell, rc::Rc, sync::Arc, time::Duration};
 fn json(t: &str) -> JsonValue {
     JsonValue::parse(t).unwrap()
 }
 fn document() -> Document {
-    Document::parse(include_str!("fixtures/r1/parcels.obi.json")).unwrap()
+    Document::parse(include_str!("fixtures/parcels/parcels.obi.json")).unwrap()
 }
 fn outcome_input(status: u16, body: &str, state: BodyState) -> TransportResult {
     let mut response = ResponseInput::new(
@@ -117,17 +117,19 @@ async fn caller_close_and_cardinality_precede_effects() {
     assert!(job.next().await.is_none());
     assert!(job.outcome().unwrap().is_ok());
     assert_eq!(count.get(), 1);
+    // Input that closes without a value still makes the one request, carrying nothing.
+    assert!(invoke(&provider, vec![], None).await.unwrap().is_empty());
+    assert_eq!(count.get(), 2);
     for inputs in [
-        vec![],
         vec![json("{}"), json("{}")],
         vec![json("null")],
-        vec![json(r#"{"parameters":{"query":{"typo":"x"}}}"#)],
+        vec![json(r#"{"query":{"typo":"x"}}"#)],
     ] {
         assert_eq!(
             invoke(&provider, inputs, None).await.unwrap_err().code(),
             "ERR_REFUSED"
         );
-        assert_eq!(count.get(), 1);
+        assert_eq!(count.get(), 2);
     }
 }
 #[tokio::test]
@@ -197,7 +199,8 @@ async fn pending_input_wakes_on_write_close_refusal_and_cancellation() {
             }
             assert!(wakes.0.load(Ordering::SeqCst) > 0);
             let result = Pin::new(&mut output).poll_next(&mut cx);
-            if finish == "close" && first_value {
+            // Closing makes the request, from the value or from none.
+            if finish == "close" {
                 assert!(matches!(result, Poll::Ready(None)));
                 assert!(control.outcome().unwrap().is_ok());
                 assert_eq!(count.get(), 1);
@@ -224,24 +227,30 @@ async fn pending_input_wakes_on_write_close_refusal_and_cancellation() {
     }
 }
 
+// Only a complete, well-formed 2xx succeeds; an empty 2xx succeeds with no value.
 #[tokio::test]
 async fn failed_or_incomplete_responses_never_emit_success() {
-    for (status, body, state, code) in [
-        (200, "", BodyState::Complete, "ERR_EXECUTION_FAILED"),
-        (200, "{", BodyState::Complete, "ERR_EXECUTION_FAILED"),
-        (200, "null", BodyState::Truncated, "ERR_EXECUTION_FAILED"),
-        (204, "null", BodyState::Complete, "ERR_EXECUTION_FAILED"),
+    for (status, body, state, expected) in [
+        (200, "", BodyState::Complete, Ok(0)),
+        (200, "{", BodyState::Complete, Err("ERR_EXECUTION_FAILED")),
         (
-            302,
-            "",
-            BodyState::Complete,
-            openbindings_openapi::HTTP_STATUS_ERROR,
+            200,
+            "null",
+            BodyState::Truncated,
+            Err("ERR_EXECUTION_FAILED"),
         ),
+        (
+            204,
+            "null",
+            BodyState::Complete,
+            Err("ERR_EXECUTION_FAILED"),
+        ),
+        (302, "", BodyState::Complete, Err("ERR_EXECUTION_FAILED")),
         (
             404,
             "not json",
             BodyState::Complete,
-            openbindings_openapi::HTTP_STATUS_ERROR,
+            Err("ERR_EXECUTION_FAILED"),
         ),
     ] {
         let count = Rc::new(Cell::new(0));
@@ -249,16 +258,61 @@ async fn failed_or_incomplete_responses_never_emit_success() {
         assert_eq!(
             invoke(provider, vec![json("{}")], None)
                 .await
-                .unwrap_err()
-                .code(),
-            code
+                .map(|values| values.len())
+                .map_err(|e| e.code().to_owned()),
+            expected.map_err(str::to_owned),
+            "{status} {body}"
         );
         assert_eq!(count.get(), 1);
     }
 }
+
+// A protocol outcome reaches the operation only through the binding's adaptation, and
+// none is supported: every final non-2xx fails with no data, whatever its body says,
+// including statuses and bodies the description declares. The redirect statuses here
+// carry no `Location`, so they are final.
+#[tokio::test]
+async fn non_2xx_responses_complete_unsuccessfully_without_data() {
+    let problem = r#"{"problem":"no such parcel","status":404}"#;
+    for status in [
+        300, 301, 302, 303, 304, 307, 308, 400, 401, 403, 404, 409, 422, 429, 500, 503,
+    ] {
+        let body = if status == 304 { "" } else { problem };
+        let count = Rc::new(Cell::new(0));
+        let provider = OpenApi::default().with_transport(host(
+            count.clone(),
+            status,
+            body,
+            BodyState::Complete,
+        ));
+        let error = invoke(&provider, vec![json("{}")], None).await.unwrap_err();
+        assert_eq!(error.code(), "ERR_EXECUTION_FAILED", "{status}");
+        assert!(error.data().is_none());
+        assert!(error.context_required().is_none());
+        assert!(!error.to_json().unwrap().text().contains("status"));
+        assert_eq!(count.get(), 1);
+        // `lookup` declares a JSON 404 body; the declaration changes nothing.
+        let invoker = operation::Invoker::new(
+            document()
+                .validate()
+                .unwrap()
+                .conformant()
+                .expect("conformant invocation document"),
+            &provider,
+        );
+        let mut job = invoker.invoke(operation::Request::operation("lookup"));
+        let _ = job.write(json(r#"{"path":{"parcelId":"missing"}}"#)).await;
+        job.close();
+        let error = job.next().await.unwrap().unwrap_err();
+        assert_eq!(error.code(), "ERR_EXECUTION_FAILED");
+        assert!(error.data().is_none());
+        assert!(job.next().await.is_none());
+        assert_eq!(count.get(), 2);
+    }
+}
 #[tokio::test]
 async fn destination_context_is_membership_and_new_attempt() {
-    let doc = Document::parse(include_str!("fixtures/r1/destinations.obi.json")).unwrap();
+    let doc = Document::parse(include_str!("fixtures/parcels/destinations.obi.json")).unwrap();
     let count = Rc::new(Cell::new(0));
     let observed = Rc::new(std::cell::RefCell::new(Vec::new()));
     let host_observed = observed.clone();
@@ -291,12 +345,20 @@ async fn destination_context_is_membership_and_new_attempt() {
     for (context, code) in [
         (json("{}"), "CONTEXT_REQUIRED"),
         (
-            json(&format!(r#"{{"configuration":{{"{SERVER_POINT}":17}}}}"#)),
+            json(&format!(
+                r#"{{"configuration":{{"{SERVER_POINT_31}":17}}}}"#
+            )),
             "ERR_REFUSED",
         ),
         (
             json(&format!(
-                r#"{{"configuration":{{"{SERVER_POINT}":"https://evil.invalid"}}}}"#
+                r#"{{"configuration":{{"{SERVER_POINT_31}":"https://beta.example.invalid/api"}}}}"#
+            )),
+            "ERR_REFUSED",
+        ),
+        (
+            json(&format!(
+                r#"{{"configuration":{{"{SERVER_POINT_31}":{{"url":"https://evil.invalid"}}}}}}"#
             )),
             "ERR_REFUSED",
         ),
@@ -311,7 +373,7 @@ async fn destination_context_is_membership_and_new_attempt() {
         assert_eq!(count.get(), 0);
     }
     let context = json(&format!(
-        r#"{{"configuration":{{"{SERVER_POINT}":"https://beta.example.invalid/api"}}}}"#
+        r#"{{"configuration":{{"{SERVER_POINT_31}":{{"url":"https://beta.example.invalid/api"}}}}}}"#
     ));
     let mut job = invoker.invoke(operation::Request::operation("health").with_context(&context));
     job.write(json("{}")).await.unwrap();
@@ -384,7 +446,7 @@ async fn exact_integer_parameters_agree_with_the_operation_schema() {
     use openbindings::{ResourceSet, Source};
     use openbindings_interface_synthesis::{SynthesisRequest, SynthesisSource, Synthesizer};
     use openbindings_json_schema_evaluator::DefaultEvaluator;
-    let source = Source {kind:openbindings_openapi::EXPERIMENTAL_KIND.into(), content:Some(json(&serde_json_compat::json!({"document":r#"{"openapi":"3.1.2","info":{"title":"Numbers","version":"1"},"servers":[{"url":"https://numbers.invalid"}],"paths":{"/n":{"get":{"parameters":[{"name":"n","in":"query","schema":{"type":"integer"}}],"responses":{"204":{"description":"empty"}}}}}}"#}).to_string())),..Default::default()};
+    let source = Source {kind:openbindings_openapi::KIND_31.into(), content:Some(json(&serde_json_compat::json!({"document":r#"{"openapi":"3.1.2","info":{"title":"Numbers","version":"1"},"servers":[{"url":"https://numbers.invalid"}],"paths":{"/n":{"get":{"parameters":[{"name":"n","in":"query","schema":{"type":"integer"}}],"responses":{"204":{"description":"empty"}}}}}}"#}).to_string())),..Default::default()};
     let calls = Rc::new(Cell::new(0));
     let provider =
         OpenApi::default().with_transport(host(calls.clone(), 204, "", BodyState::Complete));
@@ -428,7 +490,7 @@ async fn exact_integer_parameters_agree_with_the_operation_schema() {
         ("100.1e-2", false),
         ("10.1e-1", false),
     ] {
-        let input = json(&format!(r#"{{"parameters":{{"query":{{"n":{token}}}}}}}"#));
+        let input = json(&format!(r#"{{"query":{{"n":{token}}}}}"#));
         let before = calls.get();
         let mut call = direct.invoke(BindingRequest {
             source: &source,
@@ -719,12 +781,10 @@ async fn required_values_duplicates_media_and_body_budget_are_checked() {
                 .await
         },
     );
+    // Text media become a string, whatever the body looks like.
     assert_eq!(
-        invoke(provider, vec![json("{}")], None)
-            .await
-            .unwrap_err()
-            .code(),
-        "ERR_EXECUTION_FAILED"
+        invoke(provider, vec![json("{}")], None).await.unwrap()[0].text(),
+        r#""null""#
     );
 }
 
@@ -732,7 +792,7 @@ async fn required_values_duplicates_media_and_body_budget_are_checked() {
 async fn required_body_and_parameter_count_refuse_before_host_entry() {
     let text = r#"{"openapi":"3.1.2","info":{"title":"Required","version":"1"},"servers":[{"url":"https://required.invalid"}],"paths":{"/x":{"post":{"parameters":[{"name":"a","in":"query","schema":{"type":"string"}},{"name":"b","in":"query","schema":{"type":"string"}}],"requestBody":{"required":true,"content":{"application/json":{}}},"responses":{"204":{"description":"empty"}}}}}}"#;
     let source = openbindings::Source {
-        kind: openbindings_openapi::EXPERIMENTAL_KIND.into(),
+        kind: openbindings_openapi::KIND_31.into(),
         content: Some(json(
             &serde_json_compat::json!({"document":text}).to_string(),
         )),
@@ -753,11 +813,8 @@ async fn required_body_and_parameter_count_refuse_before_host_entry() {
     )));
     for (input, accepted) in [
         ("{}", false),
-        (r#"{"body":null,"parameters":{"query":{"a":"one"}}}"#, true),
-        (
-            r#"{"body":null,"parameters":{"query":{"a":"one","b":"two"}}}"#,
-            false,
-        ),
+        (r#"{"body":null,"query":{"a":"one"}}"#, true),
+        (r#"{"body":null,"query":{"a":"one","b":"two"}}"#, false),
     ] {
         let before = calls.get();
         let mut job = facade.invoke(BindingRequest {
@@ -775,8 +832,8 @@ async fn required_body_and_parameter_count_refuse_before_host_entry() {
 
 #[test]
 fn pinned_client_literal_unicode_limitation_is_reproduced_independently() {
-    // Preserve the failed FR06 expectation as a client limitation. An encoded
-    // path is an additional qualified case, not a substitute for this case.
+    // A literal non-ASCII path template is a client limitation, kept as its own case.
+    // An encoded path is an additional qualified case, not a substitute for this one.
     let text = r#"{"openapi":"3.1.2","info":{"title":"Unicode","version":"1"},"servers":[{"url":"https://unicode.invalid"}],"paths":{"/雪~s":{"get":{"responses":{"204":{"description":"empty"}}}}}}"#;
     let document =
         dynamic_openapi_client::Document::parse(text.as_bytes(), None, Default::default()).unwrap();

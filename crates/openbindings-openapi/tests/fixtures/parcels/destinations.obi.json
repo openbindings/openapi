@@ -1,0 +1,27 @@
+{
+  "openbindings": "0.2.0",
+  "name": "Manual destinations",
+  "operations": {
+    "health": {}
+  },
+  "sources": {
+    "authoredApi": {
+      "kind": "local.openapi-3.1.r2",
+      "content": {
+        "document": "{\n  \"openapi\": \"3.1.2\",\n  \"info\": {\n    \"title\": \"Parcel service\",\n    \"version\": \"1\"\n  },\n  \"servers\": [\n    {\n      \"url\": \"https://alpha.example.invalid/api\"\n    },\n    {\n      \"url\": \"https://beta.example.invalid/api\"\n    }\n  ],\n  \"paths\": {\n    \"/health\": {\n      \"get\": {\n        \"operationId\": \"health\",\n        \"responses\": {\n          \"204\": {\n            \"description\": \"Healthy\"\n          }\n        }\n      }\n    }\n  }\n}\n",
+        "location": "https://descriptions.example.invalid/destinations.json"
+      },
+      "x-preserved": 9007199254740993
+    }
+  },
+  "bindings": {
+    "healthBinding": {
+      "operation": "health",
+      "source": "authoredApi",
+      "content": {
+        "path": "/health",
+        "method": "get"
+      }
+    }
+  }
+}

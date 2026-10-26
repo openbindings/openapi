@@ -53,7 +53,7 @@ fn client_doc(text: &str) -> client::Document {
     client::Document::parse(text.as_bytes(), None, client::Limits::default()).unwrap()
 }
 fn schema() -> JsonValue {
-    JsonValue::parse(r#"{"type":"object","properties":{"parameters":{"type":"object","properties":{"path":{"type":"object","properties":{},"required":[],"additionalProperties":false},"query":{"type":"object","properties":{},"required":[],"additionalProperties":false}},"required":[],"additionalProperties":false}},"required":[],"additionalProperties":false}"#).unwrap()
+    JsonValue::parse(r#"{"additionalProperties":false,"properties":{"path":{"additionalProperties":false,"properties":{},"required":[],"type":"object"},"query":{"additionalProperties":false,"properties":{},"required":[],"type":"object"}},"required":[],"type":"object"}"#).unwrap()
 }
 fn authored(source: &openbindings::Source, document: &client::Document) -> Conformant<Document> {
     let mut draft = Document::new();
@@ -120,8 +120,8 @@ fn main() {
     let mode = std::env::args().nth(1).unwrap();
     let version = std::env::args().nth(2).unwrap_or_else(|| "3.1.2".into());
     let kind = match version.as_str() {
-        "3.0.4" => openbindings_openapi::EXPERIMENTAL_KIND_30,
-        "3.1.2" => openbindings_openapi::EXPERIMENTAL_KIND,
+        "3.0.4" => openbindings_openapi::KIND_30,
+        "3.1.2" => openbindings_openapi::KIND_31,
         _ => panic!("unsupported benchmark version"),
     };
     let candidate = mode == "candidate";
@@ -203,12 +203,12 @@ fn main() {
             let document = client_doc(&text);
             let op = document.operations().next().unwrap();
             let body = format!("\"{}\"", "x".repeat(bytes - 2));
-            let envelope = if method == "post" {
+            let native_request = if method == "post" {
                 format!("{{\"body\":{body}}}")
             } else {
                 "{}".into()
             };
-            let value = JsonValue::parse(&envelope).unwrap();
+            let value = JsonValue::parse(&native_request).unwrap();
             let input_body = (method == "post")
                 .then(|| client::exact::Value::parse(&body, client::Limits::default()).unwrap());
             let prepare = |operation: &client::Operation| {
@@ -360,7 +360,7 @@ fn main() {
                         black_box(output);
                     }
                 });
-                rows.push(serde_json::json!({"workload":"invocation","method":method,"bytes":bytes,"payload":envelope.len()+bytes,"layer":layer,"cold":false,"samples_ns":samples}));
+                rows.push(serde_json::json!({"workload":"invocation","method":method,"bytes":bytes,"payload":native_request.len()+bytes,"layer":layer,"cold":false,"samples_ns":samples}));
             }
             let samples = sample(|| {
                 if candidate {
@@ -432,7 +432,7 @@ fn main() {
                     );
                 }
             });
-            rows.push(serde_json::json!({"workload":"conformant-invocation","method":method,"bytes":bytes,"payload":envelope.len()+bytes,"samples_ns":samples}));
+            rows.push(serde_json::json!({"workload":"conformant-invocation","method":method,"bytes":bytes,"payload":native_request.len()+bytes,"samples_ns":samples}));
         }
     }
     println!(

@@ -10,6 +10,7 @@ use openbindings_interface_synthesis::{SynthesisRequest, SynthesisSource, Synthe
 use openbindings_invocation::{InvocationError, binding::BindingInvoker, operation};
 use openbindings_openapi::OpenApi;
 use std::sync::Arc;
+/// A source carrying the description as JSON text: `document` is a string.
 pub fn source(kind: &str, text: &str) -> Source {
     Source {
         kind: kind.into(),
@@ -17,12 +18,24 @@ pub fn source(kind: &str, text: &str) -> Source {
         ..Default::default()
     }
 }
+/// A source embedding the description as a JSON object. Its text is spliced in as
+/// written rather than re-encoded, so its numbers keep their exact values; the adapter
+/// hands the client that member's own text.
+pub fn embedded(kind: &str, text: &str) -> Source {
+    Source {
+        kind: kind.into(),
+        content: Some(JsonValue::parse(format!(r#"{{"document":{text}}}"#)).unwrap()),
+        ..Default::default()
+    }
+}
 pub const DESCRIPTION: &str = r#"{"openapi":"3.1.2","info":{"title":"Consumer","version":"1"},"servers":[{"url":"https://consumer.invalid"}],"paths":{"/items":{"post":{"requestBody":{"required":true,"content":{"application/json":{"schema":true}}},"responses":{"200":{"description":"echo","content":{"application/json":{"schema":true}}}}}}}}"#;
 pub const DESCRIPTION_30: &str = r#"{"openapi":"3.0.4","info":{"title":"Consumer 3.0","version":"1"},"servers":[{"url":"https://consumer.invalid"}],"paths":{"/items":{"post":{"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","nullable":true}}}},"responses":{"200":{"description":"echo","content":{"application/json":{"schema":{"type":"object","nullable":true}}}}}}}}}"#;
 pub const INPUT: &str = r#"{"body":{"integer":9007199254740993,"label":"雪"}}"#;
 pub const OUTPUT: &str = r#"{"integer":9007199254740993,"label":"雪"}"#;
+/// Inspect and synthesize an OBI for a source embedding `text`; the saved document
+/// carries that source unchanged.
 pub async fn author(kind: &str, text: &str) -> String {
-    let source = source(kind, text);
+    let source = embedded(kind, text);
     let provider = OpenApi::default();
     let inventory = openbindings_source_inspection::Inspector::new(&provider)
         .inspect(&source)
@@ -58,8 +71,9 @@ pub fn invoker<P: BindingInvoker>(saved: &str, provider: P) -> operation::Invoke
         openbindings::ResourceSet::default(),
     )
 }
-/// Caller policy for this finite, at-most-one-output experiment. Preserve the
-/// authoritative terminal after a local write error; retain output until success.
+/// Caller policy for one call: send one native request, close input, and drain. A
+/// successful call emits at most one value. Preserve the authoritative terminal after a
+/// local write error; retain output until success.
 pub async fn call<P: BindingInvoker>(
     invoker: &operation::Invoker<P>,
     request: operation::Request<'_>,
@@ -110,3 +124,4 @@ pub mod auth;
 
 pub mod auth_acceptance;
 pub mod crud;
+pub mod responses;

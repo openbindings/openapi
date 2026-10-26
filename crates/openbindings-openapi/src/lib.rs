@@ -1,15 +1,21 @@
-//! Experimental OpenAPI inspection, synthesis and finite JSON invocation.
+//! OpenAPI inspection, synthesis and finite invocation.
 //!
-//! This optional adapter implements private 3.1 and 3.0 JSON experiments. Their meaning
-//! is documented in the package README; it is not a published binding standard.
+//! This optional adapter implements two private kinds, [`KIND_31`] for OpenAPI 3.1
+//! descriptions and [`KIND_30`] for OpenAPI 3.0 descriptions. Their meaning is documented
+//! in the package README; they are not a published binding standard.
 //! Core remains unaware of OpenAPI, transport and operation effects.
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 
 mod analysis;
 mod invocation;
+mod media;
 mod naming;
+mod number;
+mod redirect;
+mod response;
 mod security;
+mod server;
 mod synthesis;
 
 use dynamic_openapi_client::graph::DocumentBuilder;
@@ -28,22 +34,30 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-/// Exact private experiment identifier. Saved r1 documents retain this meaning.
-pub const EXPERIMENTAL_KIND: &str = "local.openapi-json-probe.r1";
-/// Private per-attempt security selection and caller-approved credential origins.
-pub const SECURITY_POINT: &str = "local.openapi-json-probe.r1.security";
-/// Configuration point containing a declared absolute server URL selector.
-pub const SERVER_POINT: &str = "local.openapi-json-probe.r1.server";
-/// Kind-defined unsuccessful HTTP status, with application data `{ "status": n }`.
-pub const HTTP_STATUS_ERROR: &str = "local.openapi-json-probe.r1.http-status";
-/// Exact private OpenAPI 3.0 experiment identifier; independent of the 3.1 r1 kind.
-pub const EXPERIMENTAL_KIND_30: &str = "local.openapi30-json-probe.r1";
-/// OpenAPI 3.0 private per-attempt security selection and credential origins.
-pub const SECURITY_POINT_30: &str = "local.openapi30-json-probe.r1.security";
-/// OpenAPI 3.0 experiment's declared absolute server URL configuration point.
-pub const SERVER_POINT_30: &str = "local.openapi30-json-probe.r1.server";
-/// OpenAPI 3.0 experiment's unsuccessful HTTP status, with data `{ "status": n }`.
-pub const HTTP_STATUS_ERROR_30: &str = "local.openapi30-json-probe.r1.http-status";
+/// The private kind for OpenAPI 3.1 descriptions: sources whose document's `openapi`
+/// is 3.1.x. Defined by this project for its own use; not a published standard.
+pub const KIND_31: &str = "local.openapi-3.1.r2";
+/// [`KIND_31`]'s configuration point choosing one of an operation's effective servers
+/// (`url`) and supplying its variables (`variables`).
+pub const SERVER_POINT_31: &str = "local.openapi-3.1.r2.server";
+/// [`KIND_31`]'s configuration point for per-attempt security selection and
+/// caller-approved credential origins.
+pub const SECURITY_POINT_31: &str = "local.openapi-3.1.r2.security";
+/// [`KIND_31`]'s configuration point naming the declared request media key a body is
+/// sent as, when the declarations do not decide it.
+pub const REQUEST_MEDIA_POINT_31: &str = "local.openapi-3.1.r2.requestMedia";
+/// The private kind for OpenAPI 3.0 descriptions: sources whose document's `openapi`
+/// is 3.0.x. Defined by this project for its own use; not a published standard.
+pub const KIND_30: &str = "local.openapi-3.0.r2";
+/// [`KIND_30`]'s configuration point choosing one of an operation's effective servers
+/// (`url`) and supplying its variables (`variables`).
+pub const SERVER_POINT_30: &str = "local.openapi-3.0.r2.server";
+/// [`KIND_30`]'s configuration point for per-attempt security selection and
+/// caller-approved credential origins.
+pub const SECURITY_POINT_30: &str = "local.openapi-3.0.r2.security";
+/// [`KIND_30`]'s configuration point naming the declared request media key a body is
+/// sent as, when the declarations do not decide it.
+pub const REQUEST_MEDIA_POINT_30: &str = "local.openapi-3.0.r2.requestMedia";
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Kind {
@@ -52,17 +66,18 @@ enum Kind {
 }
 impl Kind {
     const ALL: [Self; 2] = [Self::OpenApi31, Self::OpenApi30];
+    /// Only the exact current labels; a retired label is as unknown as any other.
     fn from_label(label: &str) -> Option<Self> {
         match label {
-            EXPERIMENTAL_KIND => Some(Self::OpenApi31),
-            EXPERIMENTAL_KIND_30 => Some(Self::OpenApi30),
+            KIND_31 => Some(Self::OpenApi31),
+            KIND_30 => Some(Self::OpenApi30),
             _ => None,
         }
     }
     fn label(self) -> &'static str {
         match self {
-            Self::OpenApi31 => EXPERIMENTAL_KIND,
-            Self::OpenApi30 => EXPERIMENTAL_KIND_30,
+            Self::OpenApi31 => KIND_31,
+            Self::OpenApi30 => KIND_30,
         }
     }
     fn edition(self) -> dynamic_openapi_client::inspect::Edition {
@@ -73,20 +88,20 @@ impl Kind {
     }
     fn server_point(self) -> &'static str {
         match self {
-            Self::OpenApi31 => SERVER_POINT,
+            Self::OpenApi31 => SERVER_POINT_31,
             Self::OpenApi30 => SERVER_POINT_30,
         }
     }
     fn security_point(self) -> &'static str {
         match self {
-            Self::OpenApi31 => SECURITY_POINT,
+            Self::OpenApi31 => SECURITY_POINT_31,
             Self::OpenApi30 => SECURITY_POINT_30,
         }
     }
-    fn status_error(self) -> &'static str {
+    fn request_media_point(self) -> &'static str {
         match self {
-            Self::OpenApi31 => HTTP_STATUS_ERROR,
-            Self::OpenApi30 => HTTP_STATUS_ERROR_30,
+            Self::OpenApi31 => REQUEST_MEDIA_POINT_31,
+            Self::OpenApi30 => REQUEST_MEDIA_POINT_30,
         }
     }
 }
@@ -103,11 +118,12 @@ pub struct Options {
     pub resources: Vec<ResourceInput>,
     /// Maximum encoded source content, including its document text.
     pub source_bytes: usize,
-    /// Maximum charged adapter inventory bytes, including retained server/parameter metadata.
+    /// Maximum charged adapter inventory bytes, including retained server/parameter metadata;
+    /// a server list shared by several operations is charged once.
     /// This is a logical work budget, not an allocator or process RSS measurement.
     pub result_bytes: usize,
-    /// Maximum encoded per-attempt context for a profile containing authenticated alternatives.
-    /// Unsecured profiles ignore authentication context. No retained-arena/RSS guarantee.
+    /// Maximum encoded per-attempt context, admitted whole whenever an invocation reads the
+    /// context, secured or not. No retained-arena/RSS guarantee.
     pub context_bytes: usize,
 }
 impl Default for Options {
@@ -300,7 +316,7 @@ impl<T> SourceInspector for OpenApi<T> {
             .into_iter()
             .map(|kind| {
                 SupportedKind::new(kind.label()).with_description(
-                    "Private finite JSON experiment; consult its qualified capability profile",
+                    "Private kind, not a published standard; consult the adapter's capability profile",
                 )
             })
             .collect()
@@ -333,7 +349,7 @@ mod cache_tests {
     use super::*;
     use std::sync::atomic::Ordering;
     fn source(uri: &str) -> Source {
-        Source {kind:EXPERIMENTAL_KIND.into(),content:Some(json(&serde_json_compat::json!({"document":include_str!("../tests/fixtures/r1/parcels.json"),"retrievalUri":uri})).unwrap()),..Default::default()}
+        Source {kind:KIND_31.into(),content:Some(json(&serde_json_compat::json!({"document":include_str!("../tests/fixtures/parcels/parcels.json"),"location":uri})).unwrap()),..Default::default()}
     }
     #[test]
     fn one_source_cache_checks_content_base_and_fixed_options() {
@@ -378,10 +394,10 @@ mod cache_tests {
         let sources = [
             source("https://a.invalid/doc.json"),
             Source {
-                kind: EXPERIMENTAL_KIND.into(),
+                kind: KIND_31.into(),
                 content: Some(
                     json(&serde_json_compat::json!({
-                        "document": include_str!("../tests/fixtures/r1/destinations.json")
+                        "document": include_str!("../tests/fixtures/parcels/destinations.json")
                     }))
                     .unwrap(),
                 ),

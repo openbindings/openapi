@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SDK_URL = "https://github.com/openbindings/sdk"
 SDK_REV = "3546fc29d3fb329656c6a7506f6006b9eb38375d"
 CLIENT_URL = "https://github.com/openbindings/openapi-client"
-CLIENT_REV = "5cc2cf47ad9a05d1aa3cf968d03841ca9bbded61"
+CLIENT_REV = "c6a8236edbd02f4527d724bab60560861bf2722d"
 SDK_PATHS = [
     "crates/openbindings", "crates/openbindings-internal-json",
     "crates/openbindings-internal-cancellation", "crates/openbindings-internal-schema",
@@ -201,6 +201,12 @@ def make_consumer(run, fixture, sources=None):
     return consumer, identities
 
 
+def git_head():
+    """The checked-out commit, recorded beside the tested input hashes; None outside Git."""
+    head = subprocess.run(["git", "rev-parse", "--verify", "HEAD"], cwd=ROOT, capture_output=True, text=True)
+    return head.stdout.strip() if head.returncode == 0 else None
+
+
 def qualify(name):
     parser = argparse.ArgumentParser(description="Qualify the independent " + name + " consumer using pinned Git sources or extracted Cargo archives.")
     parser.add_argument("--archives", action="store_true")
@@ -226,7 +232,7 @@ def qualify(name):
         example_name = example_names.get("examples/" + example.name, example.stem)
         lints = ["-D", "warnings"]
         if example.stem == "auth_resolution":
-            # The preserved stopped experiment is compiled, never executed.
+            # The stopped measurement example is compiled, never executed.
             lints += ["-A", "clippy::type_complexity", "-A", "clippy::too_many_arguments"]
         run("consumer-lint-" + example.stem, ["cargo", "clippy", "--locked", "--offline", "--example", example_name, "--", *lints], consumer)
         if example.stem == "author":
@@ -234,6 +240,7 @@ def qualify(name):
     tree = run("core-isolation", ["cargo", "tree", "--locked", "--offline", "-p", "openbindings", "--edges", "normal"], consumer)
     if "dynamic-openapi-client" in tree or "openbindings-openapi" in tree:
         raise SystemExit("OpenAPI dependency leaked into core")
+    probe_report = None
     if args.wasm:
         if not args.tsc.is_file():
             raise SystemExit("Run npm ci --offline --ignore-scripts, or supply --tsc")
@@ -244,14 +251,14 @@ def qualify(name):
         run("wasm-bindgen", ["wasm-bindgen", "--target", "nodejs", "--out-dir", host / "wasm", run.target / f"wasm32-unknown-unknown/debug/{binary}.wasm"])
         shutil.copyfile(fixture / "wasm-probe.ts", host / "wasm-probe.ts")
         run("typescript", ["node", args.tsc.resolve(), "--strict", "--target", "ES2022", "--module", "commonjs", "--lib", "ES2022,DOM", host / "wasm-probe.ts"])
-        run("wasm-host", ["node", host / "wasm-probe.js"])
+        # Each line the probe prints is one JSON summary of what it checked.
+        probe_report = [json.loads(line) for line in run("wasm-host", ["node", host / "wasm-probe.js"]).splitlines() if line.strip()]
     if started != input_hashes():
         raise SystemExit("Qualification inputs changed during this run; no receipt written")
-    head = subprocess.run(["git", "rev-parse", "--verify", "HEAD"], cwd=ROOT, capture_output=True, text=True)
     receipt = {
         "status": "pass", "testedInputs": started, "sdkSource": sdk_identity,
-        "head": head.stdout.strip() if head.returncode == 0 else None,
-        "archives": archives, "wasmProbe": args.wasm, "sources": identities,
+        "head": git_head(),
+        "archives": archives, "wasmProbe": args.wasm, "wasmProbeReport": probe_report, "sources": identities,
         "archiveInputs": {p.relative_to(run.out).as_posix(): sha(p) for p in sorted((run.out / "cargo").rglob("*")) if p.is_file()},
         "consumerLockSha256": sha(consumer / "Cargo.lock"), "commands": run.commands,
         "rustc": run("rustc", ["rustc", "--version"]).strip(),
@@ -292,7 +299,7 @@ def qualify_minimal():
             raise SystemExit("Unexpected minimal consumer dependency: " + forbidden)
     if started != input_hashes():
         raise SystemExit("Qualification inputs changed")
-    (run.out / "receipt.json").write_text(json.dumps({"status": "pass", "testedInputs": started, "sources": identities, "archiveReceiptSha256": sha(archive_receipt) if archive_receipt else None, "commands": run.commands}, indent=2) + "\n")
+    (run.out / "receipt.json").write_text(json.dumps({"status": "pass", "testedInputs": started, "head": git_head(), "sources": identities, "archiveReceiptSha256": sha(archive_receipt) if archive_receipt else None, "commands": run.commands}, indent=2) + "\n")
     print("Minimal invocation-only consumer passed")
 
 

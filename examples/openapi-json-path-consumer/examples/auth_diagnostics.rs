@@ -107,9 +107,12 @@ fn main() {
                 0,
             ),
             (
+                // Credentials for two alternatives leave the choice to the caller.
                 "security-selection",
                 "/choice",
-                None,
+                Some(
+                    serde_json::json!({"credentials":{"ServiceToken":"fixture-bearer-A","PartnerKey":"fixture-key-A"}}),
+                ),
                 Some("CONTEXT_REQUIRED"),
                 0,
             ),

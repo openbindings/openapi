@@ -1,0 +1,27 @@
+{
+  "openbindings": "0.2.0",
+  "name": "Manual mounted",
+  "operations": {
+    "lookup": {}
+  },
+  "sources": {
+    "authoredApi": {
+      "kind": "local.openapi-3.1.r2",
+      "content": {
+        "document": "{\n  \"openapi\": \"3.1.2\",\n  \"info\": {\n    \"title\": \"Parcel service\",\n    \"version\": \"1\"\n  },\n  \"servers\": [\n    {\n      \"url\": \"https://parcel.example.invalid/api\"\n    }\n  ],\n  \"paths\": {\n    \"/mounted/{parcelId}\": {\n      \"$ref\": \"./parts.json#/components/pathItems/Parcel\"\n    }\n  }\n}\n",
+        "location": "https://descriptions.example.invalid/root.json"
+      },
+      "x-preserved": 9007199254740993
+    }
+  },
+  "bindings": {
+    "lookupBinding": {
+      "operation": "lookup",
+      "source": "authoredApi",
+      "content": {
+        "path": "/mounted/{parcelId}",
+        "method": "get"
+      }
+    }
+  }
+}

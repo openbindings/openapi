@@ -2,11 +2,11 @@ use openbindings::{JsonValue, Source};
 use openbindings_interface_synthesis::{
     CoverageStatus, SynthesisErrorKind, SynthesisRequest, SynthesisSource, Synthesizer,
 };
-use openbindings_openapi::{EXPERIMENTAL_KIND, OpenApi, Options, ResourceInput};
+use openbindings_openapi::{KIND_31, OpenApi, Options, ResourceInput};
 use openbindings_source_inspection::CancellationToken;
 use openbindings_source_inspection::Inspector;
 fn source(text: &str) -> Source {
-    Source{kind:EXPERIMENTAL_KIND.into(),content:Some(JsonValue::parse(serde_json_compat::json!({"document":text,"retrievalUri":"https://descriptions.example.invalid/root.json"}).to_string()).unwrap()),..Default::default()}
+    Source{kind:KIND_31.into(),content:Some(JsonValue::parse(serde_json_compat::json!({"document":text,"location":"https://descriptions.example.invalid/root.json"}).to_string()).unwrap()),..Default::default()}
 }
 #[tokio::test]
 async fn skeleton_preservation_and_composition_boundaries() {
@@ -25,7 +25,7 @@ async fn skeleton_preservation_and_composition_boundaries() {
     assert!(draft.operations().is_empty());
     assert!(draft.sources().is_none());
     assert_eq!(draft.name(), Some("Empty"));
-    let input = source(include_str!("fixtures/r1/parcels.json"));
+    let input = source(include_str!("fixtures/parcels/parcels.json"));
     let sources = [SynthesisSource {
         name: Some("user_source"),
         source: &input,
@@ -72,7 +72,7 @@ async fn skeleton_preservation_and_composition_boundaries() {
 }
 #[tokio::test]
 async fn missing_resource_remains_unknown_and_known_gaps_are_not_exclusions() {
-    let source = source(include_str!("fixtures/r1/mounted.json"));
+    let source = source(include_str!("fixtures/parcels/mounted.json"));
     let inputs = [SynthesisSource {
         name: None,
         source: &source,
@@ -100,7 +100,7 @@ async fn missing_resource_remains_unknown_and_known_gaps_are_not_exclusions() {
         SynthesisErrorKind::Incomplete
     );
     let mut api: serde_json_compat::Value =
-        serde_json_compat::from_str(include_str!("fixtures/r1/parcels.json")).unwrap();
+        serde_json_compat::from_str(include_str!("fixtures/parcels/parcels.json")).unwrap();
     api["paths"]["/parcels"]["post"]["requestBody"]["content"] =
         serde_json_compat::json!({"multipart/form-data":{"schema":{"type":"object"}}});
     let source = super_source(&api.to_string());
@@ -144,17 +144,17 @@ fn super_source(text: &str) -> Source {
 }
 #[tokio::test]
 async fn fresh_nested_resources_preserve_mounts_and_reference_bases() {
-    let input = source(include_str!("fixtures/r1/nested-entry.json"));
+    let input = source(include_str!("fixtures/parcels/nested-entry.json"));
     let mut options = Options::default();
     options.resources = vec![
         ResourceInput::at(
             "https://descriptions.example.invalid/fragments/parts.json",
-            include_bytes!("fixtures/r1/nested-parts.json").as_slice(),
+            include_bytes!("fixtures/parcels/nested-parts.json").as_slice(),
         )
         .unwrap(),
         ResourceInput::at(
             "https://descriptions.example.invalid/fragments/parameters.json",
-            include_bytes!("fixtures/r1/nested-parameters.json").as_slice(),
+            include_bytes!("fixtures/parcels/nested-parameters.json").as_slice(),
         )
         .unwrap(),
     ];
@@ -202,7 +202,7 @@ async fn exact_kind_patch_admission_and_carrier_boundaries() {
     let provider = OpenApi::default();
     let facade = Inspector::new(provider);
     for patch in ["3.1.0", "3.1.1", "3.1.2", "3.1.999"] {
-        let text = include_str!("fixtures/r1/parcels.json").replace("3.1.2", patch);
+        let text = include_str!("fixtures/parcels/parcels.json").replace("3.1.2", patch);
         assert_eq!(
             facade.inspect(&source(&text)).await.unwrap().targets.len(),
             3
@@ -220,10 +220,10 @@ async fn exact_kind_patch_admission_and_carrier_boundaries() {
         bad.content = Some(JsonValue::parse(text).unwrap());
         assert!(facade.inspect(&bad).await.is_err());
     }
-    let mut bad = source(include_str!("fixtures/r1/parcels.json"));
+    let mut bad = source(include_str!("fixtures/parcels/parcels.json"));
     bad.kind = "some-other-kind".into();
     assert!(facade.inspect(&bad).await.is_err());
-    bad.kind = EXPERIMENTAL_KIND.into();
+    bad.kind = KIND_31.into();
     bad.content = None;
     assert!(facade.inspect(&bad).await.is_err());
 }
@@ -240,8 +240,18 @@ async fn inherited_metadata_is_charged_and_source_limit_has_an_exact_boundary() 
         })
         .collect();
     let input=source(&serde_json_compat::json!({"openapi":"3.1.2","info":{"title":"Budget","version":"1"},"servers":[{"url":url}],"paths":paths}).to_string());
+    // The inherited list is charged once, not once for each of the eight operations
+    // inheriting it, which would spend this budget twice over.
     let mut options = Options::default();
     options.result_bytes = 32768;
+    assert!(
+        Inspector::new(OpenApi::new(options.clone()).unwrap())
+            .inspect(&input)
+            .await
+            .is_ok()
+    );
+    // A budget below what the one list retains still stops the analysis.
+    options.result_bytes = 8192;
     let failure = Inspector::new(OpenApi::new(options).unwrap())
         .inspect(&input)
         .await
@@ -292,6 +302,18 @@ async fn response_profiles_and_ambiguous_mounts_have_truthful_coverage() {
     let statuses = coverage(errors).await;
     assert!(statuses.contains(&CoverageStatus::Represented));
     assert!(statuses.contains(&CoverageStatus::Lossy));
+    // Success declarations never exclude an operation. Headers never become values, so
+    // declared success headers are disclosed as projection loss; a success media type
+    // without a schema loses nothing.
+    let mut headers = base.clone();
+    headers["paths"]["/x"]["get"]["responses"] = serde_json_compat::json!({"200":{"description":"listed","headers":{"X-Total-Count":{"schema":{"type":"integer"}}},"content":{"text/csv":{}}}});
+    assert_eq!(
+        coverage(headers).await,
+        vec![CoverageStatus::Represented, CoverageStatus::Lossy]
+    );
+    let mut media = base.clone();
+    media["paths"]["/x"]["get"]["responses"] = serde_json_compat::json!({"200":{"description":"image","content":{"image/png":{}}},"default":{"description":"problem","content":{"application/problem+json":{}}}});
+    assert_eq!(coverage(media).await, vec![CoverageStatus::Represented]);
     let mut ambiguous = base.clone();
     ambiguous["components"] =
         serde_json_compat::json!({"pathItems":{"Shared":base["paths"]["/x"].clone()}});
@@ -318,7 +340,7 @@ async fn response_profiles_and_ambiguous_mounts_have_truthful_coverage() {
 async fn absent_and_repeated_operation_ids_are_not_binding_identity_or_effects() {
     use std::{cell::Cell, rc::Rc};
     let mut api: serde_json_compat::Value =
-        serde_json_compat::from_str(include_str!("fixtures/r1/parcels.json")).unwrap();
+        serde_json_compat::from_str(include_str!("fixtures/parcels/parcels.json")).unwrap();
     for path in api["paths"].as_object_mut().unwrap().values_mut() {
         for method in ["get", "post"] {
             if let Some(op) = path.get_mut(method) {
@@ -363,7 +385,7 @@ async fn synthesized_contracts_keep_verdicts_with_explicit_diagnostics() {
     use openbindings_json_schema_evaluator::DefaultEvaluator;
 
     // Source schema references are disclosed as projection loss, never copied
-    // into the normative envelope contract, even when statically defective.
+    // into the synthesized input contract, even when statically defective.
     for version in ["3.0.4", "3.1.2"] {
         let api = serde_json_compat::json!({
             "openapi": version,
@@ -377,7 +399,7 @@ async fn synthesized_contracts_keep_verdicts_with_explicit_diagnostics() {
         });
         let mut input = source(&api.to_string());
         if version == "3.0.4" {
-            input.kind = openbindings_openapi::EXPERIMENTAL_KIND_30.into();
+            input.kind = openbindings_openapi::KIND_30.into();
         }
         let inputs = [SynthesisSource {
             name: None,
@@ -404,7 +426,7 @@ async fn synthesized_contracts_keep_verdicts_with_explicit_diagnostics() {
             .input()
             .expect("synthesized operations declare an input contract")
             .prepare(&DefaultEvaluator::new())
-            .expect("synthesized envelope must prepare");
+            .expect("the synthesized input contract prepares");
         // One prepared contract answers both the cheap check and an explanation.
         for detail in [Detail::Outcome, Detail::Explain] {
             let check = |value: &str| {

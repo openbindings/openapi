@@ -228,7 +228,7 @@ checksum = "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813"
 [[package]]
 name = "dynamic-openapi-client"
 version = "0.0.0"
-source = "git+https://github.com/openbindings/openapi-client?rev=5cc2cf47ad9a05d1aa3cf968d03841ca9bbded61#5cc2cf47ad9a05d1aa3cf968d03841ca9bbded61"
+source = "git+https://github.com/openbindings/openapi-client?rev=c6a8236edbd02f4527d724bab60560861bf2722d#c6a8236edbd02f4527d724bab60560861bf2722d"
 dependencies = [
  "base64",
  "fluent-uri",
@@ -240,7 +240,7 @@ dependencies = [
 [[package]]
 name = "dynamic-openapi-client-reqwest"
 version = "0.0.0"
-source = "git+https://github.com/openbindings/openapi-client?rev=5cc2cf47ad9a05d1aa3cf968d03841ca9bbded61#5cc2cf47ad9a05d1aa3cf968d03841ca9bbded61"
+source = "git+https://github.com/openbindings/openapi-client?rev=c6a8236edbd02f4527d724bab60560861bf2722d#c6a8236edbd02f4527d724bab60560861bf2722d"
 dependencies = [
  "bytes",
  "dynamic-openapi-client",
